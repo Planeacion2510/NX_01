@@ -1,99 +1,219 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Listado de Órdenes de Trabajo{% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="fw-bold">📋 Órdenes de Trabajo</h3>
-        <a href="{% url 'administrativa:ordenes:crear_orden' %}" class="btn btn-primary">
-            ➕ Nueva Orden
-        </a>
-    </div>
+<div class="container mt-5">
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
+    <!-- Título -->
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-clipboard-list"></i> Gestión de Órdenes de Trabajo
+    </h2>
 
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle text-center">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Número</th>
-                        <th>Cliente</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Documentos</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for orden in ordenes %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td class="fw-semibold">{{ orden.numero }}</td>
-                            <td>{{ orden.cliente|default:"-" }}</td>
-                            <td>{{ orden.fecha|date:"d/m/Y" }}</td>
-                            <td>
-                                {% if orden.estado == "cerrada" %}
-                                    <span class="badge bg-success">Cerrada</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Abierta</span>
-                                {% endif %}
-                            </td>
-                            <td style="max-width: 220px;">
-                                <div class="d-flex flex-wrap justify-content-center gap-1">
-                                    {% for doc in orden.documentos.all %}
-                                        {% if doc.drive_view_url %}
-                                            <a href="{{ doc.drive_view_url }}" target="_blank" 
-                                               class="btn btn-outline-primary btn-sm rounded-pill"
-                                               title="Abrir documento">
-                                                📄 {{ doc.nombre|truncatechars:15 }}
-                                            </a>
-                                        {% else %}
-                                            <span class="text-muted small">Sin enlace</span>
-                                        {% endif %}
-                                    {% empty %}
-                                        <span class="text-muted">Sin documentos</span>
-                                    {% endfor %}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="{% url 'administrativa:ordenes:editar_orden' orden.id %}" 
-                                       class="btn btn-sm btn-outline-secondary" title="Editar">
-                                        ✏️
-                                    </a>
-                                    <a href="{% url 'administrativa:ordenes:cerrar_orden' orden.id %}" 
-                                       class="btn btn-sm btn-outline-success" title="Cerrar">
-                                        ✅
-                                    </a>
-                                    <a href="{% url 'administrativa:ordenes:eliminar_orden' orden.id %}" 
-                                       class="btn btn-sm btn-outline-danger" title="Eliminar"
-                                       onclick="return confirm('¿Seguro que deseas eliminar esta orden? Se borrará también su carpeta en Google Drive.')">
-                                        🗑️
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                No hay órdenes registradas todavía.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Botones centrados -->
+    <div class="text-center mb-3">
+        <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+            <a href="{% url 'administrativa:ordenes:crear_orden' %}" class="btn-module">
+                <i class="fas fa-plus"></i> Nueva OT
+            </a>
+            <button id="refresh-btn" class="btn-module btn-refresh">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
         </div>
+        <!-- 🕒 Reloj justo debajo de los botones -->
+        <div id="clock" class="clock-display mt-3"></div>
     </div>
+
+    <!-- Contadores -->
+    <div class="stats-box text-center mb-4">
+        <span class="me-4">😀 <strong>Cierres a tiempo:</strong> {{ cierres_a_tiempo }}</span>
+        <span>😞 <strong>Cierres tardíos:</strong> {{ cierres_tardios }}</span>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-container">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Constructora</th>
+                    <th>Proyecto</th>
+                    <th>Proceso</th>
+                    <th>Descripción</th>
+                    <th>Fecha Apertura</th>
+                    <th>Fecha Envío</th>
+                    <th>Estado</th>
+                    <th>Fecha Cierre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ot in ordenes %}
+                <tr>
+                    <td>{{ ot.numero }}</td>
+                    <td>{{ ot.get_constructora_display }}</td>
+                    <td>{{ ot.get_proyecto_display }}</td>
+                    <td>{{ ot.get_proceso_display }}</td>
+                    <td>{{ ot.descripcion }}</td>
+                    <td>{{ ot.fecha_apertura|date:"d/m/Y H:i" }}</td>
+                    <td>{{ ot.fecha_envio|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if ot.estado == 'abierta' %}bg-warning
+                            {% elif ot.estado == 'en_proceso' %}bg-info
+                            {% else %}bg-success{% endif %}">
+                            {{ ot.get_estado_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if ot.fecha_cierre %}
+                            {{ ot.fecha_cierre|date:"d/m/Y" }}
+                            {% if ot.cierre_a_tiempo %} 😀 {% else %} 😞 {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="acciones-cell">
+                        <div class="acciones-wrapper">
+
+                            <!-- Carpeta -->
+                            <div class="dropdown">
+                                <a href="#" class="btn-icon folder" title="Documentos" data-bs-toggle="dropdown">
+                                    <i class="fas fa-folder-open"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg"
+                                    style="max-height: 250px; overflow-y: auto; min-width: 260px;">
+                                    {% if ot.documentos.exists %}
+                                        {% for doc in ot.documentos.all %}
+                                            <li class="d-flex justify-content-between align-items-center px-2">
+                                                <span>{{ doc.nombre|default:doc.archivo.name }}</span>
+                                                <div>
+                                                    <!-- Ver -->
+                                                    <a href="{{ doc.archivo.url }}" target="_blank" 
+                                                       class="btn-icon" title="Ver">
+                                                        <i class="fas fa-eye text-primary"></i>
+                                                    </a>
+                                                    <!-- Descargar -->
+                                                    <a href="{{ doc.archivo.url }}" download 
+                                                       class="btn-icon" title="Descargar">
+                                                        <i class="fas fa-download text-success"></i>
+                                                    </a>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        <li><span class="dropdown-item text-muted">No hay documentos</span></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- Editar -->
+                            {% if ot.estado != "cerrada" %}
+                                <a href="{% url 'administrativa:ordenes:editar_orden' ot.id %}" class="btn-icon edit" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <a href="{% url 'administrativa:ordenes:cerrar_orden' ot.id %}" 
+                                   class="btn-icon close" title="Cerrar"
+                                   onclick="return confirm('¿Seguro que deseas cerrar esta OT?');">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                            {% else %}
+                                <span class="btn-icon edit disabled" title="Editar bloqueado">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </span>
+                            {% endif %}
+
+                            <!-- Eliminar -->
+                            <a href="{% url 'administrativa:ordenes:eliminar_orden' ot.id %}" 
+                               class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Seguro que deseas eliminar esta OT?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center">No hay órdenes de trabajo registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Logos -->
+    <div class="text-center my-5">
+        <img src="{% static 'img/logo1.png' %}" alt="NexusOne" height="90" class="mx-4 logo-animado">
+        <img src="{% static 'img/logo2.png' %}" alt="Empresa Aliada" height="90" class="mx-4 logo-animado">
+    </div>
+
 </div>
+
+<!-- Script reloj -->
+<script>
+function updateClock() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('es-ES');
+    document.getElementById('clock').innerHTML = dateStr + " — " + timeStr;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// 🔄 Refrescar página
+document.getElementById('refresh-btn').addEventListener('click', function() {
+    const icon = this.querySelector('i');
+    icon.classList.add('fa-spin'); // animación
+    setTimeout(() => { location.reload(); }, 500);
+});
+</script>
+
+<!-- Estilos -->
+<style>
+.logo-animado { transition: transform 0.3s ease-in-out; }
+.logo-animado:hover { transform: scale(1.15); }
+
+/* Contenedor de acciones */
+.acciones-wrapper {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Botones iguales */
+.btn-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: #f8f9fa;
+    transition: all 0.2s;
+}
+.btn-icon i { font-size: 14px; }
+.btn-icon:hover { background: #e2e6ea; transform: scale(1.1); }
+
+/* Carpeta igual que los demás */
+.btn-icon.folder { color: #ffc107; }
+.btn-icon.folder:hover { color: #e0a800; }
+
+/* Botón de refrescar */
+.btn-refresh {
+    background: #198754;
+}
+.btn-refresh:hover {
+    background: #157347;
+}
+
+/* 🕒 Reloj centrado y más grande */
+.clock-display {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    margin-top: 8px;
+    text-align: center;
+}
+</style>
 {% endblock %}
