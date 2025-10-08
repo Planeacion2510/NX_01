@@ -1,27 +1,18 @@
-import os
-import io
-import json
-import mimetypes
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from googleapiclient.discovery_cache.base import Cache
+from google.oauth2 import service_account
+import io, os, json
 from googleapiclient.http import MediaIoBaseUpload
 from django.conf import settings
 
-# =====================================================
-# ⚙️ CONFIGURACIÓN GLOBAL
-# =====================================================
 SCOPES = ["https://www.googleapis.com/auth/drive"]
-# 📁 Carpeta raíz compartida en Drive (ajusta si usas otra)
-ROOT_DRIVE_FOLDER = "1ILl44xR0Grd-geFnW8v8anCQ0jBtbXwz"
 
-# =====================================================
-# 🔐 CREDENCIALES
-# =====================================================
+# Evitar caché pesado del cliente de Google
+class NoCache(Cache):
+    def get(self, url): return None
+    def set(self, url, content): pass
+
 def _get_credentials():
-    """
-    Obtiene las credenciales del Service Account desde settings.
-    Compatible con Render (usa JSON en variable de entorno si aplica).
-    """
     if getattr(settings, "GOOGLE_SERVICE_ACCOUNT_FILE", None):
         return service_account.Credentials.from_service_account_file(
             settings.GOOGLE_SERVICE_ACCOUNT_FILE, scopes=SCOPES
@@ -33,17 +24,13 @@ def _get_credentials():
             f.write(settings.GOOGLE_SERVICE_ACCOUNT_JSON)
         return service_account.Credentials.from_service_account_file(tmp_path, scopes=SCOPES)
 
-    raise RuntimeError(
-        "❌ No se encontraron credenciales de cuenta de servicio. "
-        "Configura GOOGLE_SERVICE_ACCOUNT_FILE o GOOGLE_SERVICE_ACCOUNT_JSON en settings."
-    )
+    raise RuntimeError("No Google service account configuration found.")
 
-# =====================================================
-# ⚙️ CONSTRUCCIÓN DEL SERVICIO
-# =====================================================
 def _build_service():
     creds = _get_credentials()
-    return build("drive", "v3", credentials=creds, cache_discovery=False)
+    # 👇 Aquí usamos el cache minimalista
+    return build("drive", "v3", credentials=creds, cache=NoCache())
+
 
 # =====================================================
 # 🗂️ CREAR CARPETA
