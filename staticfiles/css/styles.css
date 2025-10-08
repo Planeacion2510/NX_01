@@ -1,0 +1,474 @@
+/* ================================
+   🎨 Variables globales
+================================ */
+:root {
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --secondary: #3399ff;
+    --secondary-hover: #1a75d1;
+    --warning: #facc15;
+    --warning-hover: #eab308;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --gray: #6b7280;
+    --gray-hover: #4b5563;
+    --dark: #111827;
+    --light-bg: #f5f7fa;
+    --text: #333;
+}
+
+/* ================================
+   🔹 Reset & Base
+================================ */
+body {
+    background-color: var(--light-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+}
+
+/* ================================
+   🔹 Layout & Contenedores
+================================ */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.top-bar,
+.barra-superior {
+    background: var(--primary);
+    height: 60px;
+    width: 100%;
+    margin-bottom: 2rem;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid var(--primary-hover);
+}
+
+/* ================================
+   🔹 Tipografía & Encabezados
+================================ */
+h1 {
+    font-size: 28px;
+    text-align: center;
+    margin: 20px 0 0.5rem 0;
+    color: var(--dark);
+}
+
+h2, .section-title {
+    text-align: center;
+    margin: 30px 0 15px 0;
+    font-size: 22px;
+    color: #1f2937;
+    font-weight: bold;
+}
+
+.subtitle, p.subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* ================================
+   🔹 Tarjetas (Cards)
+================================ */
+.card {
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-header-bar {
+    background-color: #28a745;
+    height: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* ================================
+   🔹 Botones
+================================ */
+.btn-modern,
+.btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px 25px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s, transform 0.2s;
+    cursor: pointer;
+}
+
+.btn-modern:hover,
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.btn-module {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-size: 1rem;
+    box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.3s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none
+}
+
+.btn-module:hover {
+    background: linear-gradient(135deg, #0056b3, #003f7f);
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 12px rgba(0,0,0,0.3);
+    color: #fff;
+}
+
+.btn-secondary-module {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 500;
+    padding: 10px 22px;
+    border-radius: 50px;
+    margin-left: 10px;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none
+}
+
+.btn-secondary-module:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-back {
+    background: var(--gray);
+    color: white !important;
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-right: 10px;
+    transition: background 0.3s, transform 0.2s;
+    text-decoration: none
+}
+
+.btn-back:hover {
+    background: var(--gray-hover);
+    transform: scale(1.05);
+    text-decoration: none
+}
+
+.btn-warning-module {
+    background: var(--warning);
+    color: #000 !important;
+    font-weight: bold;
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.3s;
+}
+
+.btn-warning-module:hover {
+    background: var(--warning-hover);
+    transform: scale(1.05);
+    color: #000 !important;
+    text-decoration: none
+}
+
+/* Botones de acción (editar, cerrar, eliminar) */
+.btn-icon {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 0 3px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.btn-icon:hover {
+    transform: scale(1.1);
+}
+
+.btn-icon.edit { background: var(--secondary); }
+.btn-icon.close { background: var(--warning); color: black; }
+.btn-icon.delete { background: var(--danger); }
+
+/* ================================
+   🔹 Tablas
+================================ */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-modern th {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.table-modern td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.table-modern tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Tabla amarilla */
+.table-modern-yellow {
+    background: #fffbe6;
+    border: 1px solid var(--warning);
+}
+
+.table-modern-yellow th {
+    background: var(--warning);
+    color: #000;
+}
+
+.table-modern-yellow td {
+    border-bottom: 1px solid #fde68a;
+}
+
+.table-modern-yellow tr:hover {
+    background-color: #fef9c3;
+}
+
+/* Tabla verde */
+.table-green {
+    background: #ecfdf5;
+    border: 1px solid #28a745;
+}
+
+.table-green th {
+    background: #28a745;
+    color: white;
+}
+
+.table-green td {
+    border-bottom: 1px solid #bbf7d0;
+}
+
+.table-green tr:hover {
+    background-color: #d1fae5;
+}
+
+/* ================================
+   🔹 Logos
+================================ */
+.login-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    margin-top: 25px;
+}
+
+.login-logo {
+    max-height: 90px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.login-logo:hover {
+    transform: scale(1.15) rotate(2deg);
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.login-logo:active {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+.home-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.home-logos img {
+    height: 80px;
+    transition: transform 0.4s ease, filter 0.4s ease;
+    cursor: pointer;
+}
+
+.home-logos img:hover {
+    transform: scale(1.2) rotate(3deg);
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* ================================
+   🔹 Footer
+================================ */
+footer {
+    background: var(--dark);
+    color: #9ca3af;
+    text-align: center;
+    padding: 15px;
+    margin-top: 40px;
+    font-size: 14px;
+}
+
+/* ================================
+   🔹 Extras
+================================ */
+.logout-btn {
+    margin-left: 20px;
+}
+
+.card-body i.text-success {
+    color: #28a745;
+}
+/* ===== Tabla verde ===== */
+.table-green {
+    background: #ecfdf5; /* verde muy claro */
+    border: 1px solid #28a745;
+}
+
+.table-green th {
+    background: #28a745; /* verde fuerte */
+    color: white;
+}
+
+.table-green td {
+    border-bottom: 1px solid #bbf7d0; /* verde pastel */
+}
+
+.table-green tr:hover {
+    background-color: #d1fae5; /* verde suave al pasar */
+}
+.btn-action {
+    width: 40px;         /* ancho fijo */
+    height: 40px;        /* alto fijo */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;   /* bordes redondeados uniformes */
+    font-size: 16px;      /* tamaño del ícono */
+    padding: 0;
+}
+/* ================================
+   🔹 Documentos OT (Carpeta y Dropdown)
+================================ */
+.btn-icon.folder {
+    background: var(--warning);
+    color: black;
+}
+
+.btn-icon.folder:hover {
+    background: var(--warning-hover);
+    transform: scale(1.1);
+}
+
+/* Dropdown de documentos */
+.dropdown-menu {
+    min-width: 220px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 5px 0;
+    border: none;
+}
+
+.dropdown-item {
+    font-size: 14px;
+    padding: 6px 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dropdown-item i {
+    font-size: 14px;
+    color: var(--primary);
+}
+.dropdown-menu {
+    min-width: 260px;
+    max-height: 300px;
+    overflow-y: auto; /* scroll si hay muchos documentos */
+    z-index: 1050; /* que aparezca por encima de la tabla */
+}
+.dropdown-menu li span {
+    font-size: 14px;
+}
+.btn-group .btn {
+    padding: 2px 6px;
+}
+<style>
+.btn-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: #f8f9fa;
+    transition: all 0.2s;
+}
+.btn-icon:hover {
+    background: #e2e6ea;
+    transform: scale(1.1);
+}
+.btn-icon i {
+    font-size: 16px;
+}
+.btn-icon.folder {
+    background: transparent !important; /* sin fondo */
+    color: #ffc107;
+}
+.btn-icon.folder:hover {
+    transform: scale(1.2);
+    background: transparent !important;
+}
+</style>
+

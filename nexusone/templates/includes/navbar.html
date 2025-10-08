@@ -1,0 +1,13 @@
+{% load static %}
+
+<nav class="navbar navbar-light bg-light shadow-sm px-3">
+    <a href="{% url 'home' %}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-arrow-left"></i> Atrás
+    </a>
+    <span class="ms-auto">
+        {% if user.is_authenticated %}
+            <span class="me-2">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Salir</a>
+        {% endif %}
+    </span>
+</nav>
