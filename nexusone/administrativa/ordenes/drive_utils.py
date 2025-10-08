@@ -1,17 +1,22 @@
 import os
 import io
 import json
+import mimetypes
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from django.conf import settings
 
+# =====================================================
+# ⚙️ CONFIGURACIÓN GLOBAL
+# =====================================================
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+# 📁 Carpeta raíz compartida en Drive (ajusta si usas otra)
+ROOT_DRIVE_FOLDER = "1ILl44xR0Grd-geFnW8v8anCQ0jBtbXwz"
 
 # =====================================================
 # 🔐 CREDENCIALES
 # =====================================================
-
 def _get_credentials():
     """
     Obtiene las credenciales del Service Account desde settings.
@@ -29,14 +34,13 @@ def _get_credentials():
         return service_account.Credentials.from_service_account_file(tmp_path, scopes=SCOPES)
 
     raise RuntimeError(
-        "No Google service account configuration found. "
-        "Set GOOGLE_SERVICE_ACCOUNT_FILE or GOOGLE_SERVICE_ACCOUNT_JSON in settings."
+        "❌ No se encontraron credenciales de cuenta de servicio. "
+        "Configura GOOGLE_SERVICE_ACCOUNT_FILE o GOOGLE_SERVICE_ACCOUNT_JSON en settings."
     )
 
 # =====================================================
 # ⚙️ CONSTRUCCIÓN DEL SERVICIO
 # =====================================================
-
 def _build_service():
     creds = _get_credentials()
     return build("drive", "v3", credentials=creds, cache_discovery=False)
@@ -44,98 +48,86 @@ def _build_service():
 # =====================================================
 # 🗂️ CREAR CARPETA
 # =====================================================
-
-def create_folder(name, parent_id=None):
+def create_folder(name, parent_id=ROOT_DRIVE_FOLDER):
     """
-    Crea una carpeta en Google Drive dentro de 'parent_id' (si se indica).
+    Crea una carpeta en Google Drive dentro de la carpeta raíz (por defecto).
     Devuelve el ID de la carpeta creada.
     """
     service = _build_service()
-    file_metadata = {
+    metadata = {
         "name": name,
         "mimeType": "application/vnd.google-apps.folder",
+        "parents": [parent_id],
     }
-    if parent_id:
-        file_metadata["parents"] = [parent_id]
 
-    folder = service.files().create(body=file_metadata, fields="id").execute()
+    folder = service.files().create(body=metadata, fields="id").execute()
     return folder.get("id")
 
 # =====================================================
 # ⬆️ SUBIR ARCHIVO
 # =====================================================
-
-def upload_file(file_obj, filename, mimetype=None, parent_id=None):
+def upload_file(file_obj, filename, mimetype=None, parent_id=ROOT_DRIVE_FOLDER):
     """
     Sube un archivo al Drive del service account.
-    file_obj: Django UploadedFile (.file)
-    filename: nombre con que se guardará
-    mimetype: tipo MIME (si no se indica se intenta deducir)
-    parent_id: carpeta destino
+    Devuelve un diccionario con {id, webViewLink, webContentLink}.
     """
     service = _build_service()
 
-    # Aseguramos que el archivo se lea desde memoria
-    if hasattr(file_obj, "read"):
-        file_stream = io.BytesIO(file_obj.read())
-    else:
-        raise ValueError("El objeto de archivo no es válido o no tiene método read().")
+    # Asegurar que se pueda leer el archivo
+    if not hasattr(file_obj, "read"):
+        raise ValueError("El objeto de archivo no tiene método read().")
 
-    # Validar tipo MIME
-    mimetype = mimetype or getattr(file_obj, "content_type", "application/octet-stream")
-    if not mimetype or mimetype == "application/octet-stream":
-        # Fallback: intentar inferirlo por extensión
-        import mimetypes
+    file_stream = io.BytesIO(file_obj.read())
+
+    # Detectar tipo MIME
+    mimetype = mimetype or getattr(file_obj, "content_type", None) or "application/octet-stream"
+    if mimetype == "application/octet-stream":
         guessed, _ = mimetypes.guess_type(filename)
         if guessed:
             mimetype = guessed
 
-    # Crear metadata y cuerpo
-    body = {"name": filename}
-    if parent_id:
-        body["parents"] = [parent_id]
-
+    metadata = {"name": filename, "parents": [parent_id]}
     media = MediaIoBaseUpload(file_stream, mimetype=mimetype, resumable=True)
 
     try:
         created = service.files().create(
-            body=body, media_body=media, fields="id, webViewLink, webContentLink"
+            body=metadata, media_body=media, fields="id, webViewLink, webContentLink"
         ).execute()
         file_id = created.get("id")
 
-        # Permitir acceso por enlace (si lo soporta)
-        perm = {"type": "anyone", "role": "reader"}
+        # 🔓 Permitir acceso por enlace (público)
         try:
-            service.permissions().create(fileId=file_id, body=perm).execute()
-        except Exception:
-            pass  # Ignora si el dominio bloquea permisos públicos
+            service.permissions().create(
+                fileId=file_id,
+                body={"type": "anyone", "role": "reader"},
+            ).execute()
+        except Exception as perm_err:
+            print(f"⚠️ No se pudieron asignar permisos públicos: {perm_err}")
 
-        # Obtener URLs finales
-        meta = service.files().get(fileId=file_id, fields="webViewLink, webContentLink").execute()
-
+        # Retornar datos del archivo
         return {
             "id": file_id,
-            "webViewLink": meta.get("webViewLink"),
-            "webContentLink": meta.get("webContentLink"),
+            "webViewLink": created.get("webViewLink"),
+            "webContentLink": created.get("webContentLink"),
         }
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise RuntimeError(f"Error al subir archivo a Google Drive: {str(e)}")
+        raise RuntimeError(f"⚠️ Error al subir archivo a Google Drive: {e}")
 
 # =====================================================
-# ❌ ELIMINAR ARCHIVO
+# ❌ ELIMINAR ARCHIVO O CARPETA
 # =====================================================
-
 def delete_file(file_id):
     """
-    Elimina un archivo del Drive por su ID.
-    Devuelve True si fue exitoso.
+    Elimina un archivo o carpeta del Drive por su ID.
+    Devuelve True si fue exitoso, False si falló.
     """
     service = _build_service()
     try:
         service.files().delete(fileId=file_id).execute()
         return True
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Error eliminando archivo: {e}")
         return False

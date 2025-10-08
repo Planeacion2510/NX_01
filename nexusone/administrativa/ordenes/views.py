@@ -10,7 +10,7 @@ from .forms import OrdenTrabajoForm, DocumentoOrdenForm
 # ===========================
 # 🔹 GOOGLE DRIVE (UTILS CENTRALIZADO)
 # ===========================
-from nexusone.administrativa.ordenes.drive_utils import (
+from nexusone.utils.drive_utils import (
     create_folder,
     upload_file,
     delete_file,
@@ -46,10 +46,10 @@ def crear_orden(request):
         if form.is_valid() and formset.is_valid():
             orden = form.save()
 
-            # Crear carpeta OT en Drive
+            # Crear carpeta OT en Drive (dentro del Shared Drive)
             try:
                 folder_name = f"OT_{orden.numero}"
-                folder_id = create_folder(folder_name, settings.DRIVE_ROOT_FOLDER_ID)
+                folder_id = create_folder(folder_name)  # Ya usa ROOT_DRIVE_FOLDER por defecto
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
                 folder_id = None
@@ -102,10 +102,10 @@ def editar_orden(request, pk):
         if form.is_valid() and formset.is_valid():
             orden = form.save()
 
-            # Crear o reutilizar carpeta OT en Drive
+            # Crear o reutilizar carpeta OT
             try:
                 folder_name = f"OT_{orden.numero}"
-                folder_id = create_folder(folder_name, settings.DRIVE_ROOT_FOLDER_ID)
+                folder_id = create_folder(folder_name)
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
                 folder_id = None
@@ -117,7 +117,7 @@ def editar_orden(request, pk):
                     delete_file(doc.drive_file_id)
                 doc.delete()
 
-            # Subir o actualizar documentos
+            # Subir nuevos documentos
             for f in formset.save(commit=False):
                 f.orden = orden
                 archivo = getattr(f, "archivo", None)
@@ -153,20 +153,27 @@ def editar_orden(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     try:
-        from nexusone.drive_utils import _build_service
+        # Buscar y eliminar la carpeta OT en Drive
+        from nexusone.utils.drive_utils import _build_service
 
         service = _build_service()
-        # Buscar carpeta y eliminar su contenido
-        from googleapiclient.errors import HttpError
-
-        q = f"mimeType='application/vnd.google-apps.folder' and name='OT_{orden.numero}' and '{settings.DRIVE_ROOT_FOLDER_ID}' in parents and trashed=false"
-        folders = service.files().list(q=q, fields="files(id)").execute().get("files", [])
+        query = (
+            f"mimeType='application/vnd.google-apps.folder' "
+            f"and name='OT_{orden.numero}' "
+            f"and '{settings.DRIVE_ROOT_FOLDER_ID}' in parents "
+            f"and trashed=false"
+        )
+        folders = service.files().list(q=query, fields="files(id)").execute().get("files", [])
         if folders:
             folder_id = folders[0]["id"]
+
             # Eliminar archivos dentro
-            children = service.files().list(q=f"'{folder_id}' in parents and trashed=false", fields="files(id)").execute().get("files", [])
+            children = service.files().list(
+                q=f"'{folder_id}' in parents and trashed=false", fields="files(id)"
+            ).execute().get("files", [])
             for c in children:
                 service.files().delete(fileId=c["id"]).execute()
+
             # Eliminar carpeta principal
             service.files().delete(fileId=folder_id).execute()
     except Exception as e:
