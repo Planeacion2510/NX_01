@@ -44,7 +44,7 @@ body {
     height: 60px;
     width: 100%;
     margin-bottom: 2rem;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     border-bottom: 2px solid var(--primary-hover);
 }
 
@@ -66,7 +66,7 @@ h2, .section-title {
     font-weight: bold;
 }
 
-.subtitle, p.subtitle {
+.subtitle {
     text-align: center;
     font-size: 16px;
     color: #555;
@@ -78,7 +78,7 @@ h2, .section-title {
 ================================ */
 .card {
     border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     background: #fff;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: hidden;
@@ -86,7 +86,7 @@ h2, .section-title {
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
 .card-body {
@@ -104,7 +104,7 @@ h2, .section-title {
 }
 
 /* ================================
-   🔹 Botones
+   🔹 Botones generales
 ================================ */
 .btn-modern,
 .btn-primary {
@@ -117,7 +117,6 @@ h2, .section-title {
     border: none;
     border-radius: 10px;
     text-decoration: none;
-    display: inline-block;
     transition: background 0.3s, transform 0.2s;
     cursor: pointer;
 }
@@ -128,6 +127,9 @@ h2, .section-title {
     transform: scale(1.05);
 }
 
+/* ================================
+   🔹 Botones modulares
+================================ */
 .btn-module {
     background: linear-gradient(135deg, #007bff, #0056b3);
     color: white;
@@ -136,19 +138,18 @@ h2, .section-title {
     padding: 12px 28px;
     border-radius: 50px;
     font-size: 1rem;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     transition: all 0.3s ease-in-out;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    text-decoration: none
+    text-decoration: none;
 }
 
 .btn-module:hover {
     background: linear-gradient(135deg, #0056b3, #003f7f);
     transform: translateY(-2px);
-    box-shadow: 0px 6px 12px rgba(0,0,0,0.3);
-    color: #fff;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
 .btn-secondary-module {
@@ -159,19 +160,17 @@ h2, .section-title {
     padding: 10px 22px;
     border-radius: 50px;
     margin-left: 10px;
-    text-decoration: none;
-    transition: all 0.3s ease-in-out;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    text-decoration: none
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
 }
 
 .btn-secondary-module:hover {
     background: var(--primary);
     color: white;
     transform: translateY(-2px);
-    text-decoration: none;
 }
 
 .btn-back {
@@ -182,13 +181,11 @@ h2, .section-title {
     text-decoration: none;
     margin-right: 10px;
     transition: background 0.3s, transform 0.2s;
-    text-decoration: none
 }
 
 .btn-back:hover {
     background: var(--gray-hover);
     transform: scale(1.05);
-    text-decoration: none
 }
 
 .btn-warning-module {
@@ -197,7 +194,6 @@ h2, .section-title {
     font-weight: bold;
     padding: 10px 18px;
     border-radius: 10px;
-    text-decoration: none;
     transition: transform 0.2s ease, background 0.3s;
 }
 
@@ -205,27 +201,43 @@ h2, .section-title {
     background: var(--warning-hover);
     transform: scale(1.05);
     color: #000 !important;
-    text-decoration: none
 }
 
-/* Botones de acción (editar, cerrar, eliminar) */
+/* ================================
+   🔹 Botones de acción (iconos)
+================================ */
 .btn-icon {
-    display: inline-block;
-    padding: 6px 10px;
-    margin: 0 3px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
     border-radius: 6px;
+    background: #f8f9fa;
+    transition: all 0.2s;
     color: white;
     text-decoration: none;
-    transition: transform 0.2s ease;
+    padding: 0;
 }
 
 .btn-icon:hover {
+    background: #e2e6ea;
     transform: scale(1.1);
+}
+
+.btn-icon i {
+    font-size: 16px;
 }
 
 .btn-icon.edit { background: var(--secondary); }
 .btn-icon.close { background: var(--warning); color: black; }
 .btn-icon.delete { background: var(--danger); }
+.btn-icon.folder { background: transparent !important; color: #ffc107; }
+
+.btn-icon.folder:hover {
+    transform: scale(1.2);
+    background: transparent !important;
+}
 
 /* ================================
    🔹 Tablas
@@ -241,7 +253,7 @@ h2, .section-title {
     border-radius: 10px;
     overflow: hidden;
     background: white;
-    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
 .table-modern th {
@@ -263,26 +275,7 @@ h2, .section-title {
     background-color: #f1f5f9;
 }
 
-/* Tabla amarilla */
-.table-modern-yellow {
-    background: #fffbe6;
-    border: 1px solid var(--warning);
-}
-
-.table-modern-yellow th {
-    background: var(--warning);
-    color: #000;
-}
-
-.table-modern-yellow td {
-    border-bottom: 1px solid #fde68a;
-}
-
-.table-modern-yellow tr:hover {
-    background-color: #fef9c3;
-}
-
-/* Tabla verde */
+/* Verde */
 .table-green {
     background: #ecfdf5;
     border: 1px solid #28a745;
@@ -301,50 +294,72 @@ h2, .section-title {
     background-color: #d1fae5;
 }
 
+/* Amarilla */
+.table-modern-yellow {
+    background: #fffbe6;
+    border: 1px solid var(--warning);
+}
+
+.table-modern-yellow th {
+    background: var(--warning);
+    color: #000;
+}
+
+.table-modern-yellow td {
+    border-bottom: 1px solid #fde68a;
+}
+
+.table-modern-yellow tr:hover {
+    background-color: #fef9c3;
+}
+
+/* ================================
+   🔹 Dropdown de documentos
+================================ */
+.dropdown-menu {
+    min-width: 260px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 5px 0;
+    border: none;
+    z-index: 1050;
+}
+
+.dropdown-item {
+    font-size: 14px;
+    padding: 6px 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dropdown-item i {
+    font-size: 14px;
+    color: var(--primary);
+}
+
 /* ================================
    🔹 Logos
 ================================ */
-.login-logos {
+.login-logos, .home-logos {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 50px;
+    gap: 40px;
     margin-top: 25px;
 }
 
-.login-logo {
-    max-height: 90px;
+.login-logo, .home-logos img {
+    height: 80px;
     border-radius: 8px;
     cursor: pointer;
     transition: transform 0.4s ease, filter 0.4s ease;
 }
 
-.login-logo:hover {
+.login-logo:hover, .home-logos img:hover {
     transform: scale(1.15) rotate(2deg);
-    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-.login-logo:active {
-    transform: scale(1.1);
-    filter: brightness(1.1);
-}
-
-.home-logos {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    margin-top: 30px;
-}
-
-.home-logos img {
-    height: 80px;
-    transition: transform 0.4s ease, filter 0.4s ease;
-    cursor: pointer;
-}
-
-.home-logos img:hover {
-    transform: scale(1.2) rotate(3deg);
     filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
 }
 
@@ -363,112 +378,6 @@ footer {
 /* ================================
    🔹 Extras
 ================================ */
-.logout-btn {
-    margin-left: 20px;
-}
-
-.card-body i.text-success {
-    color: #28a745;
-}
-/* ===== Tabla verde ===== */
-.table-green {
-    background: #ecfdf5; /* verde muy claro */
-    border: 1px solid #28a745;
-}
-
-.table-green th {
-    background: #28a745; /* verde fuerte */
-    color: white;
-}
-
-.table-green td {
-    border-bottom: 1px solid #bbf7d0; /* verde pastel */
-}
-
-.table-green tr:hover {
-    background-color: #d1fae5; /* verde suave al pasar */
-}
-.btn-action {
-    width: 40px;         /* ancho fijo */
-    height: 40px;        /* alto fijo */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;   /* bordes redondeados uniformes */
-    font-size: 16px;      /* tamaño del ícono */
-    padding: 0;
-}
-/* ================================
-   🔹 Documentos OT (Carpeta y Dropdown)
-================================ */
-.btn-icon.folder {
-    background: var(--warning);
-    color: black;
-}
-
-.btn-icon.folder:hover {
-    background: var(--warning-hover);
-    transform: scale(1.1);
-}
-
-/* Dropdown de documentos */
-.dropdown-menu {
-    min-width: 220px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    border-radius: 8px;
-    padding: 5px 0;
-    border: none;
-}
-
-.dropdown-item {
-    font-size: 14px;
-    padding: 6px 15px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.dropdown-item i {
-    font-size: 14px;
-    color: var(--primary);
-}
-.dropdown-menu {
-    min-width: 260px;
-    max-height: 300px;
-    overflow-y: auto; /* scroll si hay muchos documentos */
-    z-index: 1050; /* que aparezca por encima de la tabla */
-}
-.dropdown-menu li span {
-    font-size: 14px;
-}
-.btn-group .btn {
-    padding: 2px 6px;
-}
-<style>
-.btn-icon {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
-    background: #f8f9fa;
-    transition: all 0.2s;
-}
-.btn-icon:hover {
-    background: #e2e6ea;
-    transform: scale(1.1);
-}
-.btn-icon i {
-    font-size: 16px;
-}
-.btn-icon.folder {
-    background: transparent !important; /* sin fondo */
-    color: #ffc107;
-}
-.btn-icon.folder:hover {
-    transform: scale(1.2);
-    background: transparent !important;
-}
-</style>
-
+.logout-btn { margin-left: 20px; }
+.card-body i.text-success { color: #28a745; }
+.btn-group .btn { padding: 2px 6px; }
