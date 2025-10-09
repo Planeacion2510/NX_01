@@ -14,7 +14,7 @@ from .drive_utils import upload_file, delete_file
 # =====================================================
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().order_by("-id")
-    return render(request, "ordenes/listar_ordenes.html", {"ordenes": ordenes})
+    return render(request, "ordenes/listar_orden.html", {"ordenes": ordenes})
 
 # =====================================================
 # ➕ CREAR ORDEN
