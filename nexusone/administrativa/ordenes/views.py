@@ -1,8 +1,12 @@
+# ==========================================
+# nexusone/administrativa/ordenes/views.py
+# ==========================================
 import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.forms import inlineformset_factory
 from django.contrib import messages
 from django.conf import settings
+from django.core.paginator import Paginator
 
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm, DocumentoOrdenForm
@@ -16,14 +20,34 @@ from nexusone.utils.drive_utils import (
     delete_file,
 )
 
-# ===========================
-# 🔹 VISTAS
-# ===========================
-def listar_ordenes(request):
-    ordenes = OrdenTrabajo.objects.all().order_by("-id")
+# =====================================================
+# ⚙️ OPTIMIZACIÓN: crear el FormSet una sola vez (no por request)
+# =====================================================
+DocumentoFormSet = inlineformset_factory(
+    OrdenTrabajo, DocumentoOrden, form=DocumentoOrdenForm, extra=1, can_delete=True
+)
 
-    # Generar URLs públicas de cada documento (si tiene drive_file_id)
-    for orden in ordenes:
+# =====================================================
+# 🔹 LISTAR ORDENES (con paginación y optimización)
+# =====================================================
+def listar_ordenes(request):
+    """
+    Lista las órdenes de trabajo con paginación y URLs de Drive pre-generadas.
+    """
+    # Prefetch evita consultas repetidas y reduce RAM
+    ordenes_qs = (
+        OrdenTrabajo.objects.all()
+        .order_by("-id")
+        .prefetch_related("documentos")
+    )
+
+    # Paginación: 20 órdenes por página
+    paginator = Paginator(ordenes_qs, 20)
+    page_number = request.GET.get("page")
+    ordenes_page = paginator.get_page(page_number)
+
+    # Generar URLs públicas solo para las órdenes en la página actual
+    for orden in ordenes_page:
         for doc in orden.documentos.all():
             if getattr(doc, "drive_file_id", None):
                 doc.drive_view_url = f"https://drive.google.com/file/d/{doc.drive_file_id}/view?usp=sharing"
@@ -32,33 +56,38 @@ def listar_ordenes(request):
                 doc.drive_view_url = ""
                 doc.drive_download_url = ""
 
-    return render(request, "administrativa/ordenes/listar_orden.html", {"ordenes": ordenes})
-
-
-def crear_orden(request):
-    DocumentoFormSet = inlineformset_factory(
-        OrdenTrabajo, DocumentoOrden, form=DocumentoOrdenForm, extra=1, can_delete=False
+    return render(
+        request,
+        "administrativa/ordenes/listar_orden.html",
+        {"ordenes": ordenes_page},
     )
 
+
+# =====================================================
+# 🔹 CREAR ORDEN
+# =====================================================
+def crear_orden(request):
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST)
         formset = DocumentoFormSet(request.POST, request.FILES)
+
         if form.is_valid() and formset.is_valid():
             orden = form.save()
 
-            # Crear carpeta OT en Drive (dentro del Shared Drive)
+            # Crear carpeta OT en Drive
+            folder_id = None
             try:
                 folder_name = f"OT_{orden.numero}"
-                folder_id = create_folder(folder_name)  # Ya usa ROOT_DRIVE_FOLDER por defecto
+                folder_id = create_folder(folder_name)
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
-                folder_id = None
 
             # Subir documentos a Drive
             for f in formset:
                 data = f.cleaned_data
                 if not data:
                     continue
+
                 archivo = data.get("archivo")
                 nombre = data.get("nombre") or (archivo.name if archivo else "Documento")
 
@@ -90,25 +119,26 @@ def crear_orden(request):
     )
 
 
+# =====================================================
+# 🔹 EDITAR ORDEN
+# =====================================================
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
-    DocumentoFormSet = inlineformset_factory(
-        OrdenTrabajo, DocumentoOrden, form=DocumentoOrdenForm, extra=1, can_delete=True
-    )
 
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, instance=orden)
         formset = DocumentoFormSet(request.POST, request.FILES, instance=orden)
+
         if form.is_valid() and formset.is_valid():
             orden = form.save()
 
             # Crear o reutilizar carpeta OT
+            folder_id = None
             try:
                 folder_name = f"OT_{orden.numero}"
                 folder_id = create_folder(folder_name)
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
-                folder_id = None
 
             # Eliminar documentos marcados
             for f in formset.deleted_forms:
@@ -150,6 +180,9 @@ def editar_orden(request, pk):
     )
 
 
+# =====================================================
+# 🔹 ELIMINAR ORDEN
+# =====================================================
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     try:
@@ -184,6 +217,9 @@ def eliminar_orden(request, pk):
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
+# =====================================================
+# 🔹 CERRAR ORDEN
+# =====================================================
 def cerrar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
