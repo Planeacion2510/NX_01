@@ -5,7 +5,7 @@ from django.forms import modelformset_factory
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import OrdenTrabajo, Documento
+from .models import OrdenTrabajo
 from .forms import OrdenTrabajoForm, DocumentoForm
 from nexusone.utils.drive_utils import upload_file, delete_file
 
