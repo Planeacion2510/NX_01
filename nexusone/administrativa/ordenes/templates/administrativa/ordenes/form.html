@@ -4,17 +4,17 @@
 {% block content %}
 <div class="container mt-4">
 
-    <!-- Título -->
+    <!-- 🔹 Título -->
     <h2 class="section-title text-center mb-4">
         <i class="fas fa-clipboard-list"></i> {{ title }}
     </h2>
 
-    <!-- Formulario -->
+    <!-- 🔹 Formulario de Orden -->
     <form method="post" enctype="multipart/form-data" class="form-modern">
         {% csrf_token %}
         {{ form.as_p }}
 
-        <!-- Documentos -->
+        <!-- 🔹 Sección de Documentos -->
         <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
         {{ formset.management_form }}
 
@@ -22,16 +22,20 @@
             {% for f in formset %}
                 <div class="mb-3 border rounded p-3 bg-light documento-item">
                     {{ f.id }}
-                    <div class="row">
-                        <div class="col-md-5">
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
                             {{ f.nombre.label_tag }} {{ f.nombre }}
                         </div>
                         <div class="col-md-5">
                             {{ f.archivo.label_tag }} {{ f.archivo }}
                         </div>
-                        <div class="col-md-2 text-center align-self-end">
+                        <div class="col-md-3 text-center">
+                            <!-- ✅ Botón de guardado individual -->
+                            <button type="button" class="btn btn-success guardar-doc-btn">
+                                <i class="fas fa-save"></i> Guardar Documento
+                            </button>
                             {% if f.DELETE %}
-                                <label class="form-check-label text-danger">
+                                <label class="form-check-label text-danger ms-2">
                                     {{ f.DELETE }} Eliminar
                                 </label>
                             {% endif %}
@@ -43,17 +47,17 @@
             {% endfor %}
         </div>
 
-        <!-- Botón añadir documento -->
+        <!-- 🔹 Botón para añadir documentos -->
         <div class="text-center mt-3">
             <button type="button" id="add-document-btn" class="btn btn-outline-primary">
                 <i class="fas fa-plus"></i> Agregar otro documento
             </button>
         </div>
 
-        <!-- Botones -->
+        <!-- 🔹 Botones principales -->
         <div class="form-actions text-center mt-4">
             <button type="submit" class="btn-module">
-                <i class="fas fa-save"></i> Guardar
+                <i class="fas fa-save"></i> Guardar OT
             </button>
             <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn-secondary-module">
                 <i class="fas fa-arrow-left"></i> Cancelar
@@ -62,9 +66,10 @@
     </form>
 </div>
 
-<!-- JS duplicar dinámicamente documentos -->
+<!-- 🔹 Script para duplicar y guardar documentos -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Duplicar formularios de documento
     const addBtn = document.getElementById("add-document-btn");
     const documentosBox = document.getElementById("documentos-box");
     const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
@@ -84,10 +89,56 @@ document.addEventListener("DOMContentLoaded", function() {
         documentosBox.appendChild(emptyForm);
         totalForms.value = newFormIndex + 1;
     });
+
+    // Guardar documento individual (AJAX)
+    documentosBox.addEventListener("click", async function(e) {
+        if (e.target.closest(".guardar-doc-btn")) {
+            const item = e.target.closest(".documento-item");
+            const nombreInput = item.querySelector('input[name$="-nombre"]');
+            const archivoInput = item.querySelector('input[type="file"]');
+            const nombre = nombreInput.value;
+            const archivo = archivoInput.files[0];
+
+            if (!archivo) {
+                alert("⚠️ Selecciona un archivo antes de guardar.");
+                return;
+            }
+
+            // Verificar si estamos creando o editando una orden
+            const ordenId = "{{ orden.id|default:'' }}";
+            if (!ordenId) {
+                alert("⚠️ Primero debes guardar la orden antes de subir documentos.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("nombre", nombre);
+            formData.append("archivo", archivo);
+            formData.append("orden_id", ordenId);
+
+            try {
+                const response = await fetch("{% url 'administrativa:ordenes:subir_documento' %}", {
+                    method: "POST",
+                    body: formData,
+                    headers: { "X-CSRFToken": "{{ csrf_token }}" }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert("✅ Documento guardado correctamente en Drive.");
+                    location.reload();
+                } else {
+                    alert("❌ Error: " + data.error);
+                }
+            } catch (err) {
+                alert("⚠️ Error de red: " + err);
+            }
+        }
+    });
 });
 </script>
 
-<!-- Estilos -->
+<!-- 🔹 Estilos -->
 <style>
 .documentos-box {
     border: 1px solid #ddd;
@@ -105,5 +156,10 @@ document.addEventListener("DOMContentLoaded", function() {
     border-radius: 8px;
     font-weight: 500;
 }
+.guardar-doc-btn {
+    border-radius: 6px;
+    padding: 6px 10px;
+}
 </style>
 {% endblock %}
+
