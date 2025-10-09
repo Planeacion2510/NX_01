@@ -10,7 +10,4 @@ urlpatterns = [
     path("editar/<int:pk>/", views.editar_orden, name="editar_orden"),
     path("cerrar/<int:pk>/", views.cerrar_orden, name="cerrar_orden"),
     path("eliminar/<int:pk>/", views.eliminar_orden, name="eliminar_orden"),
-
-    # ☁️ Subida de documentos individual (botón "Guardar Documento")
-    path("subir_documento/", views.subir_documento, name="subir_documento"),
 ]
