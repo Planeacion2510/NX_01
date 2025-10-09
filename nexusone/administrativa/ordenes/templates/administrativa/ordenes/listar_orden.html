@@ -88,15 +88,26 @@
                                                 <span>{{ doc.nombre|default:doc.archivo.name }}</span>
                                                 <div>
                                                     <!-- Ver -->
-                                                    <a href="{{ doc.archivo.url }}" target="_blank" 
-                                                       class="btn-icon" title="Ver">
-                                                        <i class="fas fa-eye text-primary"></i>
-                                                    </a>
+                                                    {% if doc.drive_view_url %}
+                                                        <a href="{{ doc.drive_view_url }}" target="_blank" class="btn-icon" title="Ver">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                    {% elif doc.archivo %}
+                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon" title="Ver">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                    {% endif %}
+
                                                     <!-- Descargar -->
-                                                    <a href="{{ doc.archivo.url }}" download 
-                                                       class="btn-icon" title="Descargar">
-                                                        <i class="fas fa-download text-success"></i>
-                                                    </a>
+                                                    {% if doc.drive_download_url %}
+                                                        <a href="{{ doc.drive_download_url }}" class="btn-icon" title="Descargar">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+                                                    {% elif doc.archivo %}
+                                                        <a href="{{ doc.archivo.url }}" download class="btn-icon" title="Descargar">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+                                                    {% endif %}
                                                 </div>
                                             </li>
                                         {% endfor %}
