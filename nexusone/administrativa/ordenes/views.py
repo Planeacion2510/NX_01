@@ -7,6 +7,8 @@ from django.forms import inlineformset_factory
 from django.contrib import messages
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm, DocumentoOrdenForm
@@ -14,14 +16,10 @@ from .forms import OrdenTrabajoForm, DocumentoOrdenForm
 # ===========================
 # 🔹 GOOGLE DRIVE (UTILS CENTRALIZADO)
 # ===========================
-from .drive_utils import (
-    create_folder,
-    upload_file,
-    delete_file,
-)
+from .drive_utils import create_folder, upload_file, delete_file
 
 # =====================================================
-# ⚙️ OPTIMIZACIÓN: crear el FormSet una sola vez (no por request)
+# ⚙️ OPTIMIZACIÓN: crear el FormSet una sola vez
 # =====================================================
 DocumentoFormSet = inlineformset_factory(
     OrdenTrabajo, DocumentoOrden, form=DocumentoOrdenForm, extra=1, can_delete=True
@@ -34,19 +32,17 @@ def listar_ordenes(request):
     """
     Lista las órdenes de trabajo con paginación y URLs de Drive pre-generadas.
     """
-    # Prefetch evita consultas repetidas y reduce RAM
     ordenes_qs = (
         OrdenTrabajo.objects.all()
         .order_by("-id")
         .prefetch_related("documentos")
     )
 
-    # Paginación: 20 órdenes por página
     paginator = Paginator(ordenes_qs, 20)
     page_number = request.GET.get("page")
     ordenes_page = paginator.get_page(page_number)
 
-    # Generar URLs públicas solo para las órdenes en la página actual
+    # Agregar URLs de visualización y descarga
     for orden in ordenes_page:
         for doc in orden.documentos.all():
             if getattr(doc, "drive_file_id", None):
@@ -77,8 +73,7 @@ def crear_orden(request):
             # Crear carpeta OT en Drive
             folder_id = None
             try:
-                folder_name = f"OT_{orden.numero}"
-                folder_id = create_folder(folder_name)
+                folder_id = create_folder(f"OT_{orden.numero}")
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
 
@@ -95,7 +90,12 @@ def crear_orden(request):
 
                 if archivo and folder_id:
                     try:
-                        meta = upload_file(archivo, archivo.name, archivo.content_type, parent_id=folder_id)
+                        meta = upload_file(
+                            archivo,
+                            archivo.name,
+                            archivo.content_type,
+                            parent_id=folder_id,
+                        )
                         if meta:
                             doc.drive_file_id = meta["id"]
                             doc.drive_view_url = meta.get("webViewLink")
@@ -135,8 +135,7 @@ def editar_orden(request, pk):
             # Crear o reutilizar carpeta OT
             folder_id = None
             try:
-                folder_name = f"OT_{orden.numero}"
-                folder_id = create_folder(folder_name)
+                folder_id = create_folder(f"OT_{orden.numero}")
             except Exception as e:
                 print("❌ Error creando carpeta en Drive:", e)
 
@@ -154,7 +153,12 @@ def editar_orden(request, pk):
 
                 if archivo and folder_id:
                     try:
-                        meta = upload_file(archivo, archivo.name, archivo.content_type, parent_id=folder_id)
+                        meta = upload_file(
+                            archivo,
+                            archivo.name,
+                            archivo.content_type,
+                            parent_id=folder_id,
+                        )
                         if meta:
                             f.drive_file_id = meta["id"]
                             f.drive_view_url = meta.get("webViewLink")
@@ -186,7 +190,6 @@ def editar_orden(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     try:
-        # Buscar y eliminar la carpeta OT en Drive
         from nexusone.utils.drive_utils import _build_service
 
         service = _build_service()
@@ -226,3 +229,67 @@ def cerrar_orden(request, pk):
     orden.save()
     messages.success(request, "✅ Orden cerrada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
+
+
+# =====================================================
+# 🔹 SUBIR DOCUMENTO INDIVIDUAL (para botón dinámico)
+# =====================================================
+@csrf_exempt
+def subir_documento(request):
+    """
+    Permite subir un documento individualmente desde el formulario de OT
+    sin necesidad de guardar toda la orden.
+    """
+    if request.method == "POST":
+        archivo = request.FILES.get("archivo")
+        nombre = request.POST.get("nombre")
+        orden_id = request.POST.get("orden_id")
+
+        if not archivo or not orden_id:
+            return JsonResponse({"success": False, "error": "Faltan datos para la subida."})
+
+        try:
+            orden = OrdenTrabajo.objects.get(pk=orden_id)
+
+            # Crear carpeta en Drive si no existe
+            folder_id = getattr(orden, "drive_folder_id", None)
+            if not folder_id:
+                try:
+                    folder_id = create_folder(f"OT_{orden.numero}")
+                    orden.drive_folder_id = folder_id
+                    orden.save()
+                except Exception as e:
+                    print("❌ Error creando carpeta en Drive:", e)
+                    return JsonResponse({"success": False, "error": f"No se pudo crear carpeta: {e}"})
+
+            # Subir el archivo a Drive
+            try:
+                meta = upload_file(
+                    archivo,
+                    archivo.name,
+                    archivo.content_type,
+                    parent_id=folder_id,
+                )
+            except Exception as e:
+                print("⚠️ Error subiendo archivo a Drive:", e)
+                return JsonResponse({"success": False, "error": f"No se pudo subir archivo: {e}"})
+
+            # Guardar en BD
+            doc = DocumentoOrden.objects.create(
+                orden=orden,
+                nombre=nombre or archivo.name,
+                drive_file_id=meta["id"],
+                drive_view_url=meta.get("webViewLink"),
+                drive_download_url=meta.get("webContentLink"),
+            )
+
+            print(f"✅ Documento '{doc.nombre}' subido correctamente a Drive.")
+            return JsonResponse({"success": True})
+
+        except OrdenTrabajo.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Orden no encontrada."})
+        except Exception as e:
+            print("⚠️ Error general al subir documento:", e)
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Método no permitido."})
