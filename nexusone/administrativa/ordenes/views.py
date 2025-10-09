@@ -1,9 +1,7 @@
 import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
-
-from .models import OrdenTrabajo
+from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm
 from .drive_utils import upload_file, delete_file
 
@@ -25,16 +23,26 @@ def crear_orden(request):
         if form.is_valid():
             orden = form.save()
 
-            # Subir archivo si se envió alguno
+            # Subir archivo a Drive (si se adjunta)
             archivo = request.FILES.get("archivo")
             if archivo:
-                nombre = f"{orden.numero_ot}_{archivo.name}"
-                result = upload_file(archivo, nombre)
-                orden.archivo_drive_id = result["id"]
-                orden.enlace_drive = result["webViewLink"]
-                orden.save()
+                try:
+                    nombre = f"{orden.numero}_{archivo.name}"
+                    result = upload_file(archivo, nombre)
 
-            messages.success(request, "✅ Orden creada y archivo subido correctamente.")
+                    DocumentoOrden.objects.create(
+                        orden=orden,
+                        nombre=archivo.name,
+                        drive_file_id=result["id"],
+                        drive_view_url=result["webViewLink"],
+                        drive_download_url=result["webContentLink"],
+                    )
+                    messages.success(request, "✅ Orden creada y archivo subido correctamente.")
+                except Exception as e:
+                    messages.error(request, f"⚠️ Error subiendo archivo a Drive: {e}")
+            else:
+                messages.success(request, "✅ Orden creada correctamente (sin archivo).")
+
             return redirect("administrativa:ordenes:listar_ordenes")
         else:
             messages.error(request, "⚠️ Corrige los errores del formulario.")
@@ -57,20 +65,30 @@ def editar_orden(request, pk):
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
         if form.is_valid():
             orden = form.save()
-
-            # Si se sube un nuevo archivo, reemplazar en Drive
             archivo = request.FILES.get("archivo")
+
             if archivo:
-                if orden.archivo_drive_id:
-                    delete_file(orden.archivo_drive_id)
+                doc = orden.documentos.first()
+                if doc and doc.drive_file_id:
+                    delete_file(doc.drive_file_id)
+                    doc.delete()
 
-                nombre = f"{orden.numero_ot}_{archivo.name}"
-                result = upload_file(archivo, nombre)
-                orden.archivo_drive_id = result["id"]
-                orden.enlace_drive = result["webViewLink"]
-                orden.save()
+                try:
+                    nombre = f"{orden.numero}_{archivo.name}"
+                    result = upload_file(archivo, nombre)
+                    DocumentoOrden.objects.create(
+                        orden=orden,
+                        nombre=archivo.name,
+                        drive_file_id=result["id"],
+                        drive_view_url=result["webViewLink"],
+                        drive_download_url=result["webContentLink"],
+                    )
+                    messages.success(request, "✅ Orden actualizada y archivo reemplazado correctamente.")
+                except Exception as e:
+                    messages.error(request, f"⚠️ Error al subir nuevo archivo: {e}")
+            else:
+                messages.success(request, "✅ Orden actualizada correctamente (sin cambiar archivo).")
 
-            messages.success(request, "✅ Orden actualizada correctamente.")
             return redirect("administrativa:ordenes:listar_ordenes")
         else:
             messages.error(request, "⚠️ Corrige los errores del formulario.")
@@ -90,12 +108,16 @@ def editar_orden(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Si tiene archivo en Drive, eliminarlo
-    if orden.archivo_drive_id:
-        delete_file(orden.archivo_drive_id)
+    # Eliminar archivos asociados en Drive
+    for doc in orden.documentos.all():
+        if doc.drive_file_id:
+            delete_file(doc.drive_file_id)
 
+    # Eliminar registros asociados
+    orden.documentos.all().delete()
     orden.delete()
-    messages.success(request, "🗑️ Orden eliminada correctamente.")
+
+    messages.success(request, "🗑️ Orden eliminada correctamente (archivos también eliminados en Drive).")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
@@ -104,8 +126,7 @@ def eliminar_orden(request, pk):
 # =====================================================
 def cerrar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
-    orden.estado = "Cerrada"
+    orden.estado = "cerrada"
     orden.save()
     messages.success(request, "✅ Orden cerrada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
-

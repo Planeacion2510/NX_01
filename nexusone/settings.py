@@ -124,11 +124,6 @@ STATICFILES_DIRS = [BASE_DIR / "nexusone" / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# =========================
-# DESACTIVAR ALMACENAMIENTO LOCAL DE MEDIA
-# =========================
-MEDIA_URL = ""
-MEDIA_ROOT = ""
 
 # =========================
 # DEFAULT AUTO FIELD
@@ -150,7 +145,7 @@ if not DEBUG:
 # GOOGLE DRIVE (Service Account)
 # =========================
 GOOGLE_SERVICE_ACCOUNT_JSON = env("GOOGLE_SERVICE_ACCOUNT_JSON", default="")
-DRIVE_ROOT_FOLDER_ID = env("DRIVE_ROOT_FOLDER_ID", default="1kj0WPnKKSccQHRKX8xGI3hVO7Meb_w4w")
+DRIVE_ROOT_FOLDER_ID = env("DRIVE_ROOT_FOLDER_ID", default="1jwaf_L5vnLEu7tDAmEKhjgt1ApNPHkh8")
 
 SERVICE_ACCOUNT_INFO = None
 if GOOGLE_SERVICE_ACCOUNT_JSON:

@@ -16,81 +16,30 @@
 
         <!-- Documentos -->
         <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
-        {{ formset.management_form }}
-
-        <div id="documentos-box" class="documentos-box">
-            {% for f in formset %}
-                <div class="mb-3 border rounded p-3 bg-light documento-item">
-                    {{ f.id }}
-                    <div class="row align-items-end">
-                        <div class="col-md-5">
-                            {{ f.nombre.label_tag }} {{ f.nombre }}
-                        </div>
-                        <div class="col-md-5">
-                            {{ f.archivo.label_tag }} {{ f.archivo }}
-                        </div>
-                        <div class="col-md-2 text-center align-self-end">
-                            {% if f.DELETE %}
-                                <label class="form-check-label text-danger">
-                                    {{ f.DELETE }} Eliminar
-                                </label>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <p class="text-muted">No hay documentos aún.</p>
-            {% endfor %}
-        </div>
-
-        <!-- Botón añadir documento -->
-        <div class="text-center mt-3">
-            <button type="button" id="add-document-btn" class="btn btn-outline-primary">
-                <i class="fas fa-plus"></i> Agregar otro documento
-            </button>
+        <div class="documentos-box mb-3">
+            <input 
+                type="file" 
+                name="archivos" 
+                id="id_archivos" 
+                class="form-control" 
+                multiple 
+                accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls"
+            >
+            <small class="text-muted">Puedes seleccionar varios archivos a la vez.</small>
         </div>
 
         <!-- Botones -->
         <div class="form-actions text-center mt-4">
-            <button type="submit" class="btn-module">
-                <i class="fas fa-save"></i> Guardar OT
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save"></i> Guardar OT y Subir Documentos
             </button>
-            <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn-secondary-module">
+            <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn btn-secondary px-4">
                 <i class="fas fa-arrow-left"></i> Cancelar
             </a>
         </div>
     </form>
 </div>
 
-<!-- JS duplicar dinámicamente documentos -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const addBtn = document.getElementById("add-document-btn");
-    const documentosBox = document.getElementById("documentos-box");
-    const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
-
-    addBtn.addEventListener("click", function() {
-        const currentForms = parseInt(totalForms.value);
-        const newFormIndex = currentForms;
-        const firstForm = documentosBox.querySelector(".documento-item");
-
-        if (!firstForm) return;
-
-        const emptyForm = firstForm.cloneNode(true);
-        emptyForm.querySelectorAll("input").forEach(input => {
-            if (input.type === "file" || input.type === "text") input.value = "";
-            if (input.type === "checkbox") input.checked = false;
-            input.name = input.name.replace(/-\d+-/, `-${newFormIndex}-`);
-            input.id = input.id.replace(/-\d+-/, `-${newFormIndex}-`);
-        });
-
-        documentosBox.appendChild(emptyForm);
-        totalForms.value = newFormIndex + 1;
-    });
-});
-</script>
-
-<!-- Estilos -->
 <style>
 .documentos-box {
     border: 1px solid #ddd;
@@ -98,13 +47,10 @@ document.addEventListener("DOMContentLoaded", function() {
     padding: 15px;
     background: #f9f9f9;
 }
-.documento-item {
-    transition: all 0.2s ease;
-}
-.documento-item:hover {
+.documentos-box:hover {
     background-color: #f1f7ff;
 }
-.btn-outline-primary {
+.btn-primary, .btn-secondary {
     border-radius: 8px;
     font-weight: 500;
 }
