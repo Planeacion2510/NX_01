@@ -1,7 +1,11 @@
+from dotenv import load_dotenv
 import os
 from pathlib import Path
 import json
 import environ
+
+load_dotenv()
+
 
 # =========================
 # BASE DIR

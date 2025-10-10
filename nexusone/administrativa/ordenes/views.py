@@ -3,7 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm
-from .drive_utils import upload_file, delete_file
+# ✅ Importar funciones de OneDrive
+from nexusone.administrativa.utils.azure_drive import upload_file, delete_file
 
 
 # =====================================================
@@ -23,25 +24,28 @@ def crear_orden(request):
         if form.is_valid():
             orden = form.save()
 
-            # Subir archivo a Drive (si se adjunta)
+            # Subir archivo a OneDrive (si se adjunta)
             archivo = request.FILES.get("archivo")
             if archivo:
                 try:
-                    nombre = f"{orden.numero}_{archivo.name}"
-                    result = upload_file(archivo, nombre)
+                    nombre_archivo = f"{orden.numero}_{archivo.name}"
+                    ruta_remota = f"Ordenes/{orden.numero}/{nombre_archivo}"
+
+                    # Subir archivo a OneDrive
+                    result = upload_file(archivo, ruta_remota)
 
                     DocumentoOrden.objects.create(
                         orden=orden,
                         nombre=archivo.name,
-                        drive_file_id=result["id"],
-                        drive_view_url=result["webViewLink"],
-                        drive_download_url=result["webContentLink"],
+                        drive_file_id=result.get("id"),
+                        drive_view_url=result.get("@microsoft.graph.downloadUrl", ""),
+                        drive_download_url=result.get("@microsoft.graph.downloadUrl", ""),
                     )
-                    messages.success(request, "✅ Orden creada y archivo subido correctamente.")
+                    messages.success(request, "✅ Orden creada y archivo subido correctamente a OneDrive.")
                 except Exception as e:
-                    messages.error(request, f"⚠️ Error subiendo archivo a Drive: {e}")
+                    messages.error(request, f"⚠️ Error subiendo archivo a OneDrive: {e}")
             else:
-                messages.success(request, "✅ Orden creada correctamente (sin archivo).")
+                messages.success(request, "✅ Orden creada correctamente (sin archivo adjunto).")
 
             return redirect("administrativa:ordenes:listar_ordenes")
         else:
@@ -70,24 +74,30 @@ def editar_orden(request, pk):
             if archivo:
                 doc = orden.documentos.first()
                 if doc and doc.drive_file_id:
-                    delete_file(doc.drive_file_id)
-                    doc.delete()
+                    # Eliminar el archivo anterior en OneDrive
+                    try:
+                        delete_file(doc.drive_file_id)
+                        doc.delete()
+                    except Exception as e:
+                        messages.warning(request, f"⚠️ No se pudo eliminar el archivo anterior: {e}")
 
                 try:
-                    nombre = f"{orden.numero}_{archivo.name}"
-                    result = upload_file(archivo, nombre)
+                    nombre_archivo = f"{orden.numero}_{archivo.name}"
+                    ruta_remota = f"Ordenes/{orden.numero}/{nombre_archivo}"
+                    result = upload_file(archivo, ruta_remota)
+
                     DocumentoOrden.objects.create(
                         orden=orden,
                         nombre=archivo.name,
-                        drive_file_id=result["id"],
-                        drive_view_url=result["webViewLink"],
-                        drive_download_url=result["webContentLink"],
+                        drive_file_id=result.get("id"),
+                        drive_view_url=result.get("@microsoft.graph.downloadUrl", ""),
+                        drive_download_url=result.get("@microsoft.graph.downloadUrl", ""),
                     )
-                    messages.success(request, "✅ Orden actualizada y archivo reemplazado correctamente.")
+                    messages.success(request, "✅ Orden actualizada y archivo reemplazado correctamente en OneDrive.")
                 except Exception as e:
-                    messages.error(request, f"⚠️ Error al subir nuevo archivo: {e}")
+                    messages.error(request, f"⚠️ Error subiendo nuevo archivo: {e}")
             else:
-                messages.success(request, "✅ Orden actualizada correctamente (sin cambiar archivo).")
+                messages.success(request, "✅ Orden actualizada correctamente (sin modificar archivo).")
 
             return redirect("administrativa:ordenes:listar_ordenes")
         else:
@@ -108,16 +118,19 @@ def editar_orden(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Eliminar archivos asociados en Drive
+    # Eliminar archivos asociados en OneDrive
     for doc in orden.documentos.all():
         if doc.drive_file_id:
-            delete_file(doc.drive_file_id)
+            try:
+                delete_file(doc.drive_file_id)
+            except Exception as e:
+                messages.warning(request, f"⚠️ No se pudo eliminar un archivo en OneDrive: {e}")
 
-    # Eliminar registros asociados
+    # Eliminar registros asociados en base de datos
     orden.documentos.all().delete()
     orden.delete()
 
-    messages.success(request, "🗑️ Orden eliminada correctamente (archivos también eliminados en Drive).")
+    messages.success(request, "🗑️ Orden eliminada correctamente (archivos también eliminados en OneDrive).")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
