@@ -75,20 +75,22 @@
                     <td class="acciones-cell">
                         <div class="acciones-wrapper">
 
-                            <!-- Carpeta con scroll seguro y ajuste a pantalla -->
-                            <div class="dropdown dropup document-dropdown">
+                            <!-- Carpeta con scroll y flechas -->
+                            <div class="dropdown dropup document-dropdown position-relative">
                                 <a href="#" class="btn-icon folder" title="Documentos" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <i class="fas fa-folder-open"></i>
                                 </a>
 
+                                <!-- Panel desplegable con scroll y flechas -->
                                 <ul class="dropdown-menu show-over-table shadow-lg animate__animated animate__fadeIn"
-                                    style="min-width: 320px; max-height: 320px; overflow: hidden;">
+                                    style="min-width: 320px; max-height: 320px; padding:0;">
 
                                     <li class="dropdown-header text-center fw-bold border-bottom pb-2">
                                         <i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}
                                     </li>
 
-                                    <div style="max-height: 260px; overflow-y: auto;">
+                                    <!-- Contenedor scrollable -->
+                                    <div class="document-scroll" style="max-height: 260px; overflow-y: auto; position: relative;">
                                         {% if ot.documentos.exists %}
                                             {% for doc in ot.documentos.all %}
                                                 <li class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom bg-white">
@@ -109,6 +111,14 @@
                                             <li class="dropdown-item text-muted text-center">No hay documentos</li>
                                         {% endif %}
                                     </div>
+
+                                    <!-- Flechas de navegación -->
+                                    <button class="scroll-up btn btn-light w-100 p-1" style="border:none; cursor:pointer;">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </button>
+                                    <button class="scroll-down btn btn-light w-100 p-1" style="border:none; cursor:pointer;">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
                                 </ul>
                             </div>
 
@@ -172,6 +182,22 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     icon.classList.add('fa-spin'); // animación
     setTimeout(() => { location.reload(); }, 500);
 });
+
+// Scroll flechas documentos
+document.querySelectorAll('.document-dropdown').forEach(drop => {
+    const scrollContainer = drop.querySelector('.document-scroll');
+    const upBtn = drop.querySelector('.scroll-up');
+    const downBtn = drop.querySelector('.scroll-down');
+
+    if(scrollContainer){
+        upBtn.addEventListener('click', () => {
+            scrollContainer.scrollBy({ top: -50, behavior: 'smooth' });
+        });
+        downBtn.addEventListener('click', () => {
+            scrollContainer.scrollBy({ top: 50, behavior: 'smooth' });
+        });
+    }
+});
 </script>
 
 <!-- Estilos -->
@@ -220,12 +246,6 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     color: #333;
     margin-top: 8px;
     text-align: center;
-}
-
-/* Scroll seguro dentro del dropdown */
-.document-dropdown .dropdown-menu > div {
-    max-height: 260px;
-    overflow-y: auto;
 }
 </style>
 {% endblock %}
