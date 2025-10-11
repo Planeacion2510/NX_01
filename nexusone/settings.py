@@ -178,17 +178,14 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
 # =========================
 # 📂 ARCHIVOS DE USUARIO (MEDIA)
 # =========================
-# Esta configuración define dónde se guardarán los archivos subidos (por ejemplo, documentos de OT)
-# y cómo se servirán durante el desarrollo.
+from pathlib import Path
 
-# Ruta local donde se guardarán los archivos subidos
-# ⚠️ IMPORTANTE: actualiza la ruta si tu carpeta tiene otro nombre o ubicación.
-MEDIA_ROOT = r"C:\Users\aux5g\OneDrive\Planeación & Control\Ordenes de Trabajo"
+# En desarrollo local (Windows)
+if os.name == "nt":
+    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/Planeación & Control/Ordenes de Trabajo")
+else:
+    # En Render (Linux)
+    MEDIA_ROOT = BASE_DIR / "media"
 
-# URL pública (solo para entorno de desarrollo)
 MEDIA_URL = "/media/"
-
-# Django servirá los archivos de MEDIA solo cuando DEBUG = True.
-# En producción (Render), normalmente se usa un bucket externo (no es tu caso actual).
-
 ])
