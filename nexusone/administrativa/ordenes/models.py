@@ -1,6 +1,7 @@
 # nexusone/administrativa/ordenes/models.py
 from django.db import models
 from django.utils import timezone
+import os
 
 
 def generar_numero_ot():
@@ -69,26 +70,30 @@ class OrdenTrabajo(models.Model):
 
 def ruta_documento_ot(instance, filename):
     """
-    Ruta lógica (no obligatoria con Drive) para mantener consistencia si se usa FileField.
+    Define la ruta dentro de MEDIA_ROOT donde se almacenarán los archivos.
+    Estructura:
+    Ordenes/<numero_ot>/<tipo_archivo>/<nombre_archivo>
     """
     extension = filename.split(".")[-1].lower()
     if extension in ["jpg", "jpeg", "png", "gif"]:
         subcarpeta = "evidencias"
-    elif extension in ["pdf", "docx", "xlsx", "xls"]:
+    elif extension in ["pdf", "doc", "docx", "xlsx", "xls"]:
         subcarpeta = "documentos"
     else:
         subcarpeta = "otros"
-    return f"OT_{instance.orden.numero}/{subcarpeta}/{filename}"
+
+    # Carpeta final: Ordenes/<numero_ot>/<subcarpeta>/
+    return os.path.join("Ordenes", instance.orden.numero, subcarpeta, filename)
 
 
 class DocumentoOrden(models.Model):
     orden = models.ForeignKey(OrdenTrabajo, related_name="documentos", on_delete=models.CASCADE)
     nombre = models.CharField(max_length=255, default="Documento sin nombre")
-    # archivo se mantiene (opcional) por compatibilidad con formularios antiguos
     archivo = models.FileField(upload_to=ruta_documento_ot, blank=True, null=True)
     fecha_subida = models.DateTimeField(auto_now_add=True)
 
-    # ---- Campos nuevos para Google Drive ----
+    # ✅ Eliminamos campos de Google Drive (ya no son necesarios)
+    # Mantiene compatibilidad con templates y forms antiguos
     drive_file_id = models.CharField(max_length=255, blank=True, null=True)
     drive_view_url = models.URLField(blank=True, null=True)
     drive_download_url = models.URLField(blank=True, null=True)

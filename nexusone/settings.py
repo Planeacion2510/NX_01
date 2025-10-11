@@ -6,7 +6,6 @@ import environ
 
 load_dotenv()
 
-
 # =========================
 # BASE DIR
 # =========================
@@ -128,6 +127,14 @@ STATICFILES_DIRS = [BASE_DIR / "nexusone" / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# =========================
+# 📂 ARCHIVOS MEDIA (OneDrive local)
+# =========================
+MEDIA_URL = "/media/"
+MEDIA_ROOT = r"C:\Users\aux5g\OneDrive\Planeación & Control\Ordenes de Trabajo"
+
+# Crea la carpeta base si no existe
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # =========================
 # DEFAULT AUTO FIELD
@@ -146,7 +153,7 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # =========================
-# GOOGLE DRIVE (Service Account)
+# ⚠️ OBSOLETO: Google Drive (solo mantenido por compatibilidad)
 # =========================
 GOOGLE_SERVICE_ACCOUNT_JSON = env("GOOGLE_SERVICE_ACCOUNT_JSON", default="")
 DRIVE_ROOT_FOLDER_ID = env("DRIVE_ROOT_FOLDER_ID", default="1jwaf_L5vnLEu7tDAmEKhjgt1ApNPHkh8")
@@ -159,7 +166,7 @@ if GOOGLE_SERVICE_ACCOUNT_JSON:
         SERVICE_ACCOUNT_INFO = None
         print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON no es un JSON válido.")
 else:
-    print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON no está configurado en Render.")
+    print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON no está configurado en Render (no se usará).")
 
 # =========================
 # CSRF TRUSTED ORIGINS
@@ -168,4 +175,20 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://nexusone.onrender.com",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
+# =========================
+# 📂 ARCHIVOS DE USUARIO (MEDIA)
+# =========================
+# Esta configuración define dónde se guardarán los archivos subidos (por ejemplo, documentos de OT)
+# y cómo se servirán durante el desarrollo.
+
+# Ruta local donde se guardarán los archivos subidos
+# ⚠️ IMPORTANTE: actualiza la ruta si tu carpeta tiene otro nombre o ubicación.
+MEDIA_ROOT = r"C:\Users\aux5g\OneDrive\Planeación & Control\Ordenes de Trabajo"
+
+# URL pública (solo para entorno de desarrollo)
+MEDIA_URL = "/media/"
+
+# Django servirá los archivos de MEDIA solo cuando DEBUG = True.
+# En producción (Render), normalmente se usa un bucket externo (no es tu caso actual).
+
 ])
