@@ -381,3 +381,42 @@ footer {
 .logout-btn { margin-left: 20px; }
 .card-body i.text-success { color: #28a745; }
 .btn-group .btn { padding: 2px 6px; }
+
+/* ===============================
+   📁 Dropdown sobre la tabla
+================================ */
+.document-dropdown {
+    position: relative;
+}
+
+.show-over-table {
+    position: absolute !important;
+    z-index: 9999 !important; /* sobresale de todo */
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(10px);
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    padding: 0;
+}
+
+.show-over-table li:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-icon-mini {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f3f3;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+.btn-icon-mini:hover {
+    background: #e2e6ea;
+    transform: scale(1.1);
+}

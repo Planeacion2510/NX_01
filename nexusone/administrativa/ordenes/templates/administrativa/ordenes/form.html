@@ -16,6 +16,29 @@
 
         <!-- Documentos -->
         <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
+
+        <!-- 🗂️ Lista de documentos actuales -->
+        {% if orden and orden.documentos.exists %}
+            <div class="documentos-box mb-3">
+                <h5><i class="fas fa-file-alt"></i> Archivos actuales:</h5>
+                <ul class="list-unstyled mb-2">
+                    {% for doc in orden.documentos.all %}
+                        <li class="d-flex justify-content-between align-items-center border-bottom py-1">
+                            <a href="{{ doc.archivo.url }}" target="_blank">
+                                <i class="fas fa-paperclip text-primary"></i> {{ doc.nombre }}
+                            </a>
+                            <a href="{% url 'administrativa:ordenes:eliminar_documento' doc.id %}" 
+                               class="text-danger small"
+                               onclick="return confirm('¿Seguro que deseas eliminar este archivo?');">
+                                <i class="fas fa-trash"></i> eliminar
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- 📎 Subir nuevos archivos -->
         <div class="documentos-box mb-3">
             <input 
                 type="file" 
@@ -25,7 +48,7 @@
                 multiple 
                 accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls"
             >
-            <small class="text-muted">Puedes seleccionar varios archivos a la vez.</small>
+            <small class="text-muted">Puedes seleccionar varios archivos a la vez. Los nuevos se agregarán a la lista.</small>
         </div>
 
         <!-- Botones -->

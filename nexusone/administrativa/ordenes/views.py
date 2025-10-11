@@ -2,6 +2,9 @@ import os
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm
 
@@ -72,12 +75,7 @@ def editar_orden(request, pk):
                 carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
                 os.makedirs(carpeta_ot, exist_ok=True)
 
-                # Eliminar documentos previos
-                for doc in orden.documentos.all():
-                    if doc.archivo and os.path.exists(doc.archivo.path):
-                        os.remove(doc.archivo.path)
-                    doc.delete()
-
+                # Agregar nuevos archivos (sin borrar los anteriores)
                 for archivo in archivos:
                     ruta_archivo = os.path.join(carpeta_ot, archivo.name)
                     with open(ruta_archivo, "wb+") as destino:
@@ -90,9 +88,9 @@ def editar_orden(request, pk):
                         archivo=f"Ordenes/{orden.numero}/{archivo.name}"
                     )
 
-                messages.success(request, "✅ Orden actualizada y archivos reemplazados correctamente.")
+                messages.success(request, "✅ Archivos agregados correctamente.")
             else:
-                messages.success(request, "✅ Orden actualizada correctamente (sin modificar archivos).")
+                messages.success(request, "✅ Orden actualizada correctamente.")
 
             return redirect("administrativa:ordenes:listar_ordenes")
         else:
@@ -108,12 +106,26 @@ def editar_orden(request, pk):
 
 
 # =====================================================
-# ❌ ELIMINAR ORDEN
+# ❌ ELIMINAR DOCUMENTO INDIVIDUAL
+# =====================================================
+def eliminar_documento(request, pk):
+    doc = get_object_or_404(DocumentoOrden, pk=pk)
+    orden_id = doc.orden.id
+
+    if doc.archivo and os.path.exists(doc.archivo.path):
+        os.remove(doc.archivo.path)
+
+    doc.delete()
+    messages.success(request, "🗑️ Documento eliminado correctamente.")
+    return HttpResponseRedirect(reverse("administrativa:ordenes:editar_orden", args=[orden_id]))
+
+
+# =====================================================
+# ❌ ELIMINAR ORDEN COMPLETA
 # =====================================================
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Eliminar archivos locales
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
     if os.path.exists(carpeta_ot):
         for root, dirs, files in os.walk(carpeta_ot, topdown=False):
@@ -123,7 +135,6 @@ def eliminar_orden(request, pk):
                 os.rmdir(os.path.join(root, dir))
         os.rmdir(carpeta_ot)
 
-    # Eliminar registros de BD
     orden.documentos.all().delete()
     orden.delete()
 
