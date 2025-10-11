@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-import json
 import environ
 
 load_dotenv()
@@ -128,12 +127,18 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # =========================
-# 📂 ARCHIVOS MEDIA (OneDrive local)
+# 📂 ARCHIVOS DE USUARIO (MEDIA)
 # =========================
-MEDIA_URL = "/media/"
-MEDIA_ROOT = r"C:\Users\aux5g\OneDrive\Planeación & Control\Ordenes de Trabajo"
+# ✅ En Windows (local) → carpeta OneDrive compartida
+# ✅ En Render (Linux) → carpeta /media dentro del proyecto
+if os.name == "nt":
+    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/Planeación & Control/Ordenes de Trabajo")
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
 
-# Crea la carpeta base si no existe
+MEDIA_URL = "/media/"
+
+# Crea la carpeta base si no existe (solo si se ejecuta localmente)
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # =========================
@@ -153,39 +158,10 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # =========================
-# ⚠️ OBSOLETO: Google Drive (solo mantenido por compatibilidad)
-# =========================
-GOOGLE_SERVICE_ACCOUNT_JSON = env("GOOGLE_SERVICE_ACCOUNT_JSON", default="")
-DRIVE_ROOT_FOLDER_ID = env("DRIVE_ROOT_FOLDER_ID", default="1jwaf_L5vnLEu7tDAmEKhjgt1ApNPHkh8")
-
-SERVICE_ACCOUNT_INFO = None
-if GOOGLE_SERVICE_ACCOUNT_JSON:
-    try:
-        SERVICE_ACCOUNT_INFO = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
-    except json.JSONDecodeError:
-        SERVICE_ACCOUNT_INFO = None
-        print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON no es un JSON válido.")
-else:
-    print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON no está configurado en Render (no se usará).")
-
-# =========================
 # CSRF TRUSTED ORIGINS
 # =========================
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://nexusone.onrender.com",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-# =========================
-# 📂 ARCHIVOS DE USUARIO (MEDIA)
-# =========================
-from pathlib import Path
-
-# En desarrollo local (Windows)
-if os.name == "nt":
-    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/Planeación & Control/Ordenes de Trabajo")
-else:
-    # En Render (Linux)
-    MEDIA_ROOT = BASE_DIR / "media"
-
-MEDIA_URL = "/media/"
 ])
