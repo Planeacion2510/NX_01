@@ -75,50 +75,39 @@
                     <td class="acciones-cell">
                         <div class="acciones-wrapper">
 
-                            <!-- Carpeta con scroll y flechas -->
-                            <div class="dropdown dropup document-dropdown position-relative">
+                            <!-- Carpeta -->
+                            <div class="dropdown dropup document-dropdown">
                                 <a href="#" class="btn-icon folder" title="Documentos" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <i class="fas fa-folder-open"></i>
                                 </a>
 
-                                <!-- Panel desplegable con scroll y flechas -->
+                                <!-- Panel desplegable con scroll seguro -->
                                 <ul class="dropdown-menu show-over-table shadow-lg animate__animated animate__fadeIn"
-                                    style="min-width: 320px; max-height: 320px; padding:0;">
-
-                                    <li class="dropdown-header text-center fw-bold border-bottom pb-2">
+                                    style="min-width: 320px; max-height: 350px; overflow-y: auto; padding: 0;">
+                                    
+                                    <li class="dropdown-header text-center fw-bold border-bottom py-2">
                                         <i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}
                                     </li>
 
-                                    <!-- Contenedor scrollable -->
-                                    <div class="document-scroll" style="max-height: 260px; overflow-y: auto; position: relative;">
-                                        {% if ot.documentos.exists %}
-                                            {% for doc in ot.documentos.all %}
-                                                <li class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom bg-white">
-                                                    <span class="text-truncate" style="max-width: 200px;">📄 {{ doc.nombre }}</span>
-                                                    <div class="d-flex gap-2">
-                                                        {% if doc.archivo %}
-                                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
-                                                                <i class="fas fa-eye text-primary"></i>
-                                                            </a>
-                                                            <a href="{{ doc.archivo.url }}" download class="btn-icon-mini" title="Descargar">
-                                                                <i class="fas fa-download text-success"></i>
-                                                            </a>
-                                                        {% endif %}
-                                                    </div>
-                                                </li>
-                                            {% endfor %}
-                                        {% else %}
-                                            <li class="dropdown-item text-muted text-center">No hay documentos</li>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Flechas de navegación -->
-                                    <button class="scroll-up btn btn-light w-100 p-1" style="border:none; cursor:pointer;">
-                                        <i class="fas fa-chevron-up"></i>
-                                    </button>
-                                    <button class="scroll-down btn btn-light w-100 p-1" style="border:none; cursor:pointer;">
-                                        <i class="fas fa-chevron-down"></i>
-                                    </button>
+                                    {% if ot.documentos.exists %}
+                                        {% for doc in ot.documentos.all %}
+                                            <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-white">
+                                                <span class="text-truncate" style="max-width: 220px;">📄 {{ doc.nombre|default:doc.archivo.name }}</span>
+                                                <div class="d-flex gap-2">
+                                                    {% if doc.archivo %}
+                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                        <a href="{{ doc.archivo.url }}" download class="btn-icon-mini" title="Descargar">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        <li class="dropdown-item text-muted text-center py-2">No hay documentos</li>
+                                    {% endif %}
                                 </ul>
                             </div>
 
@@ -182,22 +171,6 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     icon.classList.add('fa-spin'); // animación
     setTimeout(() => { location.reload(); }, 500);
 });
-
-// Scroll flechas documentos
-document.querySelectorAll('.document-dropdown').forEach(drop => {
-    const scrollContainer = drop.querySelector('.document-scroll');
-    const upBtn = drop.querySelector('.scroll-up');
-    const downBtn = drop.querySelector('.scroll-down');
-
-    if(scrollContainer){
-        upBtn.addEventListener('click', () => {
-            scrollContainer.scrollBy({ top: -50, behavior: 'smooth' });
-        });
-        downBtn.addEventListener('click', () => {
-            scrollContainer.scrollBy({ top: 50, behavior: 'smooth' });
-        });
-    }
-});
 </script>
 
 <!-- Estilos -->
@@ -246,6 +219,11 @@ document.querySelectorAll('.document-dropdown').forEach(drop => {
     color: #333;
     margin-top: 8px;
     text-align: center;
+}
+
+/* Scroll interno dropdown documentos */
+.document-dropdown .dropdown-menu {
+    padding: 0;
 }
 </style>
 {% endblock %}
