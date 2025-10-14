@@ -12,16 +12,7 @@
             <a href="{% url 'administrativa:ordenes:crear_orden' %}" class="btn-module">
                 <i class="fas fa-plus"></i> Nueva OT
             </a>
-            <button id="refresh-btn" class="btn-module btn-refresh">
-                <i class="fas fa-sync-alt"></i> Actualizar
-            </button>
         </div>
-        <div id="clock" class="clock-display mt-3"></div>
-    </div>
-
-    <div class="stats-box text-center mb-4">
-        <span class="me-4">😀 <strong>Cierres a tiempo:</strong> {{ cierres_a_tiempo }}</span>
-        <span>😞 <strong>Cierres tardíos:</strong> {{ cierres_tardios }}</span>
     </div>
 
     <div class="table-container">
@@ -36,7 +27,6 @@
                     <th>Fecha Apertura</th>
                     <th>Fecha Envío</th>
                     <th>Estado</th>
-                    <th>Fecha Cierre</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -48,58 +38,23 @@
                     <td>{{ ot.get_proyecto_display }}</td>
                     <td>{{ ot.get_proceso_display }}</td>
                     <td>{{ ot.descripcion }}</td>
-                    <td>{{ ot.fecha_apertura|date:"d/m/Y H:i" }}</td>
+                    <td>{{ ot.fecha_apertura|date:"d/m/Y" }}</td>
                     <td>{{ ot.fecha_envio|date:"d/m/Y" }}</td>
+                    <td>{{ ot.get_estado_display }}</td>
                     <td>
-                        <span class="badge 
-                            {% if ot.estado == 'abierta' %}bg-warning
-                            {% elif ot.estado == 'en_proceso' %}bg-info
-                            {% else %}bg-success{% endif %}">
-                            {{ ot.get_estado_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if ot.fecha_cierre %}
-                            {{ ot.fecha_cierre|date:"d/m/Y" }}
-                            {% if ot.cierre_a_tiempo %} 😀 {% else %} 😞 {% endif %}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="acciones-wrapper">
-                            <!-- 📂 BOTÓN DOCUMENTOS -->
-                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}')">
-                                <i class="fas fa-folder-open"></i>
-                            </button>
+                        <!-- 📂 Botón de documentos -->
+                        <button class="btn-icon folder" onclick="openModal('{{ ot.id }}')">
+                            <i class="fas fa-folder-open"></i>
+                        </button>
 
-                            {% if ot.estado != "cerrada" %}
-                                <a href="{% url 'administrativa:ordenes:editar_orden' ot.id %}" class="btn-icon edit" title="Editar">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </a>
-                                <a href="{% url 'administrativa:ordenes:cerrar_orden' ot.id %}" class="btn-icon close" title="Cerrar"
-                                   onclick="return confirm('¿Seguro que deseas cerrar esta OT?');">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                            {% else %}
-                                <span class="btn-icon edit disabled" title="Editar bloqueado">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </span>
-                            {% endif %}
-
-                            <a href="{% url 'administrativa:ordenes:eliminar_orden' ot.id %}" class="btn-icon delete" title="Eliminar"
-                               onclick="return confirm('¿Seguro que deseas eliminar esta OT?');">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-
-                        <!-- MODAL DE DOCUMENTOS -->
-                        <div id="modal-{{ ot.id }}" class="document-modal">
-                            <div class="document-modal-content">
-                                <div class="document-modal-header">
+                        <!-- Modal de documentos -->
+                        <div id="docModal-{{ ot.id }}" class="modal-doc">
+                            <div class="modal-doc-content">
+                                <div class="modal-doc-header">
                                     <h5><i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}</h5>
-                                    <button class="document-modal-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
+                                    <button class="modal-doc-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
                                 </div>
+
                                 <ul class="document-list">
                                     {% if ot.documentos.exists %}
                                         {% for doc in ot.documentos.all %}
@@ -118,7 +73,7 @@
                                             </li>
                                         {% endfor %}
                                     {% else %}
-                                        <li class="text-muted text-center py-3">No hay documentos</li>
+                                        <li class="text-muted text-center py-3">No hay documentos cargados</li>
                                     {% endif %}
                                 </ul>
                             </div>
@@ -126,26 +81,23 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="10" class="text-center">No hay órdenes registradas.</td></tr>
+                <tr><td colspan="9" class="text-center">No hay órdenes registradas</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
-    <div class="text-center my-5">
-        <img src="{% static 'img/logo1.png' %}" alt="NexusOne" height="90" class="mx-4 logo-animado">
-        <img src="{% static 'img/logo2.png' %}" alt="Empresa Aliada" height="90" class="mx-4 logo-animado">
-    </div>
 </div>
 
+<!-- Script del modal -->
 <script>
 function openModal(id) {
-    document.getElementById('modal-' + id).classList.add('active');
+    document.getElementById('docModal-' + id).classList.add('active');
 }
 function closeModal(id) {
-    document.getElementById('modal-' + id).classList.remove('active');
+    document.getElementById('docModal-' + id).classList.remove('active');
 }
-document.querySelectorAll('.document-modal').forEach(m => {
+// cerrar al hacer clic fuera del cuadro
+document.querySelectorAll('.modal-doc').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
 });
 </script>
