@@ -79,16 +79,18 @@
                                 <a href="#" class="btn-icon folder" title="Documentos" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                     <i class="fas fa-folder-open"></i>
                                 </a>
+
+                                <!-- Contenedor expandible sin scroll -->
                                 <ul class="dropdown-menu show-over-table shadow-lg animate__animated animate__fadeIn"
-                                    style="min-width: 320px; max-width: 360px; padding: 0;">
+                                    style="min-width: 340px; max-width: 380px; padding: 0;">
                                     <li class="dropdown-header text-center fw-bold border-bottom py-2">
                                         <i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}
                                     </li>
 
                                     {% if ot.documentos.exists %}
                                         {% for doc in ot.documentos.all %}
-                                            <li class="doc-item d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-white">
-                                                <span class="text-truncate" style="max-width: 220px;">📄 {{ doc.nombre|default:doc.archivo.name }}</span>
+                                            <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-white doc-item">
+                                                <span class="text-truncate" style="max-width: 240px;">📄 {{ doc.nombre|default:doc.archivo.name }}</span>
                                                 <div class="d-flex gap-2">
                                                     {% if doc.archivo %}
                                                         <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
@@ -101,9 +103,6 @@
                                                 </div>
                                             </li>
                                         {% endfor %}
-                                        <li class="text-center py-2 bg-light border-top toggle-docs" style="cursor: pointer;">
-                                            <span class="text-primary fw-bold ver-mas">Ver más...</span>
-                                        </li>
                                     {% else %}
                                         <li class="dropdown-item text-muted text-center py-2">No hay documentos</li>
                                     {% endif %}
@@ -168,25 +167,6 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     icon.classList.add('fa-spin');
     setTimeout(() => { location.reload(); }, 500);
 });
-
-// 👇 Ver más / Ver menos documentos
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".dropdown-menu").forEach(menu => {
-        const docs = menu.querySelectorAll(".doc-item");
-        const toggle = menu.querySelector(".toggle-docs");
-        if (docs.length > 3) {
-            docs.forEach((doc, i) => { if (i >= 3) doc.style.display = "none"; });
-            toggle.style.display = "block";
-            toggle.addEventListener("click", () => {
-                const isHidden = docs[3].style.display === "none";
-                docs.forEach((doc, i) => { if (i >= 3) doc.style.display = isHidden ? "flex" : "none"; });
-                toggle.querySelector(".ver-mas").textContent = isHidden ? "Ver menos..." : "Ver más...";
-            });
-        } else {
-            toggle?.remove();
-        }
-    });
-});
 </script>
 
 <!-- Estilos -->
@@ -205,6 +185,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 .clock-display { font-size: 1.1rem; font-weight: 500; color: #333; margin-top: 8px; text-align: center; }
 
-.document-dropdown .dropdown-menu { padding: 0; }
+/* 📁 Dropdown ahora sin scroll, crece automáticamente */
+.document-dropdown .dropdown-menu {
+    padding: 0;
+}
+.doc-item {
+    white-space: nowrap;
+}
 </style>
 {% endblock %}
