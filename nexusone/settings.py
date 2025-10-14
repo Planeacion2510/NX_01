@@ -3,21 +3,29 @@ import os
 from pathlib import Path
 import environ
 
+# =========================
+# CARGAR VARIABLES DE ENTORNO
+# =========================
 load_dotenv()
 
-# =========================
-# BASE DIR
-# =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =========================
-# ENVIRONMENT VARIABLES
-# =========================
+# Configurar entorno
 env = environ.Env(DEBUG=(bool, False))
+
+# Archivos .env
 env_file = os.path.join(BASE_DIR, ".env")
-if os.path.exists(env_file):
+env_local = os.path.join(BASE_DIR, ".env.local")
+
+# 🧠 Prioriza .env.local si existe (para tu PC)
+if os.path.exists(env_local):
+    environ.Env.read_env(env_local)
+elif os.path.exists(env_file):
     environ.Env.read_env(env_file)
 
+# =========================
+# CONFIGURACIÓN BÁSICA
+# =========================
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="clave-dev")
 DEBUG = env.bool("DEBUG", default=False)
 
@@ -132,13 +140,13 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # ✅ En Windows (local) → carpeta OneDrive compartida
 # ✅ En Render (Linux) → carpeta /media dentro del proyecto
 if os.name == "nt":
-    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/Planeación & Control/Ordenes de Trabajo")
+    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/DinnovaERP")
+    MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 else:
     MEDIA_ROOT = BASE_DIR / "media"
+    MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 
-MEDIA_URL = "/media/"
-
-# Crea la carpeta base si no existe (solo si se ejecuta localmente)
+# Crear la carpeta base si no existe
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # =========================
@@ -147,7 +155,7 @@ os.makedirs(MEDIA_ROOT, exist_ok=True)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
-# SEGURIDAD (solo forzado en producción)
+# SEGURIDAD (solo en producción)
 # =========================
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -162,6 +170,7 @@ if not DEBUG:
 # =========================
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "https://nexusone.onrender.com",
+    "https://nx-01.onrender.com",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ])
