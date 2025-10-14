@@ -74,7 +74,7 @@
                     <td class="acciones-cell">
                         <div class="acciones-wrapper">
 
-                            <!-- Dropdown de Documentos -->
+                            <!-- Dropdown Documentos -->
                             <div class="dropdown dropup document-dropdown">
                                 <a href="#" class="btn-icon folder" title="Documentos" data-bs-toggle="dropdown">
                                     <i class="fas fa-folder-open"></i>
@@ -87,23 +87,23 @@
                                         <i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}
                                     </li>
 
-                                    {% if ot.documentoorden_set.all %}
-                                        {% for doc in ot.documentoorden_set.all %}
+                                    {% if ot.documentos.exists %}
+                                        {% for doc in ot.documentos.all %}
                                             <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                                                 <span class="text-truncate" style="max-width: 200px;">
                                                     📄 {{ doc.nombre|default:doc.archivo.name }}
                                                 </span>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
-                                                        <i class="fas fa-eye text-primary"></i>
-                                                    </a>
-                                                    <a href="{{ doc.archivo.url }}" download class="btn-icon-mini" title="Descargar">
-                                                        <i class="fas fa-download text-success"></i>
-                                                    </a>
+                                                    {% if doc.archivo %}
+                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                        <a href="{{ doc.archivo.url }}" download class="btn-icon-mini" title="Descargar">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+                                                    {% endif %}
                                                 </div>
                                             </li>
-                                        {% empty %}
-                                            <li class="dropdown-item text-muted text-center py-2">No hay documentos</li>
                                         {% endfor %}
                                     {% else %}
                                         <li class="dropdown-item text-muted text-center py-2">Sin documentos</li>
@@ -209,4 +209,3 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
 }
 </style>
 {% endblock %}
-
