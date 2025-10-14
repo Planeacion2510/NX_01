@@ -314,12 +314,15 @@ h2, .section-title {
 }
 
 /* ================================
-   🔹 Dropdown de documentos
+   🔹 Dropdown de documentos (AJUSTADO)
 ================================ */
 .dropdown-menu {
     min-width: 260px;
-    max-height: 300px;
-    overflow-y: auto;
+    /* 🔧 Eliminado el límite de altura */
+    /* max-height: 300px; */
+    /* overflow-y: auto; */
+    overflow: visible;
+    max-height: none;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 8px;
     padding: 5px 0;
@@ -416,6 +419,7 @@ footer {
     border-radius: 5px;
     transition: all 0.2s ease;
 }
+
 .btn-icon-mini:hover {
     background: #e2e6ea;
     transform: scale(1.1);
