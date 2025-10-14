@@ -1,6 +1,6 @@
-/* ================================
-   🎨 Variables globales
-================================ */
+/* ============================================
+   🎨 VARIABLES GLOBALES
+============================================ */
 :root {
     --primary: #007bff;
     --primary-hover: #0056b3;
@@ -17,9 +17,9 @@
     --text: #333;
 }
 
-/* ================================
-   🔹 Reset & Base
-================================ */
+/* ============================================
+   🔹 BASE Y RESETEO
+============================================ */
 body {
     background-color: var(--light-bg);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,9 +28,9 @@ body {
     padding: 0;
 }
 
-/* ================================
-   🔹 Layout & Contenedores
-================================ */
+/* ============================================
+   🔹 LAYOUT GENERAL
+============================================ */
 .container {
     display: flex;
     flex-direction: column;
@@ -38,8 +38,7 @@ body {
     justify-content: center;
 }
 
-.top-bar,
-.barra-superior {
+.top-bar, .barra-superior {
     background: var(--primary);
     height: 60px;
     width: 100%;
@@ -48,93 +47,26 @@ body {
     border-bottom: 2px solid var(--primary-hover);
 }
 
-/* ================================
-   🔹 Tipografía & Encabezados
-================================ */
-h1 {
-    font-size: 28px;
+/* ============================================
+   🔹 TEXTOS Y ENCABEZADOS
+============================================ */
+h1, h2, .section-title {
     text-align: center;
-    margin: 20px 0 0.5rem 0;
     color: var(--dark);
 }
 
-h2, .section-title {
-    text-align: center;
-    margin: 30px 0 15px 0;
-    font-size: 22px;
-    color: #1f2937;
-    font-weight: bold;
-}
+h1 { font-size: 28px; margin: 20px 0 0.5rem 0; }
+h2.section-title { margin: 30px 0 15px 0; font-size: 22px; font-weight: bold; }
 
-.subtitle {
-    text-align: center;
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 20px;
-}
+.subtitle { text-align: center; font-size: 16px; color: #555; margin-bottom: 20px; }
 
-/* ================================
-   🔹 Tarjetas (Cards)
-================================ */
-.card {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    background: #fff;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-}
-
-.card-body {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.card-header-bar {
-    background-color: #28a745;
-    height: 8px;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-}
-
-/* ================================
-   🔹 Botones generales
-================================ */
-.btn-modern,
-.btn-primary {
-    background-color: var(--primary);
-    color: #fff;
-    font-size: 18px;
-    font-weight: bold;
-    padding: 12px 25px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 10px;
-    text-decoration: none;
-    transition: background 0.3s, transform 0.2s;
-    cursor: pointer;
-}
-
-.btn-modern:hover,
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-    transform: scale(1.05);
-}
-
-/* ================================
-   🔹 Botones modulares
-================================ */
+/* ============================================
+   🔹 BOTONES
+============================================ */
 .btn-module {
-    background: linear-gradient(135deg, #007bff, #0056b3);
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white;
     font-weight: bold;
-    border: none;
     padding: 12px 28px;
     border-radius: 50px;
     font-size: 1rem;
@@ -144,108 +76,36 @@ h2, .section-title {
     align-items: center;
     gap: 8px;
     text-decoration: none;
+    border: none;
 }
-
 .btn-module:hover {
-    background: linear-gradient(135deg, #0056b3, #003f7f);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-}
-
-.btn-secondary-module {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    font-weight: 500;
-    padding: 10px 22px;
-    border-radius: 50px;
-    margin-left: 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease-in-out;
-    text-decoration: none;
-}
-
-.btn-secondary-module:hover {
-    background: var(--primary);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-hover), #003f7f);
     transform: translateY(-2px);
 }
 
-.btn-back {
-    background: var(--gray);
-    color: white !important;
-    padding: 10px 18px;
-    border-radius: 10px;
-    text-decoration: none;
-    margin-right: 10px;
-    transition: background 0.3s, transform 0.2s;
-}
-
-.btn-back:hover {
-    background: var(--gray-hover);
-    transform: scale(1.05);
-}
-
-.btn-warning-module {
-    background: var(--warning);
-    color: #000 !important;
-    font-weight: bold;
-    padding: 10px 18px;
-    border-radius: 10px;
-    transition: transform 0.2s ease, background 0.3s;
-}
-
-.btn-warning-module:hover {
-    background: var(--warning-hover);
-    transform: scale(1.05);
-    color: #000 !important;
-}
-
-/* ================================
-   🔹 Botones de acción (iconos)
-================================ */
+/* Botones de acción */
 .btn-icon {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: 6px;
     background: #f8f9fa;
     transition: all 0.2s;
-    color: white;
-    text-decoration: none;
-    padding: 0;
 }
+.btn-icon i { font-size: 16px; }
+.btn-icon:hover { background: #e2e6ea; transform: scale(1.1); }
 
-.btn-icon:hover {
-    background: #e2e6ea;
-    transform: scale(1.1);
-}
-
-.btn-icon i {
-    font-size: 16px;
-}
-
-.btn-icon.edit { background: var(--secondary); }
+.btn-icon.edit { background: var(--secondary); color: white; }
 .btn-icon.close { background: var(--warning); color: black; }
-.btn-icon.delete { background: var(--danger); }
-.btn-icon.folder { background: transparent !important; color: #ffc107; }
+.btn-icon.delete { background: var(--danger); color: white; }
+.btn-icon.folder { color: #ffc107; background: transparent !important; }
+.btn-icon.folder:hover { transform: scale(1.2); }
 
-.btn-icon.folder:hover {
-    transform: scale(1.2);
-    background: transparent !important;
-}
-
-/* ================================
-   🔹 Tablas
-================================ */
-.table-container {
-    overflow-x: auto;
-    margin-top: 20px;
-}
+/* ============================================
+   🔹 TABLAS
+============================================ */
+.table-container { overflow-x: auto; margin-top: 20px; }
 
 .table-modern {
     width: 100%;
@@ -255,7 +115,6 @@ h2, .section-title {
     background: white;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
-
 .table-modern th {
     background: var(--primary);
     color: white;
@@ -263,155 +122,74 @@ h2, .section-title {
     text-align: center;
     font-size: 14px;
 }
-
 .table-modern td {
     padding: 10px;
     text-align: center;
     border-bottom: 1px solid #ddd;
     font-size: 14px;
 }
+.table-modern tr:hover { background-color: #f1f5f9; }
 
-.table-modern tr:hover {
-    background-color: #f1f5f9;
-}
+/* ============================================
+   🔹 LOGOS
+============================================ */
+.logo-animado { transition: transform 0.3s ease-in-out; }
+.logo-animado:hover { transform: scale(1.15); }
 
-/* Verde */
-.table-green {
-    background: #ecfdf5;
-    border: 1px solid #28a745;
-}
-
-.table-green th {
-    background: #28a745;
-    color: white;
-}
-
-.table-green td {
-    border-bottom: 1px solid #bbf7d0;
-}
-
-.table-green tr:hover {
-    background-color: #d1fae5;
-}
-
-/* Amarilla */
-.table-modern-yellow {
-    background: #fffbe6;
-    border: 1px solid var(--warning);
-}
-
-.table-modern-yellow th {
-    background: var(--warning);
-    color: #000;
-}
-
-.table-modern-yellow td {
-    border-bottom: 1px solid #fde68a;
-}
-
-.table-modern-yellow tr:hover {
-    background-color: #fef9c3;
-}
-
-/* ================================
-   🔹 Dropdown de documentos (AJUSTADO)
-================================ */
-.dropdown-menu {
-    min-width: 260px;
-    /* 🔧 Eliminado el límite de altura */
-    /* max-height: 300px; */
-    /* overflow-y: auto; */
-    overflow: visible;
-    max-height: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    border-radius: 8px;
-    padding: 5px 0;
-    border: none;
-    z-index: 1050;
-}
-
-.dropdown-item {
-    font-size: 14px;
-    padding: 6px 15px;
-    display: flex;
+/* ============================================
+   🔹 MODAL DE DOCUMENTOS
+============================================ */
+.document-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.55);
+    display: none;
     align-items: center;
-    gap: 6px;
-}
-
-.dropdown-item i {
-    font-size: 14px;
-    color: var(--primary);
-}
-
-/* ================================
-   🔹 Logos
-================================ */
-.login-logos, .home-logos {
-    display: flex;
     justify-content: center;
-    align-items: center;
-    gap: 40px;
-    margin-top: 25px;
+    z-index: 99999;
 }
 
-.login-logo, .home-logos img {
-    height: 80px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.4s ease, filter 0.4s ease;
-}
+.document-modal.active { display: flex; }
 
-.login-logo:hover, .home-logos img:hover {
-    transform: scale(1.15) rotate(2deg);
-    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-/* ================================
-   🔹 Footer
-================================ */
-footer {
-    background: var(--dark);
-    color: #9ca3af;
-    text-align: center;
-    padding: 15px;
-    margin-top: 40px;
-    font-size: 14px;
-}
-
-/* ================================
-   🔹 Extras
-================================ */
-.logout-btn { margin-left: 20px; }
-.card-body i.text-success { color: #28a745; }
-.btn-group .btn { padding: 2px 6px; }
-
-/* ===============================
-   📁 Dropdown sobre la tabla
-================================ */
-.document-dropdown {
-    position: relative;
-}
-
-.show-over-table {
-    position: absolute !important;
-    z-index: 9999 !important; /* sobresale de todo */
-    top: 100% !important;
-    left: 50% !important;
-    transform: translateX(-50%) translateY(10px);
+.document-modal-content {
     background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    padding: 0;
+    width: 85vw;
+    max-width: 1000px;
+    max-height: 90vh;
+    border-radius: 12px;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
-.show-over-table li:hover {
-    background-color: #f8f9fa;
+.document-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+.document-modal-header h5 { margin: 0; color: var(--primary); }
+.document-modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
 }
 
+.document-list li {
+    list-style: none;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.document-list li:last-child { border-bottom: none; }
 .btn-icon-mini {
-    width: 26px;
-    height: 26px;
+    width: 26px; height: 26px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -419,8 +197,4 @@ footer {
     border-radius: 5px;
     transition: all 0.2s ease;
 }
-
-.btn-icon-mini:hover {
-    background: #e2e6ea;
-    transform: scale(1.1);
-}
+.btn-icon-mini:hover { background: #e2e6ea; transform: scale(1.1); }

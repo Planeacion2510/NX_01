@@ -1,38 +1,152 @@
-/* ===============================
-   📁 Forzar ventana de documentos grande
-================================ */
-.document-dropdown .dropdown-menu {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 80vw !important;         /* ancho: 80% del viewport */
-    max-width: 1000px !important;   /* límite máximo en pantallas grandes */
-    height: auto !important;        /* altura dinámica */
-    max-height: none !important;    /* sin límite vertical */
-    overflow: visible !important;   /* sin scroll */
-    z-index: 99999 !important;
-    background: #fff !important;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    padding: 15px 0 !important;
-}
+{% extends "base.html" %}
+{% load static %}
 
-/* Asegura que no se corte dentro de la tabla */
-.document-dropdown {
-    overflow: visible !important;
-    position: relative !important;
-}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-clipboard-list"></i> Gestión de Órdenes de Trabajo
+    </h2>
 
-/* Opcional: cierra al hacer clic afuera */
-body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 99998;
-    display: none;
+    <div class="text-center mb-3">
+        <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+            <a href="{% url 'administrativa:ordenes:crear_orden' %}" class="btn-module">
+                <i class="fas fa-plus"></i> Nueva OT
+            </a>
+            <button id="refresh-btn" class="btn-module btn-refresh">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+        </div>
+        <div id="clock" class="clock-display mt-3"></div>
+    </div>
+
+    <div class="stats-box text-center mb-4">
+        <span class="me-4">😀 <strong>Cierres a tiempo:</strong> {{ cierres_a_tiempo }}</span>
+        <span>😞 <strong>Cierres tardíos:</strong> {{ cierres_tardios }}</span>
+    </div>
+
+    <div class="table-container">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Constructora</th>
+                    <th>Proyecto</th>
+                    <th>Proceso</th>
+                    <th>Descripción</th>
+                    <th>Fecha Apertura</th>
+                    <th>Fecha Envío</th>
+                    <th>Estado</th>
+                    <th>Fecha Cierre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ot in ordenes %}
+                <tr>
+                    <td>{{ ot.numero }}</td>
+                    <td>{{ ot.get_constructora_display }}</td>
+                    <td>{{ ot.get_proyecto_display }}</td>
+                    <td>{{ ot.get_proceso_display }}</td>
+                    <td>{{ ot.descripcion }}</td>
+                    <td>{{ ot.fecha_apertura|date:"d/m/Y H:i" }}</td>
+                    <td>{{ ot.fecha_envio|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if ot.estado == 'abierta' %}bg-warning
+                            {% elif ot.estado == 'en_proceso' %}bg-info
+                            {% else %}bg-success{% endif %}">
+                            {{ ot.get_estado_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if ot.fecha_cierre %}
+                            {{ ot.fecha_cierre|date:"d/m/Y" }}
+                            {% if ot.cierre_a_tiempo %} 😀 {% else %} 😞 {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="acciones-wrapper">
+                            <!-- 📂 BOTÓN DOCUMENTOS -->
+                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}')">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+
+                            {% if ot.estado != "cerrada" %}
+                                <a href="{% url 'administrativa:ordenes:editar_orden' ot.id %}" class="btn-icon edit" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                <a href="{% url 'administrativa:ordenes:cerrar_orden' ot.id %}" class="btn-icon close" title="Cerrar"
+                                   onclick="return confirm('¿Seguro que deseas cerrar esta OT?');">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                            {% else %}
+                                <span class="btn-icon edit disabled" title="Editar bloqueado">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </span>
+                            {% endif %}
+
+                            <a href="{% url 'administrativa:ordenes:eliminar_orden' ot.id %}" class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Seguro que deseas eliminar esta OT?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+
+                        <!-- MODAL DE DOCUMENTOS -->
+                        <div id="modal-{{ ot.id }}" class="document-modal">
+                            <div class="document-modal-content">
+                                <div class="document-modal-header">
+                                    <h5><i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}</h5>
+                                    <button class="document-modal-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
+                                </div>
+                                <ul class="document-list">
+                                    {% if ot.documentos.exists %}
+                                        {% for doc in ot.documentos.all %}
+                                            <li>
+                                                <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
+                                                <div class="d-flex gap-2">
+                                                    {% if doc.archivo %}
+                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                        <a href="{{ doc.archivo.url }}" download class="btn-icon-mini" title="Descargar">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        <li class="text-muted text-center py-3">No hay documentos</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="10" class="text-center">No hay órdenes registradas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center my-5">
+        <img src="{% static 'img/logo1.png' %}" alt="NexusOne" height="90" class="mx-4 logo-animado">
+        <img src="{% static 'img/logo2.png' %}" alt="Empresa Aliada" height="90" class="mx-4 logo-animado">
+    </div>
+</div>
+
+<script>
+function openModal(id) {
+    document.getElementById('modal-' + id).classList.add('active');
 }
-.dropdown-menu.show + body::after {
-    display: block;
+function closeModal(id) {
+    document.getElementById('modal-' + id).classList.remove('active');
 }
+document.querySelectorAll('.document-modal').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+</script>
+{% endblock %}
