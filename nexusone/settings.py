@@ -140,15 +140,27 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # =========================
 # ✅ En Windows (local) → carpeta OneDrive compartida
 # ✅ En Render (Linux) → carpeta /media dentro del proyecto
+
 if os.name == "nt":
     MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/DinnovaERP")
-    MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+
+    # 👇 Si tienes una URL pública de ngrok, úsala automáticamente
+    NGROK_URL = os.getenv("NGROK_URL", "").strip()
+    if NGROK_URL:
+        # Asegura que termine con '/'
+        if not NGROK_URL.endswith("/"):
+            NGROK_URL += "/"
+        MEDIA_URL = NGROK_URL + "media/"
+    else:
+        # Fallback local si no hay ngrok
+        MEDIA_URL = "/media/"
 else:
     MEDIA_ROOT = BASE_DIR / "media"
     MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 
 # Crear la carpeta base si no existe
 os.makedirs(MEDIA_ROOT, exist_ok=True)
+
 
 # =========================
 # DEFAULT AUTO FIELD

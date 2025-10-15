@@ -1,81 +1,113 @@
-{% extends "base.html" %}
-{% load static %}
-
+{% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
-
-    <!-- Título -->
-    <h2 class="section-title text-center mb-4">
-        <i class="fas fa-clipboard-list"></i> {{ title }}
-    </h2>
-
-    <!-- Formulario -->
-    <form method="post" enctype="multipart/form-data" class="form-modern">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <!-- Documentos -->
-        <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
-
-        <!-- 🗂️ Archivos existentes en tu PC -->
-        {% if archivos_pc %}
-        <div class="documentos-box mb-3">
-            <h5><i class="fas fa-file-alt"></i> Archivos actuales:</h5>
-            <ul class="list-unstyled mb-2">
-                {% for archivo in archivos_pc %}
-                <li class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <a href="{{ ngrok_url }}/administrativa/ordenes/descargar-archivo/{{ orden.numero }}/{{ archivo }}" target="_blank">
-                        <i class="fas fa-paperclip text-primary"></i> {{ archivo }}
-                    </a>
-                    <a href="{% url 'administrativa:ordenes:eliminar_documento' orden.id %}?archivo={{ archivo }}" 
-                       class="text-danger small"
-                       onclick="return confirm('¿Seguro que deseas eliminar este archivo de tu PC?');">
-                        <i class="fas fa-trash"></i> eliminar
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        <!-- 📎 Subir nuevos archivos -->
-        <div class="documentos-box mb-3">
-            <input 
-                type="file" 
-                name="archivos" 
-                id="id_archivos" 
-                class="form-control" 
-                multiple 
-                accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls"
-            >
-            <small class="text-muted">Puedes seleccionar varios archivos a la vez. Los nuevos se agregarán a la lista.</small>
-        </div>
-
-        <!-- Botones -->
-        <div class="form-actions text-center mt-4">
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="fas fa-save"></i> Guardar OT y Subir Documentos
-            </button>
-            <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn btn-secondary px-4">
-                <i class="fas fa-arrow-left"></i> Cancelar
-            </a>
-        </div>
-    </form>
-</div>
 
 <style>
-.documentos-box {
-    border: 1px solid #ddd;
+  .container {
+    max-width: 800px;
+    margin-top: 40px;
+  }
+
+  h2 {
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  form {
+    background-color: #ffffff;
+    padding: 25px;
     border-radius: 10px;
-    padding: 15px;
-    background: #f9f9f9;
-}
-.documentos-box:hover {
-    background-color: #f1f7ff;
-}
-.btn-primary, .btn-secondary {
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+  }
+
+  label {
+    font-weight: 600;
+  }
+
+  .btn {
     border-radius: 8px;
-    font-weight: 500;
-}
+    font-weight: 600;
+    padding: 8px 16px;
+  }
+
+  .btn-primary {
+    background-color: #0066cc;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: #004999;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+  }
+
+  .btn-secondary:hover {
+    background-color: #565e64;
+  }
+
+  .list-group-item a {
+    text-decoration: none;
+    color: #007bff;
+  }
+
+  .list-group-item a:hover {
+    text-decoration: underline;
+  }
+
+  .list-group-item .btn-sm {
+    padding: 2px 8px;
+  }
+
+  hr {
+    margin-top: 30px;
+    margin-bottom: 15px;
+  }
+
+  .text-muted {
+    font-style: italic;
+  }
 </style>
+
+<div class="container">
+  <h2>{% if orden %}Editar Orden #{{ orden.id }}{% else %}Nueva Orden{% endif %}</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div class="mb-3">
+      <label>📂 Subir nuevos documentos:</label>
+      <input type="file" name="documentos" multiple class="form-control" />
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <button type="submit" class="btn btn-primary">💾 Guardar</button>
+      <a href="{% url 'lista_ordenes' %}" class="btn btn-secondary">⬅️ Volver</a>
+    </div>
+  </form>
+
+  {% if documentos %}
+  <hr />
+  <h4>📁 Documentos actuales:</h4>
+  <ul class="list-group">
+    {% for doc in documentos %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <a href="{{ doc.archivo.url }}" target="_blank">
+        {{ doc.archivo.name|cut:"ordenes/" }}
+      </a>
+      <a
+        href="{% url 'eliminar_documento' doc.id %}"
+        class="btn btn-danger btn-sm"
+        onclick="return confirm('¿Eliminar este documento?')"
+      >🗑️</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mt-3">No hay documentos guardados.</p>
+  {% endif %}
+</div>
+
 {% endblock %}

@@ -79,75 +79,41 @@
                             </button>
 
                             <!-- 🪟 Modal Documentos -->
-                            <div id="docModal-{{ ot.id }}" class="modal-doc">
-                                <div class="modal-doc-content">
-                                    <div class="modal-doc-header">
-                                        <h5><i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}</h5>
-                                        <button class="modal-doc-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
-                                    </div>
-
-                                    <ul class="document-list">
-                                        {% if ot.documentos.exists %}
-                                            {% for doc in ot.documentos.all %}
-                                            <li>
-                                                <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
-                                                <div class="d-flex gap-2">
-                                                    {% if doc.archivo %}
-                                                        <!-- 🖥️ Enlace directo desde tu PC vía ngrok -->
-                                                        <a href="https://unfledged-unsalably-laticia.ngrok-free.dev/Ordenes/{{ ot.numero }}/{{ doc.archivo.name }}" 
-                                                           class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
-                                                            <i class="fas fa-download text-success"></i>
-                                                        </a>
-
-                                                        <!-- 🔗 Enlace alternativo (Render / Django) -->
-                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver desde Render">
-                                                            <i class="fas fa-eye text-primary"></i>
-                                                        </a>
-                                                    {% endif %}
-                                                </div>
-                                            </li>
-                                            {% endfor %}
-                                        {% else %}
-                                            <li class="text-muted text-center py-3">No hay documentos cargados</li>
-                                        {% endif %}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <!-- ✏️ Editar -->
-                            {% if ot.estado != "cerrada" %}
-                                <a href="{% url 'administrativa:ordenes:editar_orden' ot.id %}" class="btn-icon edit" title="Editar">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </a>
-                                <a href="{% url 'administrativa:ordenes:cerrar_orden' ot.id %}" 
-                                   class="btn-icon close" title="Cerrar"
-                                   onclick="return confirm('¿Seguro que deseas cerrar esta OT?');">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                            {% else %}
-                                <span class="btn-icon edit disabled" title="Editar bloqueado">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </span>
-                            {% endif %}
-
-                            <!-- 🗑️ Eliminar -->
-                            <a href="{% url 'administrativa:ordenes:eliminar_orden' ot.id %}" 
-                               class="btn-icon delete" title="Eliminar"
-                               onclick="return confirm('¿Seguro que deseas eliminar esta OT?');">
-                                <i class="fas fa-trash"></i>
-                            </a>
-
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="10" class="text-center">No hay órdenes de trabajo registradas.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div id="docModal-{{ ot.id }}" class="modal-doc">
+  <div class="modal-doc-content">
+    <div class="modal-doc-header">
+      <h5><i class="fas fa-folder-open text-warning"></i> Documentos de {{ ot.numero }}</h5>
+      <button class="modal-doc-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
     </div>
+
+    <ul class="document-list">
+      {% if ot.documentos.all %}
+        {% for doc in ot.documentos.all %}
+        <li>
+          <span>📄 {{ doc.archivo.name|cut:"ordenes/" }}</span>
+          <div class="d-flex gap-2">
+            {% if doc.archivo %}
+              <!-- 🖥️ Enlace directo desde tu PC vía ngrok -->
+              <a href="https://unfledged-unsalably-laticia.ngrok-free.dev/media/{{ doc.archivo.name }}" 
+                 class="btn-icon-mini" title="Abrir desde tu PC" target="_blank">
+                <i class="fas fa-folder-open text-success"></i>
+              </a>
+
+              <!-- 🔗 Enlace alternativo desde Django (Render o local) -->
+              <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver desde Django">
+                <i class="fas fa-eye text-primary"></i>
+              </a>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      {% else %}
+        <li class="text-muted text-center py-3">No hay documentos guardados</li>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+
 
     <!-- Logos -->
     <div class="text-center my-5">
