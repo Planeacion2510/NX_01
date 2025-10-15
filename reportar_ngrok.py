@@ -1,7 +1,7 @@
 import requests
 import time
 import json
-import socket
+import subprocess
 
 def obtener_url_ngrok():
     """Obtiene la URL pública de ngrok desde la API local"""
@@ -15,40 +15,46 @@ def obtener_url_ngrok():
         print("⚠️ No se pudo obtener URL de ngrok:", e)
     return None
 
-def enviar_a_render(url, intentos=5, espera=5):
-    """Envía la URL de ngrok a Render con reintentos automáticos"""
+
+def enviar_a_render(url):
+    """Envía la URL de ngrok a Render usando curl (para evitar bug WinError 10022)"""
     endpoint = "https://nx-01.onrender.com/administrativa/api/actualizar-ngrok/"
-    headers = {"Content-Type": "application/json"}
+    payload = json.dumps({"url": url})
 
-    for intento in range(1, intentos + 1):
-        try:
-            # 🔧 Forzar IPv4 para evitar fallos DNS con urllib3
-            original_getaddrinfo = socket.getaddrinfo
-            socket.getaddrinfo = lambda *args, **kwargs: original_getaddrinfo(args[0], args[1], socket.AF_INET, *args[2:], **kwargs)
+    comando = [
+        "curl",
+        "-X", "POST",
+        "-H", "Content-Type: application/json",
+        "-d", payload,
+        endpoint
+    ]
 
-            res = requests.post(endpoint, json={"url": url}, headers=headers, timeout=10)
-            if res.status_code == 200:
-                print(f"✅ URL enviada correctamente a Render: {url}")
-                return True
-            else:
-                print(f"❌ Error al enviar (intento {intento}/{intentos}): {res.status_code} - {res.text}")
-        except Exception as e:
-            print(f"⚠️ Error de conexión (intento {intento}/{intentos}):", e)
-
-        # Restaurar función original
-        socket.getaddrinfo = original_getaddrinfo
-        time.sleep(espera)
-
-    print("❌ No se pudo conectar con Render después de varios intentos.")
-    return False
+    print("📡 Enviando URL a Render con curl...")
+    try:
+        resultado = subprocess.run(
+            comando,
+            capture_output=True,
+            text=True,
+            timeout=15
+        )
+        if resultado.returncode == 0:
+            print(f"✅ URL enviada correctamente a Render: {url}")
+        else:
+            print(f"❌ Error al enviar: {resultado.stderr}")
+    except Exception as e:
+        print("⚠️ Error al ejecutar curl:", e)
 
 
 if __name__ == "__main__":
     print("⏳ Esperando a que ngrok esté listo...")
-    time.sleep(10)
+    for i in range(20, 0, -1):
+        print(f"⏳ Iniciando en {i}s...", end="\r")
+        time.sleep(1)
+    print()
+
     url = obtener_url_ngrok()
     if url:
+        print(f"🔗 URL detectada: {url}")
         enviar_a_render(url)
     else:
         print("⚠️ No se encontró URL pública de ngrok.")
-

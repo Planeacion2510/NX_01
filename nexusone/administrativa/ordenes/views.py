@@ -33,15 +33,18 @@ def crear_orden(request):
 
                 for archivo in archivos:
                     ruta_archivo = os.path.join(carpeta_ot, archivo.name)
-                    with open(ruta_archivo, "wb+") as destino:
-                        for chunk in archivo.chunks():
-                            destino.write(chunk)
+                    try:
+                        with open(ruta_archivo, "wb+") as destino:
+                            for chunk in archivo.chunks():
+                                destino.write(chunk)
 
-                    DocumentoOrden.objects.create(
-                        orden=orden,
-                        nombre=archivo.name,
-                        archivo=f"Ordenes/{orden.numero}/{archivo.name}"
-                    )
+                        DocumentoOrden.objects.create(
+                            orden=orden,
+                            nombre=archivo.name,
+                            archivo=f"Ordenes/{orden.numero}/{archivo.name}"
+                        )
+                    except Exception as e:
+                        messages.error(request, f"❌ Error al guardar {archivo.name}: {e}")
 
                 messages.success(request, "✅ Orden creada y archivos guardados correctamente.")
             else:
@@ -75,18 +78,20 @@ def editar_orden(request, pk):
                 carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
                 os.makedirs(carpeta_ot, exist_ok=True)
 
-                # Agregar nuevos archivos (sin borrar los anteriores)
                 for archivo in archivos:
                     ruta_archivo = os.path.join(carpeta_ot, archivo.name)
-                    with open(ruta_archivo, "wb+") as destino:
-                        for chunk in archivo.chunks():
-                            destino.write(chunk)
+                    try:
+                        with open(ruta_archivo, "wb+") as destino:
+                            for chunk in archivo.chunks():
+                                destino.write(chunk)
 
-                    DocumentoOrden.objects.create(
-                        orden=orden,
-                        nombre=archivo.name,
-                        archivo=f"Ordenes/{orden.numero}/{archivo.name}"
-                    )
+                        DocumentoOrden.objects.create(
+                            orden=orden,
+                            nombre=archivo.name,
+                            archivo=f"Ordenes/{orden.numero}/{archivo.name}"
+                        )
+                    except Exception as e:
+                        messages.error(request, f"❌ Error al guardar {archivo.name}: {e}")
 
                 messages.success(request, "✅ Archivos agregados correctamente.")
             else:
