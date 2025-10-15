@@ -9,13 +9,22 @@ from django.urls import reverse
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm
 
+# URL de tu PC vía ngrok (actualizable desde Render)
+ngrok_url_actual = "https://unfledged-unsalably-laticia.ngrok-free.dev"
+
 
 # =====================================================
 # 📋 LISTAR
 # =====================================================
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().order_by("-id")
-    return render(request, "administrativa/ordenes/listar_orden.html", {"ordenes": ordenes})
+    cierres_a_tiempo = ordenes.filter(cierre_a_tiempo=True).count()
+    cierres_tardios = ordenes.filter(cierre_a_tiempo=False, fecha_cierre__isnull=False).count()
+    return render(request, "administrativa/ordenes/listar_orden.html", {
+        "ordenes": ordenes,
+        "cierres_a_tiempo": cierres_a_tiempo,
+        "cierres_tardios": cierres_tardios
+    })
 
 
 # =====================================================
@@ -29,10 +38,7 @@ def crear_orden(request):
             archivos = request.FILES.getlist("archivos")
 
             if archivos:
-                # 🌐 URL de tu túnel ngrok actual (puedes dejarla fija o actualizarla dinámicamente)
-                ngrok_url = "https://unfledged-unsalably-laticia.ngrok-free.dev"
-                endpoint = f"{ngrok_url}/administrativa/ordenes/recibir-archivos-local/"
-
+                endpoint = f"{ngrok_url_actual}/administrativa/ordenes/recibir-archivos-local/"
                 files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
                 data = {"numero_ot": orden.numero}
 
@@ -53,10 +59,7 @@ def crear_orden(request):
     else:
         form = OrdenTrabajoForm()
 
-    return render(request, "administrativa/ordenes/form.html", {
-        "form": form,
-        "title": "Crear Orden de Trabajo",
-    })
+    return render(request, "administrativa/ordenes/form.html", {"form": form, "title": "Crear Orden de Trabajo"})
 
 
 # =====================================================
@@ -64,17 +67,13 @@ def crear_orden(request):
 # =====================================================
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
-
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
         if form.is_valid():
             orden = form.save()
             archivos = request.FILES.getlist("archivos")
-
             if archivos:
-                ngrok_url = "https://unfledged-unsalably-laticia.ngrok-free.dev"
-                endpoint = f"{ngrok_url}/administrativa/ordenes/recibir-archivos-local/"
-
+                endpoint = f"{ngrok_url_actual}/administrativa/ordenes/recibir-archivos-local/"
                 files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
                 data = {"numero_ot": orden.numero}
 
@@ -95,11 +94,7 @@ def editar_orden(request, pk):
     else:
         form = OrdenTrabajoForm(instance=orden)
 
-    return render(request, "administrativa/ordenes/form.html", {
-        "form": form,
-        "orden": orden,
-        "title": "Editar Orden de Trabajo",
-    })
+    return render(request, "administrativa/ordenes/form.html", {"form": form, "orden": orden, "title": "Editar Orden de Trabajo"})
 
 
 # =====================================================
@@ -108,10 +103,8 @@ def editar_orden(request, pk):
 def eliminar_documento(request, pk):
     doc = get_object_or_404(DocumentoOrden, pk=pk)
     orden_id = doc.orden.id
-
     if doc.archivo and os.path.exists(doc.archivo.path):
         os.remove(doc.archivo.path)
-
     doc.delete()
     messages.success(request, "🗑️ Documento eliminado correctamente.")
     return HttpResponseRedirect(reverse("administrativa:ordenes:editar_orden", args=[orden_id]))
@@ -123,29 +116,28 @@ def eliminar_documento(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-    if os.path.exists(carpeta_ot):
-        for root, dirs, files in os.walk(carpeta_ot, topdown=False):
-            for file in files:
-                os.remove(os.path.join(root, file))
-            for dir in dirs:
-                os.rmdir(os.path.join(root, dir))
-        os.rmdir(carpeta_ot)
+    # 🔹 Eliminar carpeta en tu PC vía ngrok
+    try:
+        requests.post(f"{ngrok_url_actual}/administrativa/ordenes/eliminar-orden-local/",
+                      data={"numero_ot": orden.numero}, timeout=10)
+    except Exception as e:
+        messages.warning(request, f"No se pudo eliminar la carpeta en la PC: {e}")
 
     orden.documentos.all().delete()
     orden.delete()
-
     messages.success(request, "🗑️ Orden y archivos eliminados correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
 # =====================================================
-# 🚫 CERRAR ORDEN
+# ✅ CERRAR ORDEN
 # =====================================================
 def cerrar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
+    from django.utils import timezone
+    orden.fecha_cierre = timezone.now()
+    orden.cierre_a_tiempo = True if orden.fecha_cierre <= orden.fecha_envio else False
     orden.save()
     messages.success(request, "✅ Orden cerrada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
-
