@@ -3,7 +3,7 @@ import requests
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponseRedirect, FileResponse, Http404, JsonResponse
+from django.http import HttpResponseRedirect, FileResponse, Http404
 from django.urls import reverse
 
 from .models import OrdenTrabajo, DocumentoOrden
@@ -14,8 +14,10 @@ from .forms import OrdenTrabajoForm
 # =====================================================
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
-    cierres_a_tiempo = ordenes.filter(cierre_a_tiempo=True).count()
-    cierres_tardios = ordenes.filter(cierre_a_tiempo=False, fecha_cierre__isnull=False).count()
+    
+    # Contadores calculados en Python, sin tocar la base de datos
+    cierres_a_tiempo = sum(1 for ot in ordenes if getattr(ot, 'cierre_a_tiempo', False))
+    cierres_tardios = sum(1 for ot in ordenes if ot.fecha_cierre and not getattr(ot, 'cierre_a_tiempo', False))
 
     return render(request, "administrativa/ordenes/listar_orden.html", {
         "ordenes": ordenes,
@@ -148,4 +150,3 @@ def descargar_archivo_render(request, numero_ot, nombre_archivo):
         return FileResponse(open(ruta_archivo, 'rb'), as_attachment=True, filename=nombre_archivo)
     else:
         raise Http404("Archivo no encontrado")
-
