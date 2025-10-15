@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_upload  # 🔹 Importamos también views_upload
 
 app_name = "ordenes"
 
@@ -10,5 +10,7 @@ urlpatterns = [
     path("eliminar/<int:pk>/", views.eliminar_orden, name="eliminar_orden"),
     path("cerrar/<int:pk>/", views.cerrar_orden, name="cerrar_orden"),
     path("documento/eliminar/<int:pk>/", views.eliminar_documento, name="eliminar_documento"),
+    
+    # Endpoint para recibir archivos en tu PC vía ngrok
     path("recibir-archivos-local/", views_upload.recibir_archivos_local, name="recibir_archivos_local"),
 ]
