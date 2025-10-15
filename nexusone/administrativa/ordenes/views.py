@@ -14,10 +14,10 @@ from .forms import OrdenTrabajoForm
 # =====================================================
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
-    
-    # Contadores calculados en Python, sin tocar la base de datos
+
+    # ✅ Contadores calculados en Python sin filtrar por campo inexistente
     cierres_a_tiempo = sum(1 for ot in ordenes if getattr(ot, 'cierre_a_tiempo', False))
-    cierres_tardios = sum(1 for ot in ordenes if ot.fecha_cierre and not getattr(ot, 'cierre_a_tiempo', False))
+    cierres_tardios = sum(1 for ot in ordenes if getattr(ot, 'fecha_cierre', None) and not getattr(ot, 'cierre_a_tiempo', False))
 
     return render(request, "administrativa/ordenes/listar_orden.html", {
         "ordenes": ordenes,
@@ -35,6 +35,7 @@ def crear_orden(request):
             orden = form.save()
             archivos = request.FILES.getlist("archivos")
             if archivos:
+                # Tu ngrok URL siempre apuntando a tu PC
                 ngrok_url = "https://unfledged-unsalably-laticia.ngrok-free.dev"
                 endpoint = f"{ngrok_url}/administrativa/ordenes/recibir-archivos-local/"
                 files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
@@ -142,7 +143,7 @@ def cerrar_orden(request, pk):
 # =====================================================
 def descargar_archivo_render(request, numero_ot, nombre_archivo):
     """
-    Endpoint para Render: descarga segura de archivos sin afectar ngrok.
+    Descarga segura de archivos desde Render sin afectar tu PC vía ngrok
     """
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/")
     ruta_archivo = os.path.join(carpeta_ot, nombre_archivo)
