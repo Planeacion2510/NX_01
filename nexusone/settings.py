@@ -36,6 +36,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
     "127.0.0.1",
     "localhost",
     "nx-01.onrender.com",
+    ".ngrok-free.dev",
 ])
 
 # =========================
