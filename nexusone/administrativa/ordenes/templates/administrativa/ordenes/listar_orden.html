@@ -93,7 +93,9 @@
                                                     <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
                                                     <div class="d-flex gap-2">
                                                         {% if doc.archivo %}
-                                                            <a href="{% url 'administrativa:ordenes:descargar_archivo' ot.numero doc.archivo.name %}" class="btn-icon-mini" title="Descargar">
+                                                            <!-- 🔗 Enlace directo a tu PC via ngrok -->
+                                                            <a href="https://unfledged-unsalably-laticia.ngrok-free.dev/administrativa/ordenes/descargar-archivo/{{ ot.numero }}/{{ doc.archivo.name }}" 
+                                                               class="btn-icon-mini" title="Descargar" target="_blank">
                                                                 <i class="fas fa-download text-success"></i>
                                                             </a>
                                                             <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">

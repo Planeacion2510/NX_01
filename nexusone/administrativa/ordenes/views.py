@@ -3,7 +3,7 @@ import requests
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponseRedirect, FileResponse, Http404
+from django.http import HttpResponseRedirect, FileResponse, Http404, JsonResponse
 from django.urls import reverse
 
 from .models import OrdenTrabajo, DocumentoOrden
@@ -138,10 +138,14 @@ def cerrar_orden(request, pk):
 # =====================================================
 # 📂 DESCARGAR ARCHIVO
 # =====================================================
-def descargar_archivo(request, numero_ot, nombre_archivo):
+def descargar_archivo_render(request, numero_ot, nombre_archivo):
+    """
+    Endpoint para Render: descarga segura de archivos sin afectar ngrok.
+    """
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/")
     ruta_archivo = os.path.join(carpeta_ot, nombre_archivo)
     if os.path.exists(ruta_archivo):
         return FileResponse(open(ruta_archivo, 'rb'), as_attachment=True, filename=nombre_archivo)
     else:
         raise Http404("Archivo no encontrado")
+
