@@ -87,23 +87,25 @@
                                     </div>
 
                                     <ul class="document-list">
-                                        {% if ot.documentos.count %}
+                                        {% if ot.documentos.exists %}
                                             {% for doc in ot.documentos.all %}
-                                                <li>
-                                                    <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
-                                                    <div class="d-flex gap-2">
-                                                        {% if doc.archivo %}
-                                                            <!-- 🔗 Enlace directo a tu PC via ngrok -->
-                                                            <a href="https://unfledged-unsalably-laticia.ngrok-free.dev/administrativa/ordenes/descargar-archivo/{{ ot.numero }}/{{ doc.archivo.name }}" 
-                                                               class="btn-icon-mini" title="Descargar" target="_blank">
-                                                                <i class="fas fa-download text-success"></i>
-                                                            </a>
-                                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver">
-                                                                <i class="fas fa-eye text-primary"></i>
-                                                            </a>
-                                                        {% endif %}
-                                                    </div>
-                                                </li>
+                                            <li>
+                                                <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
+                                                <div class="d-flex gap-2">
+                                                    {% if doc.archivo %}
+                                                        <!-- 🖥️ Enlace directo desde tu PC vía ngrok -->
+                                                        <a href="https://unfledged-unsalably-laticia.ngrok-free.dev/Ordenes/{{ ot.numero }}/{{ doc.archivo.name }}" 
+                                                           class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
+                                                            <i class="fas fa-download text-success"></i>
+                                                        </a>
+
+                                                        <!-- 🔗 Enlace alternativo (Render / Django) -->
+                                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn-icon-mini" title="Ver desde Render">
+                                                            <i class="fas fa-eye text-primary"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </li>
                                             {% endfor %}
                                         {% else %}
                                             <li class="text-muted text-center py-3">No hay documentos cargados</li>
