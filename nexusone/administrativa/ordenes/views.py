@@ -1,4 +1,5 @@
 import os
+import requests
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -25,28 +26,24 @@ def crear_orden(request):
         form = OrdenTrabajoForm(request.POST, request.FILES)
         if form.is_valid():
             orden = form.save()
-
             archivos = request.FILES.getlist("archivos")
+
             if archivos:
-                carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-                os.makedirs(carpeta_ot, exist_ok=True)
+                # 🌐 URL de tu túnel ngrok actual (puedes dejarla fija o actualizarla dinámicamente)
+                ngrok_url = "https://unfledged-unsalably-laticia.ngrok-free.dev"
+                endpoint = f"{ngrok_url}/administrativa/ordenes/recibir-archivos-local/"
 
-                for archivo in archivos:
-                    ruta_archivo = os.path.join(carpeta_ot, archivo.name)
-                    try:
-                        with open(ruta_archivo, "wb+") as destino:
-                            for chunk in archivo.chunks():
-                                destino.write(chunk)
+                files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
+                data = {"numero_ot": orden.numero}
 
-                        DocumentoOrden.objects.create(
-                            orden=orden,
-                            nombre=archivo.name,
-                            archivo=f"Ordenes/{orden.numero}/{archivo.name}"
-                        )
-                    except Exception as e:
-                        messages.error(request, f"❌ Error al guardar {archivo.name}: {e}")
-
-                messages.success(request, "✅ Orden creada y archivos guardados correctamente.")
+                try:
+                    response = requests.post(endpoint, data=data, files=files, timeout=60)
+                    if response.status_code == 200:
+                        messages.success(request, "✅ Orden creada y archivos guardados en tu PC.")
+                    else:
+                        messages.error(request, f"⚠️ Error al enviar archivos: {response.text}")
+                except Exception as e:
+                    messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
             else:
                 messages.success(request, "✅ Orden creada correctamente (sin archivos adjuntos).")
 
@@ -75,25 +72,20 @@ def editar_orden(request, pk):
             archivos = request.FILES.getlist("archivos")
 
             if archivos:
-                carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-                os.makedirs(carpeta_ot, exist_ok=True)
+                ngrok_url = "https://unfledged-unsalably-laticia.ngrok-free.dev"
+                endpoint = f"{ngrok_url}/administrativa/ordenes/recibir-archivos-local/"
 
-                for archivo in archivos:
-                    ruta_archivo = os.path.join(carpeta_ot, archivo.name)
-                    try:
-                        with open(ruta_archivo, "wb+") as destino:
-                            for chunk in archivo.chunks():
-                                destino.write(chunk)
+                files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
+                data = {"numero_ot": orden.numero}
 
-                        DocumentoOrden.objects.create(
-                            orden=orden,
-                            nombre=archivo.name,
-                            archivo=f"Ordenes/{orden.numero}/{archivo.name}"
-                        )
-                    except Exception as e:
-                        messages.error(request, f"❌ Error al guardar {archivo.name}: {e}")
-
-                messages.success(request, "✅ Archivos agregados correctamente.")
+                try:
+                    response = requests.post(endpoint, data=data, files=files, timeout=60)
+                    if response.status_code == 200:
+                        messages.success(request, "✅ Archivos agregados correctamente en tu PC.")
+                    else:
+                        messages.error(request, f"⚠️ Error al enviar archivos: {response.text}")
+                except Exception as e:
+                    messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
             else:
                 messages.success(request, "✅ Orden actualizada correctamente.")
 
@@ -156,3 +148,4 @@ def cerrar_orden(request, pk):
     orden.save()
     messages.success(request, "✅ Orden cerrada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
+

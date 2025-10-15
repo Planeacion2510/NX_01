@@ -10,4 +10,5 @@ urlpatterns = [
     path("eliminar/<int:pk>/", views.eliminar_orden, name="eliminar_orden"),
     path("cerrar/<int:pk>/", views.cerrar_orden, name="cerrar_orden"),
     path("documento/eliminar/<int:pk>/", views.eliminar_documento, name="eliminar_documento"),
+    path("recibir-archivos-local/", views_upload.recibir_archivos_local, name="recibir_archivos_local"),
 ]
