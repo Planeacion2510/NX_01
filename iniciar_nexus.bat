@@ -1,32 +1,26 @@
-@echo off
-echo ================================
-echo  Iniciando servidor Django + Ngrok
-echo ================================
+import requests
+import json
+import time
 
-cd /d C:\Users\aux5g\Downloads\NX_01
+# ===== Esperar unos segundos por si ngrok aún no está listo =====
+time.sleep(2)
 
-:: Activar entorno virtual
-call venv\Scripts\activate
+try:
+    # Leer info de ngrok
+    r = requests.get("http://127.0.0.1:4040/api/tunnels")
+    data = r.json()
+    tunnel_url = data['tunnels'][0]['public_url']
+    
+    print(f"🔗 URL detectada: {tunnel_url}")
 
-:: Iniciar servidor Django en una nueva ventana
-echo 🚀 Iniciando Django...
-start "Django Server" cmd /k "python manage.py runserver 0.0.0.0:8000"
+    # Enviar URL a Render (endpoint que hayas definido para actualizar NGROK_URL)
+    render_endpoint = "https://nx-01.onrender.com/administrativa/ordenes/actualizar-ngrok/"
+    response = requests.post(render_endpoint, json={"ngrok_url": tunnel_url}, timeout=10)
 
-:: Esperar 8 segundos para asegurar que Django ya esté activo
-timeout /t 8 >nul
+    if response.status_code == 200:
+        print(f"✅ URL enviada correctamente a Render: {tunnel_url}")
+    else:
+        print(f"⚠️ Error enviando URL a Render: {response.text}")
 
-:: Iniciar ngrok
-echo 🌐 Iniciando túnel ngrok...
-start "Ngrok Tunnel" cmd /k "ngrok http 8000"
-
-:: Esperar 10 segundos para que ngrok levante el túnel antes de reportarlo
-timeout /t 10 >nul
-
-:: Enviar automáticamente la URL pública de ngrok a Render
-echo 📡 Reportando URL pública a Render...
-start "" cmd /k "python reportar_ngrok.py"
-
-echo =====================================
-echo ✅ Servidor Django + Ngrok iniciados correctamente
-echo =====================================
-exit
+except Exception as e:
+    print(f"❌ Error detectando ngrok o enviando URL: {e}")
