@@ -8,6 +8,7 @@ import requests
 # URL actual de tu ngrok (actualizada dinámicamente desde Render)
 ngrok_url_actual = None  # esta variable puede actualizarse desde tu endpoint actualizar_ngrok
 
+
 @csrf_exempt
 def recibir_archivos_local(request):
     """
@@ -55,6 +56,7 @@ def eliminar_orden_local(request):
     else:
         return JsonResponse({"status": "ok", "mensaje": f"No existe la carpeta {numero_ot}"})
 
+
 @csrf_exempt
 def descargar_archivo(request, numero_ot, filename):
     """
@@ -76,3 +78,20 @@ def descargar_archivo(request, numero_ot, filename):
     except Exception as e:
         return HttpResponse(f"Error al conectar con la PC: {e}", status=500)
 
+
+@csrf_exempt
+def listar_archivos_local(request):
+    """
+    Endpoint para listar los archivos actuales de una orden en tu PC,
+    usado por Render cuando se edita una OT y necesita mostrar los existentes.
+    """
+    numero_ot = request.GET.get("numero_ot")
+    if not numero_ot:
+        return JsonResponse({"error": "Falta número de OT"}, status=400)
+
+    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/")
+    if os.path.exists(carpeta_ot):
+        archivos = os.listdir(carpeta_ot)
+        return JsonResponse({"archivos": archivos})
+    else:
+        return JsonResponse({"archivos": []})

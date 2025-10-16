@@ -69,9 +69,19 @@ def editar_orden(request, pk):
 
     # Obtener archivos directamente de tu PC
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-    archivos_pc = []
     if os.path.exists(carpeta_ot):
         archivos_pc = os.listdir(carpeta_ot)
+    else:
+        archivos_pc = []
+
+    # 🔄 Si no hay archivos locales, intenta obtenerlos desde tu PC vía ngrok
+    if not archivos_pc:
+        try:
+            r = requests.get(f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/", params={"numero_ot": orden.numero}, timeout=10)
+            if r.status_code == 200:
+                archivos_pc = r.json().get("archivos", [])
+        except Exception:
+            pass
 
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
