@@ -43,21 +43,36 @@ def eliminar_orden_local(request):
     if not numero_ot:
         return JsonResponse({"error": "Falta número de OT"}, status=400)
 
-    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/")
+    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}")
+    
+    print(f"🔍 Intentando eliminar: {carpeta_ot}")
+    print(f"🔍 ¿Existe? {os.path.exists(carpeta_ot)}")
     
     if os.path.exists(carpeta_ot):
         try:
-            shutil.rmtree(carpeta_ot)
+            # Primero eliminar todos los archivos dentro
+            for archivo in os.listdir(carpeta_ot):
+                ruta_archivo = os.path.join(carpeta_ot, archivo)
+                if os.path.isfile(ruta_archivo):
+                    os.remove(ruta_archivo)
+                    print(f"🗑️ Archivo eliminado: {archivo}")
+            
+            # Luego eliminar la carpeta vacía
+            os.rmdir(carpeta_ot)
+            print(f"✅ Carpeta eliminada: {carpeta_ot}")
+            
             return JsonResponse({
                 "status": "ok", 
                 "mensaje": f"✅ Carpeta {numero_ot} eliminada completamente de tu PC"
             })
         except Exception as e:
+            print(f"❌ Error: {str(e)}")
             return JsonResponse({
                 "status": "error",
                 "mensaje": f"❌ Error al eliminar carpeta: {str(e)}"
             }, status=500)
     else:
+        print(f"ℹ️ Carpeta no encontrada: {carpeta_ot}")
         return JsonResponse({
             "status": "ok", 
             "mensaje": f"ℹ️ No existe la carpeta {numero_ot} en tu PC"
