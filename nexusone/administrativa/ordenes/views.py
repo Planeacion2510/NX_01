@@ -67,33 +67,38 @@ def crear_orden(request):
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Obtener archivos directamente de tu PC
+    # Carpeta local de la OT
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
+    archivos_pc = []
+
+    # 1️⃣ Obtener archivos desde la PC
     if os.path.exists(carpeta_ot):
         archivos_pc = os.listdir(carpeta_ot)
-    else:
-        archivos_pc = []
 
-    # 🔄 Si no hay archivos locales, intenta obtenerlos desde tu PC vía ngrok
-    if not archivos_pc:
+    # 2️⃣ Si no hay archivos locales, intentar vía ngrok
+    if not archivos_pc and getattr(settings, "NGROK_URL", None):
         try:
-            r = requests.get(f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/", params={"numero_ot": orden.numero}, timeout=10)
+            r = requests.get(
+                f"{settings.NGROK_URL}administrativa/ordenes/listar-archivos-local/",
+                params={"numero_ot": orden.numero},
+                timeout=10
+            )
             if r.status_code == 200:
                 archivos_pc = r.json().get("archivos", [])
         except Exception:
-            pass
+            archivos_pc = []
 
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
         if form.is_valid():
-            orden.save()
+            form.save()
 
-            # Subir nuevos archivos a tu PC
+            # Subir nuevos archivos a la PC vía ngrok
             nuevos_archivos = request.FILES.getlist("archivos")
             if nuevos_archivos:
                 files = [("archivos", (a.name, a, a.content_type)) for a in nuevos_archivos]
                 data = {"numero_ot": orden.numero}
-                endpoint = f"{NGROK_URL}/administrativa/ordenes/recibir-archivos-local/"
+                endpoint = f"{settings.NGROK_URL}administrativa/ordenes/recibir-archivos-local/"
                 try:
                     r = requests.post(endpoint, data=data, files=files, timeout=60)
                     if r.status_code == 200:
@@ -114,8 +119,8 @@ def editar_orden(request, pk):
         "form": form,
         "orden": orden,
         "archivos_pc": archivos_pc,
-        "ngrok_url": NGROK_URL,
-        "title": "Editar Orden de Trabajo",
+        "ngrok_url": getattr(settings, "NGROK_URL", "/media/"),
+        "title": f"Editar Orden {orden.numero}",
     })
 
 # =====================================================
