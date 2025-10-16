@@ -1,103 +1,81 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block content %}
-<div class="container-form">
-  <h2 class="title">📄 Crear nueva Orden de Trabajo</h2>
+<div class="container mt-4">
 
-  <form method="POST" enctype="multipart/form-data" class="orden-form">
-    {% csrf_token %}
-    {{ form.as_p }}
+    <!-- Título -->
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-clipboard-list"></i> {{ title }}
+    </h2>
 
-    <div class="form-buttons">
-      <button type="submit" class="btn-guardar">💾 Guardar Orden</button>
-      <a href="{% url 'administrativa:ordenes:listar_ordenes' %}"class="btn-volver">↩ Volver</a>
-    </div>
-  </form>
+    <!-- Formulario -->
+    <form method="post" enctype="multipart/form-data" class="form-modern">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <!-- Documentos -->
+        <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
+
+        <!-- 🗂️ Archivos existentes en tu PC -->
+        {% if archivos_pc %}
+        <div class="documentos-box mb-3">
+            <h5><i class="fas fa-file-alt"></i> Archivos actuales:</h5>
+            <ul class="list-unstyled mb-2">
+                {% for archivo in archivos_pc %}
+                <li class="d-flex justify-content-between align-items-center border-bottom py-1">
+                    <a href="{{ ngrok_url }}/administrativa/ordenes/descargar-archivo/{{ orden.numero }}/{{ archivo }}" target="_blank">
+                        <i class="fas fa-paperclip text-primary"></i> {{ archivo }}
+                    </a>
+                    <a href="{% url 'administrativa:ordenes:eliminar_documento' orden.id %}?archivo={{ archivo }}" 
+                       class="text-danger small"
+                       onclick="return confirm('¿Seguro que deseas eliminar este archivo de tu PC?');">
+                        <i class="fas fa-trash"></i> eliminar
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- 📎 Subir nuevos archivos -->
+        <div class="documentos-box mb-3">
+            <input 
+                type="file" 
+                name="archivos" 
+                id="id_archivos" 
+                class="form-control" 
+                multiple 
+                accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls"
+            >
+            <small class="text-muted">Puedes seleccionar varios archivos a la vez. Los nuevos se agregarán a la lista.</small>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions text-center mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save"></i> Guardar OT y Subir Documentos
+            </button>
+            <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn btn-secondary px-4">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
 </div>
 
 <style>
-  body {
-    background-color: #f5f6fa;
-    font-family: "Poppins", sans-serif;
-  }
-
-  .container-form {
-    max-width: 750px;
-    margin: 50px auto;
-    background: #fff;
-    padding: 40px 50px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-
-  .title {
-    text-align: center;
-    color: #2d3436;
-    font-weight: 600;
-    margin-bottom: 25px;
-  }
-
-  .orden-form p {
-    margin-bottom: 20px;
-  }
-
-  label {
-    display: block;
+.documentos-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    background: #f9f9f9;
+}
+.documentos-box:hover {
+    background-color: #f1f7ff;
+}
+.btn-primary, .btn-secondary {
+    border-radius: 8px;
     font-weight: 500;
-    margin-bottom: 6px;
-    color: #333;
-  }
-
-  input, select, textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 15px;
-    background-color: #f9f9f9;
-    transition: all 0.3s ease;
-  }
-
-  input:focus, select:focus, textarea:focus {
-    border-color: #007bff;
-    outline: none;
-    background-color: #fff;
-  }
-
-  .form-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-  }
-
-  .btn-guardar {
-    background-color: #007bff;
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-
-  .btn-guardar:hover {
-    background-color: #0056b3;
-  }
-
-  .btn-volver {
-    background-color: #6c757d;
-    color: white;
-    text-decoration: none;
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: background 0.3s ease;
-  }
-
-  .btn-volver:hover {
-    background-color: #5a6268;
-  }
+}
 </style>
 {% endblock %}
