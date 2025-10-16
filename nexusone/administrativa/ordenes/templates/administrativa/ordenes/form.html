@@ -3,24 +3,33 @@
 
 {% block content %}
 <div class="container mt-4">
+
+    <!-- Título -->
     <h2 class="section-title text-center mb-4">
         <i class="fas fa-clipboard-list"></i> {{ title }}
     </h2>
 
+    <!-- Formulario -->
     <form method="post" enctype="multipart/form-data" class="form-modern">
         {% csrf_token %}
         {{ form.as_p }}
 
-        <!-- Documentos existentes -->
+        <!-- Documentos -->
+        <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
+
+        <!-- 🗂️ Archivos existentes en tu PC vía ngrok -->
         {% if archivos_pc %}
         <div class="documentos-box mb-3">
             <h5><i class="fas fa-file-alt"></i> Archivos actuales:</h5>
             <ul class="list-unstyled mb-2">
                 {% for archivo in archivos_pc %}
                 <li class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <a href="{% url 'administrativa:ordenes:descargar_archivo_render' orden.numero archivo %}" target="_blank">
+                    <!-- Descargar vía ngrok -->
+                    <a href="{{ ngrok_url }}administrativa/ordenes/descargar-archivo/{{ orden.numero }}/{{ archivo }}" target="_blank">
                         <i class="fas fa-paperclip text-primary"></i> {{ archivo }}
                     </a>
+
+                    <!-- Eliminar archivo -->
                     <a href="{% url 'administrativa:ordenes:eliminar_documento' orden.id %}?archivo={{ archivo }}" 
                        class="text-danger small"
                        onclick="return confirm('¿Seguro que deseas eliminar este archivo de tu PC?');">
@@ -30,15 +39,26 @@
                 {% endfor %}
             </ul>
         </div>
+        {% else %}
+        <div class="documentos-box mb-3">
+            <p class="text-muted">No se encontraron archivos para esta orden.</p>
+        </div>
         {% endif %}
 
-        <!-- Subir nuevos archivos -->
+        <!-- 📎 Subir nuevos archivos -->
         <div class="documentos-box mb-3">
-            <input type="file" name="archivos" class="form-control" multiple
-                   accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls">
-            <small class="text-muted">Puedes seleccionar varios archivos a la vez.</small>
+            <input 
+                type="file" 
+                name="archivos" 
+                id="id_archivos" 
+                class="form-control" 
+                multiple 
+                accept=".pdf,.doc,.docx,.jpg,.png,.xlsx,.xls"
+            >
+            <small class="text-muted">Puedes seleccionar varios archivos a la vez. Los nuevos se agregarán a la lista.</small>
         </div>
 
+        <!-- Botones -->
         <div class="form-actions text-center mt-4">
             <button type="submit" class="btn btn-primary px-4">
                 <i class="fas fa-save"></i> Guardar OT y Subir Documentos
