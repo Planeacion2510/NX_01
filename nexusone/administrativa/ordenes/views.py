@@ -35,9 +35,10 @@ def listar_ordenes(request):
         except Exception:
             orden.archivos_disponibles = []
 
-    # Calcular cierres a tiempo y tardíos según tus reglas internas
-    cierres_a_tiempo = sum([1 for ot in ordenes if getattr(ot, "cierre_a_tiempo", False)])
-    cierres_tardios = sum([1 for ot in ordenes if getattr(ot, "cierre_a_tiempo", True) is False and ot.fecha_cierre])
+    # Calcular cierres a tiempo y tardíos
+    ordenes_cerradas = [ot for ot in ordenes if ot.estado == "cerrada" and ot.fecha_cierre]
+    cierres_a_tiempo = sum([1 for ot in ordenes_cerradas if ot.cierre_a_tiempo == True])
+    cierres_tardios = sum([1 for ot in ordenes_cerradas if ot.cierre_a_tiempo == False])
 
     return render(request, "administrativa/ordenes/listar_orden.html", {
         "ordenes": ordenes,
@@ -201,10 +202,29 @@ def eliminar_orden(request, pk):
 # 🚫 CERRAR ORDEN
 # =====================================================
 def cerrar_orden(request, pk):
+    from django.utils import timezone
+    
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
+    orden.fecha_cierre = timezone.now()  # ✅ Registra la fecha y hora exacta del cierre
+    
+    # ✅ Calcular si el cierre fue a tiempo o tardío
+    if orden.fecha_envio:
+        # Comparar solo las fechas (sin hora)
+        fecha_cierre_solo_fecha = orden.fecha_cierre.date()
+        fecha_envio_solo_fecha = orden.fecha_envio
+        
+        if fecha_cierre_solo_fecha <= fecha_envio_solo_fecha:
+            orden.cierre_a_tiempo = True
+            messages.success(request, "✅ Orden cerrada A TIEMPO correctamente. 😀")
+        else:
+            orden.cierre_a_tiempo = False
+            messages.warning(request, "⚠️ Orden cerrada TARDÍAMENTE. 😞")
+    else:
+        orden.cierre_a_tiempo = None
+        messages.success(request, "✅ Orden cerrada (sin fecha de envío para comparar).")
+    
     orden.save()
-    messages.success(request, "✅ Orden cerrada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 

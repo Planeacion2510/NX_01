@@ -55,16 +55,27 @@ class OrdenTrabajo(models.Model):
     fecha_apertura = models.DateTimeField("Fecha de Apertura", auto_now_add=True, null=True, blank=True)
     fecha_envio = models.DateField("Fecha de Envío", null=True, blank=True)
     estado = models.CharField("Estado", max_length=20, choices=ESTADO_CHOICES, default='abierta')
-    fecha_cierre = models.DateField("Fecha de Cierre", null=True, blank=True)
+    fecha_cierre = models.DateTimeField("Fecha de Cierre", null=True, blank=True)  # ✅ Cambiado a DateTimeField
+    cierre_a_tiempo = models.BooleanField("Cierre a Tiempo", null=True, blank=True)  # ✅ NUEVO CAMPO
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"OT {self.numero} — {self.get_constructora_display()} / {self.get_proyecto_display()}"
 
     def cerrar(self):
+        """Cierra la orden y calcula si fue a tiempo"""
         if self.estado != "cerrada":
             self.estado = "cerrada"
             self.fecha_cierre = timezone.now()
+            
+            # Calcular si el cierre fue a tiempo
+            if self.fecha_envio:
+                fecha_cierre_solo_fecha = self.fecha_cierre.date()
+                if fecha_cierre_solo_fecha <= self.fecha_envio:
+                    self.cierre_a_tiempo = True
+                else:
+                    self.cierre_a_tiempo = False
+            
             self.save()
 
 
@@ -91,12 +102,6 @@ class DocumentoOrden(models.Model):
     nombre = models.CharField(max_length=255, default="Documento sin nombre")
     archivo = models.FileField(upload_to=ruta_documento_ot, blank=True, null=True)
     fecha_subida = models.DateTimeField(auto_now_add=True)
-
-    # ✅ Eliminamos campos de Google Drive (ya no son necesarios)
-    # Mantiene compatibilidad con templates y forms antiguos
-    drive_file_id = models.CharField(max_length=255, blank=True, null=True)
-    drive_view_url = models.URLField(blank=True, null=True)
-    drive_download_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre or (self.archivo.name if self.archivo else "Documento")
