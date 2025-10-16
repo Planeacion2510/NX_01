@@ -1,113 +1,125 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-
+<link rel="stylesheet" href="{% static 'css/estilos.css' %}">
 <style>
-  .container {
-    max-width: 800px;
-    margin-top: 40px;
+  /* 🎨 Estilos adicionales */
+  .form-container {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
 
-  h2 {
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-
-  form {
-    background-color: #ffffff;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-  }
-
-  label {
+  .form-label {
     font-weight: 600;
+    color: #333;
   }
 
-  .btn {
-    border-radius: 8px;
-    font-weight: 600;
-    padding: 8px 16px;
+  input, select, textarea {
+    border-radius: 8px !important;
+    border: 1px solid #ccc !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: #007bff !important;
+    box-shadow: 0 0 6px rgba(0,123,255,0.4);
   }
 
   .btn-primary {
-    background-color: #0066cc;
+    background-color: #007bff;
     border: none;
+    border-radius: 8px;
+    padding: 8px 25px;
+    transition: all 0.3s ease;
   }
 
   .btn-primary:hover {
-    background-color: #004999;
+    background-color: #0056b3;
+    transform: scale(1.05);
   }
 
   .btn-secondary {
-    background-color: #6c757d;
-    border: none;
+    border-radius: 8px;
+    padding: 8px 25px;
+    transition: all 0.3s ease;
   }
 
   .btn-secondary:hover {
-    background-color: #565e64;
+    background-color: #6c757d;
+    transform: scale(1.05);
   }
 
-  .list-group-item a {
-    text-decoration: none;
-    color: #007bff;
-  }
-
-  .list-group-item a:hover {
-    text-decoration: underline;
-  }
-
-  .list-group-item .btn-sm {
-    padding: 2px 8px;
-  }
-
-  hr {
-    margin-top: 30px;
-    margin-bottom: 15px;
-  }
-
-  .text-muted {
-    font-style: italic;
+  h2 {
+    font-weight: 700;
+    color: #0056b3;
   }
 </style>
 
-<div class="container">
-  <h2>{% if orden %}Editar Orden #{{ orden.id }}{% else %}Nueva Orden{% endif %}</h2>
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">
+    {% if form.instance.pk %}
+      ✏️ Editar Orden de Trabajo
+    {% else %}
+      🧾 Crear Nueva Orden de Trabajo
+    {% endif %}
+  </h2>
 
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" class="form-container">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="{{ form.numero_orden.id_for_label }}" class="form-label">Número de Orden</label>
+        {{ form.numero_orden }}
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="{{ form.solicitante.id_for_label }}" class="form-label">Solicitante</label>
+        {{ form.solicitante }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="{{ form.departamento.id_for_label }}" class="form-label">Departamento</label>
+        {{ form.departamento }}
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="{{ form.fecha.id_for_label }}" class="form-label">Fecha</label>
+        {{ form.fecha }}
+      </div>
+    </div>
 
     <div class="mb-3">
-      <label>📂 Subir nuevos documentos:</label>
-      <input type="file" name="documentos" multiple class="form-control" />
+      <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+      {{ form.descripcion }}
     </div>
 
-    <div class="d-flex justify-content-between mt-4">
-      <button type="submit" class="btn btn-primary">💾 Guardar</button>
-      <a href="{% url 'administrativa:ordenes:listar_ordenes' %}" class="btn btn-secondary">⬅️ Volver</a>
+    <div class="mb-3">
+      <label for="{{ form.estado.id_for_label }}" class="form-label">Estado</label>
+      {{ form.estado }}
+    </div>
+
+    <div class="mb-3">
+      <label for="archivos" class="form-label">Archivos Adjuntos</label>
+      <input type="file" name="archivos" id="archivos" multiple class="form-control" />
+      <small class="text-muted">Puedes seleccionar varios archivos a la vez.</small>
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary">
+        {% if form.instance.pk %}
+          💾 Guardar Cambios
+        {% else %}
+          ✅ Crear Orden
+        {% endif %}
+      </button>
+      <a href="{% url 'lista_ordenes' %}" class="btn btn-secondary ms-2">Cancelar</a>
     </div>
   </form>
-
-  {% if documentos %}
-  <hr />
-  <h4>📁 Documentos actuales:</h4>
-  <ul class="list-group">
-    {% for doc in documentos %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <a href="{{ doc.archivo.url }}" target="_blank">
-        {{ doc.archivo.name|cut:"ordenes/" }}
-      </a>
-      <a
-        href="{% url 'eliminar_documento' doc.id %}"
-        class="btn btn-danger btn-sm"
-        onclick="return confirm('¿Eliminar este documento?')"
-      >🗑️</a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted mt-3">No hay documentos guardados.</p>
-  {% endif %}
 </div>
-
 {% endblock %}
