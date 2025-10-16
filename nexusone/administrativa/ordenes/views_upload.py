@@ -35,6 +35,7 @@ def recibir_archivos_local(request):
 
 @csrf_exempt
 def eliminar_orden_local(request):
+    """Elimina completamente la carpeta de una orden en tu PC"""
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
@@ -43,11 +44,24 @@ def eliminar_orden_local(request):
         return JsonResponse({"error": "Falta número de OT"}, status=400)
 
     carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/")
+    
     if os.path.exists(carpeta_ot):
-        shutil.rmtree(carpeta_ot)
-        return JsonResponse({"status": "ok", "mensaje": f"Carpeta {numero_ot} eliminada"})
+        try:
+            shutil.rmtree(carpeta_ot)
+            return JsonResponse({
+                "status": "ok", 
+                "mensaje": f"✅ Carpeta {numero_ot} eliminada completamente de tu PC"
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "mensaje": f"❌ Error al eliminar carpeta: {str(e)}"
+            }, status=500)
     else:
-        return JsonResponse({"status": "ok", "mensaje": f"No existe la carpeta {numero_ot}"})
+        return JsonResponse({
+            "status": "ok", 
+            "mensaje": f"ℹ️ No existe la carpeta {numero_ot} en tu PC"
+        })
 
 
 @csrf_exempt

@@ -178,18 +178,22 @@ def eliminar_orden(request, pk):
 
     # Borrar carpeta en tu PC vía ngrok
     try:
-        requests.post(
+        response = requests.post(
             f"{NGROK_URL}/administrativa/ordenes/eliminar-orden-local/",
             data={"numero_ot": orden.numero},
             timeout=10
         )
+        if response.status_code == 200:
+            messages.success(request, "🗑️ Carpeta eliminada de tu PC correctamente.")
+        else:
+            messages.warning(request, f"⚠️ No se pudo eliminar carpeta en tu PC: {response.text}")
     except Exception as e:
-        messages.warning(request, f"No se pudo eliminar carpeta en tu PC: {e}")
+        messages.warning(request, f"❌ Error al conectar con tu PC para eliminar carpeta: {e}")
 
     # Borrar registros en DB
     orden.documentos.all().delete()
     orden.delete()
-    messages.success(request, "🗑️ Orden y carpeta eliminadas correctamente.")
+    messages.success(request, "🗑️ Orden eliminada de la base de datos correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
