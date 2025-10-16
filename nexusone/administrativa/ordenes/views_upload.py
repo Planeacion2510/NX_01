@@ -51,6 +51,26 @@ def eliminar_orden_local(request):
 
 
 @csrf_exempt
+def eliminar_archivo_local(request):
+    """✅ Endpoint para eliminar un archivo específico"""
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    numero_ot = request.POST.get("numero_ot")
+    archivo = request.POST.get("archivo")
+    
+    if not numero_ot or not archivo:
+        return JsonResponse({"error": "Faltan parámetros"}, status=400)
+
+    ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{archivo}")
+    if os.path.exists(ruta_archivo):
+        os.remove(ruta_archivo)
+        return JsonResponse({"status": "ok", "mensaje": f"Archivo {archivo} eliminado"})
+    else:
+        return JsonResponse({"status": "error", "mensaje": "Archivo no encontrado"}, status=404)
+
+
+@csrf_exempt
 def descargar_archivo(request, numero_ot, filename):
     """
     Descargar un archivo de tu PC vía ngrok

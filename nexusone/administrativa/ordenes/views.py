@@ -28,6 +28,7 @@ def listar_ordenes(request):
         "ordenes": ordenes,
         "cierres_a_tiempo": cierres_a_tiempo,
         "cierres_tardios": cierres_tardios,
+        "ngrok_url": NGROK_URL,  # ✅ Añadido
     })
 
 
@@ -69,6 +70,7 @@ def crear_orden(request):
     return render(request, "administrativa/ordenes/form.html", {
         "form": form,
         "title": "Crear Orden de Trabajo",
+        "ngrok_url": NGROK_URL,  # ✅ Añadido
     })
 
 
@@ -78,25 +80,18 @@ def crear_orden(request):
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Obtener archivos directamente de tu PC
-    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-    if os.path.exists(carpeta_ot):
-        archivos_pc = os.listdir(carpeta_ot)
-    else:
-        archivos_pc = []
-
-    # 🔄 Si no hay archivos locales, intenta obtenerlos desde tu PC vía ngrok
-    if not archivos_pc:
-        try:
-            r = requests.get(
-                f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/",
-                params={"numero_ot": orden.numero},
-                timeout=10
-            )
-            if r.status_code == 200:
-                archivos_pc = r.json().get("archivos", [])
-        except Exception:
-            pass
+    # 🔍 Intentar obtener archivos desde tu PC vía ngrok
+    archivos_pc = []
+    try:
+        r = requests.get(
+            f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/",
+            params={"numero_ot": orden.numero},
+            timeout=10
+        )
+        if r.status_code == 200:
+            archivos_pc = r.json().get("archivos", [])
+    except Exception as e:
+        print(f"Error al obtener archivos desde PC: {e}")
 
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
@@ -143,12 +138,19 @@ def eliminar_documento(request, pk):
     archivo = request.GET.get("archivo")
 
     if archivo:
-        ruta = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/{archivo}")
-        if os.path.exists(ruta):
-            os.remove(ruta)
-            messages.success(request, "🗑️ Archivo eliminado correctamente de tu PC.")
-        else:
-            messages.error(request, "⚠️ Archivo no encontrado en tu PC.")
+        # Intentar eliminar desde tu PC vía ngrok
+        try:
+            r = requests.post(
+                f"{NGROK_URL}/administrativa/ordenes/eliminar-archivo-local/",
+                data={"numero_ot": orden.numero, "archivo": archivo},
+                timeout=10
+            )
+            if r.status_code == 200:
+                messages.success(request, "🗑️ Archivo eliminado correctamente de tu PC.")
+            else:
+                messages.error(request, "⚠️ Error al eliminar archivo en tu PC.")
+        except Exception as e:
+            messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
 
     return redirect("administrativa:ordenes:editar_orden", pk=orden.id)
 
@@ -158,11 +160,6 @@ def eliminar_documento(request, pk):
 # =====================================================
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
-
-    # Borrar carpeta en Render (si existe)
-    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-    if os.path.exists(carpeta_ot):
-        shutil.rmtree(carpeta_ot)
 
     # Borrar carpeta en tu PC vía ngrok
     try:
@@ -196,18 +193,14 @@ def cerrar_orden(request, pk):
 # 📂 DESCARGAR ARCHIVO
 # =====================================================
 def descargar_archivo_render(request, numero_ot, nombre_archivo):
-    ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{nombre_archivo}")
-    if os.path.exists(ruta_archivo):
-        return FileResponse(open(ruta_archivo, 'rb'), as_attachment=True, filename=nombre_archivo)
-    else:
-        try:
-            r = requests.get(f"{NGROK_URL}/Ordenes/{numero_ot}/{nombre_archivo}")
-            if r.status_code == 200:
-                from django.http import HttpResponse
-                response = HttpResponse(r.content, content_type="application/octet-stream")
-                response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-                return response
-            else:
-                raise Http404("Archivo no encontrado")
-        except Exception:
+    try:
+        r = requests.get(f"{NGROK_URL}/Ordenes/{numero_ot}/{nombre_archivo}")
+        if r.status_code == 200:
+            from django.http import HttpResponse
+            response = HttpResponse(r.content, content_type="application/octet-stream")
+            response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+            return response
+        else:
             raise Http404("Archivo no encontrado")
+    except Exception:
+        raise Http404("Archivo no encontrado")

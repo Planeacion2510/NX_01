@@ -19,6 +19,8 @@ urlpatterns = [
     # =======================
     path("recibir-archivos-local/", views_upload.recibir_archivos_local, name="recibir_archivos_local"),
     path("eliminar-orden-local/", views_upload.eliminar_orden_local, name="eliminar_orden_local"),
+    path("eliminar-archivo-local/", views_upload.eliminar_archivo_local, name="eliminar_archivo_local"),  # ✅ Nuevo
+    path("listar-archivos-local/", views_upload.listar_archivos_local, name="listar_archivos_local"),  # ✅ Explícito
     path("descargar-archivo/<str:numero_ot>/<str:filename>/", views_upload.descargar_archivo, name="descargar_archivo"),
 
     # =======================

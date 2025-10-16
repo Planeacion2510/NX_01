@@ -74,7 +74,7 @@
                         <div class="acciones-wrapper">
 
                             <!-- 📁 Carpeta Documentos -->
-                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}')" title="Documentos">
+                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}', '{{ ot.numero }}')" title="Documentos">
                                 <i class="fas fa-folder-open"></i>
                             </button>
 
@@ -86,25 +86,8 @@
                                         <button class="modal-doc-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
                                     </div>
 
-                                    <ul class="document-list">
-                                        {% if ot.documentos.exists %}
-                                            {% for doc in ot.documentos.all %}
-                                            <li>
-                                                <span>📄 {{ doc.nombre|default:doc.archivo.name }}</span>
-                                                <div class="d-flex gap-2">
-                                                    {% if doc.archivo %}
-                                                        <!-- 🖥️ Enlace directo desde tu PC vía ngrok -->
-                                                        <a href="{{ ngrok_url }}Ordenes/{{ ot.numero }}/{{ doc.archivo.name }}" 
-                                                           class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
-                                                            <i class="fas fa-download text-success"></i>
-                                                        </a>
-                                                    {% endif %}
-                                                </div>
-                                            </li>
-                                            {% endfor %}
-                                        {% else %}
-                                            <li class="text-muted text-center py-3">No hay documentos cargados</li>
-                                        {% endif %}
+                                    <ul class="document-list" id="docList-{{ ot.id }}">
+                                        <li class="text-muted text-center py-3">Cargando archivos...</li>
                                     </ul>
                                 </div>
                             </div>
@@ -153,6 +136,8 @@
 
 <!-- Script reloj y modales -->
 <script>
+const NGROK_URL = "{{ ngrok_url }}";
+
 function updateClock() {
     const now = new Date();
     const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -169,9 +154,43 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     setTimeout(() => { location.reload(); }, 500);
 });
 
-// 📂 Abrir/Cerrar modal
-function openModal(id) { document.getElementById('docModal-' + id).classList.add('active'); }
-function closeModal(id) { document.getElementById('docModal-' + id).classList.remove('active'); }
+// 📂 Abrir modal y cargar archivos desde la PC
+async function openModal(id, numeroOT) {
+    const modal = document.getElementById('docModal-' + id);
+    modal.classList.add('active');
+    
+    const docList = document.getElementById('docList-' + id);
+    docList.innerHTML = '<li class="text-muted text-center py-3">Cargando archivos...</li>';
+    
+    try {
+        const response = await fetch(`/administrativa/ordenes/listar-archivos-local/?numero_ot=${numeroOT}`);
+        const data = await response.json();
+        
+        if (data.archivos && data.archivos.length > 0) {
+            docList.innerHTML = data.archivos.map(archivo => `
+                <li>
+                    <span>📄 ${archivo}</span>
+                    <div class="d-flex gap-2">
+                        <a href="${NGROK_URL}/Ordenes/${numeroOT}/${archivo}" 
+                           class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
+                            <i class="fas fa-download text-success"></i>
+                        </a>
+                    </div>
+                </li>
+            `).join('');
+        } else {
+            docList.innerHTML = '<li class="text-muted text-center py-3">No hay documentos cargados</li>';
+        }
+    } catch (error) {
+        docList.innerHTML = '<li class="text-danger text-center py-3">Error al cargar archivos</li>';
+        console.error('Error:', error);
+    }
+}
+
+function closeModal(id) { 
+    document.getElementById('docModal-' + id).classList.remove('active'); 
+}
+
 document.querySelectorAll('.modal-doc').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
 });
