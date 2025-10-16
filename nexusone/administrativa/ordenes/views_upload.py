@@ -50,21 +50,34 @@ def eliminar_orden_local(request):
     
     if os.path.exists(carpeta_ot):
         try:
-            # Primero eliminar todos los archivos dentro
-            for archivo in os.listdir(carpeta_ot):
-                ruta_archivo = os.path.join(carpeta_ot, archivo)
-                if os.path.isfile(ruta_archivo):
-                    os.remove(ruta_archivo)
-                    print(f"🗑️ Archivo eliminado: {archivo}")
+            # Usar shutil.rmtree con onerror para manejar permisos en Windows
+            def handle_remove_readonly(func, path, exc):
+                """Maneja archivos de solo lectura en Windows"""
+                import stat
+                os.chmod(path, stat.S_IWRITE)
+                func(path)
             
-            # Luego eliminar la carpeta vacía
-            os.rmdir(carpeta_ot)
-            print(f"✅ Carpeta eliminada: {carpeta_ot}")
+            shutil.rmtree(carpeta_ot, onerror=handle_remove_readonly)
+            print(f"✅ Carpeta eliminada completamente: {carpeta_ot}")
             
+            # Verificar que realmente se eliminó
+            if not os.path.exists(carpeta_ot):
+                return JsonResponse({
+                    "status": "ok", 
+                    "mensaje": f"✅ Carpeta {numero_ot} eliminada completamente de tu PC"
+                })
+            else:
+                return JsonResponse({
+                    "status": "warning",
+                    "mensaje": f"⚠️ La carpeta {numero_ot} aún existe después de intentar eliminarla"
+                })
+                
+        except PermissionError as e:
+            print(f"❌ Error de permisos: {str(e)}")
             return JsonResponse({
-                "status": "ok", 
-                "mensaje": f"✅ Carpeta {numero_ot} eliminada completamente de tu PC"
-            })
+                "status": "error",
+                "mensaje": f"❌ Falta de permisos para eliminar: {str(e)}"
+            }, status=500)
         except Exception as e:
             print(f"❌ Error: {str(e)}")
             return JsonResponse({
