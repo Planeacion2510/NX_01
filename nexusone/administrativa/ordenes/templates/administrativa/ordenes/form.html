@@ -24,8 +24,8 @@
             <ul class="list-unstyled mb-2">
                 {% for archivo in archivos_pc %}
                 <li class="d-flex justify-content-between align-items-center border-bottom py-1">
-                    <!-- Descargar vía ngrok -->
-                    <a href="{{ ngrok_url }}administrativa/ordenes/descargar-archivo/{{ orden.numero }}/{{ archivo }}" target="_blank">
+                    <!-- Descargar directamente desde tu PC vía ngrok -->
+                    <a href="{{ ngrok_url }}Ordenes/{{ orden.numero }}/{{ archivo }}" target="_blank">
                         <i class="fas fa-paperclip text-primary"></i> {{ archivo }}
                     </a>
 

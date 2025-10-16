@@ -5,15 +5,11 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 
-# URL actual de tu ngrok (actualizada dinámicamente desde Render)
-ngrok_url_actual = None  # esta variable puede actualizarse desde tu endpoint actualizar_ngrok
-
+# 🔹 Usar la URL de ngrok definida en settings
+NGROK_URL = getattr(settings, "NGROK_URL", "").rstrip("/") + "/"
 
 @csrf_exempt
 def recibir_archivos_local(request):
-    """
-    Endpoint para subir archivos desde Render a tu PC via ngrok
-    """
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
@@ -39,9 +35,6 @@ def recibir_archivos_local(request):
 
 @csrf_exempt
 def eliminar_orden_local(request):
-    """
-    Endpoint para eliminar la carpeta completa de una OT en tu PC via ngrok
-    """
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
@@ -60,13 +53,12 @@ def eliminar_orden_local(request):
 @csrf_exempt
 def descargar_archivo(request, numero_ot, filename):
     """
-    Endpoint para descargar un archivo de tu PC via ngrok desde Render
+    Descargar un archivo de tu PC vía ngrok
     """
-    global ngrok_url_actual
-    if not ngrok_url_actual:
+    if not NGROK_URL:
         return HttpResponse("URL de ngrok no configurada.", status=400)
 
-    url_pc = f"{ngrok_url_actual}/Ordenes/{numero_ot}/{filename}"
+    url_pc = f"{NGROK_URL}Ordenes/{numero_ot}/{filename}"
     try:
         r = requests.get(url_pc)
         if r.status_code == 200:
@@ -81,10 +73,6 @@ def descargar_archivo(request, numero_ot, filename):
 
 @csrf_exempt
 def listar_archivos_local(request):
-    """
-    Endpoint para listar los archivos actuales de una orden en tu PC,
-    usado por Render cuando se edita una OT y necesita mostrar los existentes.
-    """
     numero_ot = request.GET.get("numero_ot")
     if not numero_ot:
         return JsonResponse({"error": "Falta número de OT"}, status=400)
