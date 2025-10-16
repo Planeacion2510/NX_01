@@ -20,6 +20,21 @@ NGROK_URL = "https://unfledged-unsalably-laticia.ngrok-free.dev"
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
 
+    # Para cada orden, obtener archivos desde la PC vía ngrok
+    for orden in ordenes:
+        try:
+            r = requests.get(
+                f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/",
+                params={"numero_ot": orden.numero},
+                timeout=5
+            )
+            if r.status_code == 200:
+                orden.archivos_disponibles = r.json().get("archivos", [])
+            else:
+                orden.archivos_disponibles = []
+        except Exception:
+            orden.archivos_disponibles = []
+
     # Calcular cierres a tiempo y tardíos según tus reglas internas
     cierres_a_tiempo = sum([1 for ot in ordenes if getattr(ot, "cierre_a_tiempo", False)])
     cierres_tardios = sum([1 for ot in ordenes if getattr(ot, "cierre_a_tiempo", True) is False and ot.fecha_cierre])
@@ -28,7 +43,7 @@ def listar_ordenes(request):
         "ordenes": ordenes,
         "cierres_a_tiempo": cierres_a_tiempo,
         "cierres_tardios": cierres_tardios,
-        "ngrok_url": NGROK_URL,  # ✅ Añadido
+        "ngrok_url": NGROK_URL,
     })
 
 
@@ -115,7 +130,7 @@ def editar_orden(request, pk):
                     messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
 
             messages.success(request, "✅ Orden actualizada correctamente.")
-            return redirect("administrativa:ordenes:editar_orden", pk=orden.id)
+            return redirect("administrativa:ordenes:listar_ordenes")
         else:
             messages.error(request, "⚠️ Corrige los errores del formulario.")
     else:

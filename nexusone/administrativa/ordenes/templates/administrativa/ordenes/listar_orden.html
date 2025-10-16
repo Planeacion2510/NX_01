@@ -87,7 +87,21 @@
                                     </div>
 
                                     <ul class="document-list" id="docList-{{ ot.id }}">
-                                        <li class="text-muted text-center py-3">Cargando archivos...</li>
+                                        {% if ot.archivos_disponibles %}
+                                            {% for archivo in ot.archivos_disponibles %}
+                                            <li>
+                                                <span>📄 {{ archivo }}</span>
+                                                <div class="d-flex gap-2">
+                                                    <a href="{{ ngrok_url }}/Ordenes/{{ ot.numero }}/{{ archivo }}" 
+                                                       class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
+                                                        <i class="fas fa-download text-success"></i>
+                                                    </a>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        {% else %}
+                                            <li class="text-muted text-center py-3">📭 No hay documentos cargados</li>
+                                        {% endif %}
                                     </ul>
                                 </div>
                             </div>
@@ -154,37 +168,10 @@ document.getElementById('refresh-btn').addEventListener('click', function() {
     setTimeout(() => { location.reload(); }, 500);
 });
 
-// 📂 Abrir modal y cargar archivos desde la PC
-async function openModal(id, numeroOT) {
+// 📂 Abrir modal (archivos ya precargados desde el servidor)
+function openModal(id, numeroOT) {
     const modal = document.getElementById('docModal-' + id);
     modal.classList.add('active');
-    
-    const docList = document.getElementById('docList-' + id);
-    docList.innerHTML = '<li class="text-muted text-center py-3">Cargando archivos...</li>';
-    
-    try {
-        const response = await fetch(`/administrativa/ordenes/listar-archivos-local/?numero_ot=${numeroOT}`);
-        const data = await response.json();
-        
-        if (data.archivos && data.archivos.length > 0) {
-            docList.innerHTML = data.archivos.map(archivo => `
-                <li>
-                    <span>📄 ${archivo}</span>
-                    <div class="d-flex gap-2">
-                        <a href="${NGROK_URL}/Ordenes/${numeroOT}/${archivo}" 
-                           class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
-                            <i class="fas fa-download text-success"></i>
-                        </a>
-                    </div>
-                </li>
-            `).join('');
-        } else {
-            docList.innerHTML = '<li class="text-muted text-center py-3">No hay documentos cargados</li>';
-        }
-    } catch (error) {
-        docList.innerHTML = '<li class="text-danger text-center py-3">Error al cargar archivos</li>';
-        console.error('Error:', error);
-    }
 }
 
 function closeModal(id) { 
