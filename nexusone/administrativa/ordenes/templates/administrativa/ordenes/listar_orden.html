@@ -74,11 +74,11 @@
                         <div class="acciones-wrapper">
 
                             <!-- 📁 Carpeta Documentos -->
-                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}', '{{ ot.numero }}')" title="Documentos">
+                            <button class="btn-icon folder" onclick="openModal('{{ ot.id }}')" title="Documentos">
                                 <i class="fas fa-folder-open"></i>
                             </button>
 
-                            <!-- 🪟 Modal Documentos -->
+                            <!-- Modal Documentos -->
                             <div id="docModal-{{ ot.id }}" class="modal-doc">
                                 <div class="modal-doc-content">
                                     <div class="modal-doc-header">
@@ -86,14 +86,14 @@
                                         <button class="modal-doc-close" onclick="closeModal('{{ ot.id }}')">&times;</button>
                                     </div>
 
-                                    <ul class="document-list" id="docList-{{ ot.id }}">
+                                    <ul class="document-list">
                                         {% if ot.archivos_disponibles %}
                                             {% for archivo in ot.archivos_disponibles %}
                                             <li>
                                                 <span>📄 {{ archivo }}</span>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ ngrok_url }}/Ordenes/{{ ot.numero }}/{{ archivo }}" 
-                                                       class="btn-icon-mini" title="Descargar desde tu PC" target="_blank">
+                                                    <a href="{% url 'administrativa:ordenes:descargar_archivo' ot.numero archivo %}" 
+                                                       class="btn-icon-mini" title="Descargar" target="_blank">
                                                         <i class="fas fa-download text-success"></i>
                                                     </a>
                                                 </div>
@@ -150,8 +150,6 @@
 
 <!-- Script reloj y modales -->
 <script>
-const NGROK_URL = "{{ ngrok_url }}";
-
 function updateClock() {
     const now = new Date();
     const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -161,23 +159,20 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// 🔄 Refrescar página
+// Refrescar página
 document.getElementById('refresh-btn').addEventListener('click', function() {
     const icon = this.querySelector('i');
     icon.classList.add('fa-spin');
     setTimeout(() => { location.reload(); }, 500);
 });
 
-// 📂 Abrir modal (archivos ya precargados desde el servidor)
-function openModal(id, numeroOT) {
-    const modal = document.getElementById('docModal-' + id);
-    modal.classList.add('active');
+// Abrir/Cerrar modal
+function openModal(id) { 
+    document.getElementById('docModal-' + id).classList.add('active'); 
 }
-
 function closeModal(id) { 
     document.getElementById('docModal-' + id).classList.remove('active'); 
 }
-
 document.querySelectorAll('.modal-doc').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
 });

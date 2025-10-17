@@ -1,24 +1,17 @@
+from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from . import views
-from . import views_api  # ✅ import correcto
-
-app_name = "administrativa"
 
 urlpatterns = [
-    path("", views.menu_administrativa, name="menu_administrativa"),
-
-    # Módulo Órdenes
-    path(
-        "ordenes/",
-        include(("nexusone.administrativa.ordenes.urls", "ordenes"), namespace="ordenes")
-    ),
-
-    # Endpoint API para recibir la URL ngrok
-    path("api/actualizar-ngrok/", views_api.actualizar_ngrok, name="actualizar_ngrok"),
+    path('admin/', admin.site.urls),
+    path('', include('nexusone.urls')),
+    path('administrativa/', include('nexusone.administrativa.urls')),
 ]
 
-# Servir archivos media en desarrollo
+# Servir archivos media en todos los entornos
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Servir archivos estáticos solo en desarrollo
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

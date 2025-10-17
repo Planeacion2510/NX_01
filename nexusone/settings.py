@@ -15,18 +15,13 @@ env = environ.Env(DEBUG=(bool, False))
 
 # Archivos .env
 env_file = os.path.join(BASE_DIR, ".env")
-env_local = os.path.join(BASE_DIR, ".env.local")
-
-# 🧠 Prioriza .env.local si existe (para tu PC)
-if os.path.exists(env_local):
-    environ.Env.read_env(env_local)
-elif os.path.exists(env_file):
+if os.path.exists(env_file):
     environ.Env.read_env(env_file)
 
 # =========================
 # CONFIGURACIÓN BÁSICA
 # =========================
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="clave-dev")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="clave-dev-insegura")
 DEBUG = env.bool("DEBUG", default=False)
 
 # =========================
@@ -36,7 +31,6 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
     "127.0.0.1",
     "localhost",
     "nx-01.onrender.com",
-    ".ngrok-free.dev",
 ])
 
 # =========================
@@ -138,29 +132,20 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # =========================
 # 📂 ARCHIVOS DE USUARIO (MEDIA)
 # =========================
-# ✅ En Windows (local) → carpeta OneDrive compartida
-# ✅ En Render (Linux) → carpeta /media dentro del proyecto
+# Detección de entorno
+IS_RENDER = os.getenv("RENDER", False)
 
-if os.name == "nt":
-    MEDIA_ROOT = Path(r"C:/Users/aux5g/OneDrive/DinnovaERP")
-
-    # 👇 Si tienes una URL pública de ngrok, úsala automáticamente
-    NGROK_URL = os.getenv("NGROK_URL", "").strip()
-    if NGROK_URL:
-        # Asegura que termine con '/'
-        if not NGROK_URL.endswith("/"):
-            NGROK_URL += "/"
-        MEDIA_URL = NGROK_URL + "media/"
-    else:
-        # Fallback local si no hay ngrok
-        MEDIA_URL = "/media/"
+if IS_RENDER:
+    # 🌐 Producción en Render - Disco persistente montado en /data
+    MEDIA_ROOT = Path("/data")
+    MEDIA_URL = "/media/"
 else:
+    # 💻 Desarrollo local
     MEDIA_ROOT = BASE_DIR / "media"
-    MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+    MEDIA_URL = "/media/"
 
-# Crear la carpeta base si no existe
+# Crear carpeta si no existe
 os.makedirs(MEDIA_ROOT, exist_ok=True)
-
 
 # =========================
 # DEFAULT AUTO FIELD
@@ -182,7 +167,6 @@ if not DEBUG:
 # CSRF TRUSTED ORIGINS
 # =========================
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
-    "https://nexusone.onrender.com",
     "https://nx-01.onrender.com",
     "http://127.0.0.1:8000",
     "http://localhost:8000",

@@ -1,17 +1,12 @@
 import os
 import shutil
-import requests
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponseRedirect, FileResponse, Http404
-from django.urls import reverse
+from django.http import FileResponse, Http404
 
 from .models import OrdenTrabajo, DocumentoOrden
 from .forms import OrdenTrabajoForm
-
-
-NGROK_URL = "https://unfledged-unsalably-laticia.ngrok-free.dev"
 
 
 # =====================================================
@@ -20,19 +15,12 @@ NGROK_URL = "https://unfledged-unsalably-laticia.ngrok-free.dev"
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
 
-    # Para cada orden, obtener archivos desde la PC vía ngrok
+    # Para cada orden, obtener archivos del disco
     for orden in ordenes:
-        try:
-            r = requests.get(
-                f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/",
-                params={"numero_ot": orden.numero},
-                timeout=5
-            )
-            if r.status_code == 200:
-                orden.archivos_disponibles = r.json().get("archivos", [])
-            else:
-                orden.archivos_disponibles = []
-        except Exception:
+        carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
+        if os.path.exists(carpeta_ot):
+            orden.archivos_disponibles = os.listdir(carpeta_ot)
+        else:
             orden.archivos_disponibles = []
 
     # Calcular cierres a tiempo y tardíos
@@ -44,7 +32,6 @@ def listar_ordenes(request):
         "ordenes": ordenes,
         "cierres_a_tiempo": cierres_a_tiempo,
         "cierres_tardios": cierres_tardios,
-        "ngrok_url": NGROK_URL,
     })
 
 
@@ -59,21 +46,17 @@ def crear_orden(request):
             archivos = request.FILES.getlist("archivos")
 
             if archivos:
-                files = [("archivos", (a.name, a, a.content_type)) for a in archivos]
-                data = {"numero_ot": orden.numero}
-                try:
-                    response = requests.post(
-                        f"{NGROK_URL}/administrativa/ordenes/recibir-archivos-local/",
-                        data=data,
-                        files=files,
-                        timeout=60
-                    )
-                    if response.status_code == 200:
-                        messages.success(request, "✅ Orden creada y archivos guardados en tu PC.")
-                    else:
-                        messages.error(request, f"⚠️ Error al enviar archivos: {response.text}")
-                except Exception as e:
-                    messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
+                # Guardar archivos en el disco
+                carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
+                os.makedirs(carpeta_ot, exist_ok=True)
+                
+                for archivo in archivos:
+                    ruta_archivo = os.path.join(carpeta_ot, archivo.name)
+                    with open(ruta_archivo, "wb+") as destino:
+                        for chunk in archivo.chunks():
+                            destino.write(chunk)
+                
+                messages.success(request, "✅ Orden creada y archivos guardados correctamente.")
             else:
                 messages.success(request, "✅ Orden creada correctamente (sin archivos).")
 
@@ -86,7 +69,6 @@ def crear_orden(request):
     return render(request, "administrativa/ordenes/form.html", {
         "form": form,
         "title": "Crear Orden de Trabajo",
-        "ngrok_url": NGROK_URL,  # ✅ Añadido
     })
 
 
@@ -96,39 +78,30 @@ def crear_orden(request):
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # 🔍 Intentar obtener archivos desde tu PC vía ngrok
-    archivos_pc = []
-    try:
-        r = requests.get(
-            f"{NGROK_URL}/administrativa/ordenes/listar-archivos-local/",
-            params={"numero_ot": orden.numero},
-            timeout=10
-        )
-        if r.status_code == 200:
-            archivos_pc = r.json().get("archivos", [])
-    except Exception as e:
-        print(f"Error al obtener archivos desde PC: {e}")
+    # Obtener archivos del disco
+    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
+    if os.path.exists(carpeta_ot):
+        archivos_disponibles = os.listdir(carpeta_ot)
+    else:
+        archivos_disponibles = []
 
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES, instance=orden)
         if form.is_valid():
             orden.save()
 
-            # Subir nuevos archivos a tu PC
+            # Subir nuevos archivos
             nuevos_archivos = request.FILES.getlist("archivos")
             if nuevos_archivos:
-                files = [("archivos", (a.name, a, a.content_type)) for a in nuevos_archivos]
-                data = {"numero_ot": orden.numero}
-                endpoint = f"{NGROK_URL}/administrativa/ordenes/recibir-archivos-local/"
-
-                try:
-                    r = requests.post(endpoint, data=data, files=files, timeout=60)
-                    if r.status_code == 200:
-                        messages.success(request, "✅ Nuevos archivos subidos correctamente a tu PC.")
-                    else:
-                        messages.error(request, f"⚠️ Error al subir archivos: {r.text}")
-                except Exception as e:
-                    messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
+                os.makedirs(carpeta_ot, exist_ok=True)
+                
+                for archivo in nuevos_archivos:
+                    ruta_archivo = os.path.join(carpeta_ot, archivo.name)
+                    with open(ruta_archivo, "wb+") as destino:
+                        for chunk in archivo.chunks():
+                            destino.write(chunk)
+                
+                messages.success(request, "✅ Nuevos archivos subidos correctamente.")
 
             messages.success(request, "✅ Orden actualizada correctamente.")
             return redirect("administrativa:ordenes:listar_ordenes")
@@ -140,8 +113,7 @@ def editar_orden(request, pk):
     return render(request, "administrativa/ordenes/form.html", {
         "form": form,
         "orden": orden,
-        "archivos_pc": archivos_pc,
-        "ngrok_url": NGROK_URL,
+        "archivos_disponibles": archivos_disponibles,
         "title": "Editar Orden de Trabajo",
     })
 
@@ -154,19 +126,12 @@ def eliminar_documento(request, pk):
     archivo = request.GET.get("archivo")
 
     if archivo:
-        # Intentar eliminar desde tu PC vía ngrok
-        try:
-            r = requests.post(
-                f"{NGROK_URL}/administrativa/ordenes/eliminar-archivo-local/",
-                data={"numero_ot": orden.numero, "archivo": archivo},
-                timeout=10
-            )
-            if r.status_code == 200:
-                messages.success(request, "🗑️ Archivo eliminado correctamente de tu PC.")
-            else:
-                messages.error(request, "⚠️ Error al eliminar archivo en tu PC.")
-        except Exception as e:
-            messages.error(request, f"❌ No se pudo conectar con tu PC: {e}")
+        ruta = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/{archivo}")
+        if os.path.exists(ruta):
+            os.remove(ruta)
+            messages.success(request, "🗑️ Archivo eliminado correctamente.")
+        else:
+            messages.error(request, "⚠️ Archivo no encontrado.")
 
     return redirect("administrativa:ordenes:editar_orden", pk=orden.id)
 
@@ -177,24 +142,26 @@ def eliminar_documento(request, pk):
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
-    # Borrar carpeta en tu PC vía ngrok
-    try:
-        response = requests.post(
-            f"{NGROK_URL}/administrativa/ordenes/eliminar-orden-local/",
-            data={"numero_ot": orden.numero},
-            timeout=10
-        )
-        if response.status_code == 200:
-            messages.success(request, "🗑️ Carpeta eliminada de tu PC correctamente.")
-        else:
-            messages.warning(request, f"⚠️ No se pudo eliminar carpeta en tu PC: {response.text}")
-    except Exception as e:
-        messages.warning(request, f"❌ Error al conectar con tu PC para eliminar carpeta: {e}")
+    # Borrar carpeta del disco
+    carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}")
+    
+    if os.path.exists(carpeta_ot):
+        try:
+            # Función para manejar archivos de solo lectura
+            def handle_remove_readonly(func, path, exc):
+                import stat
+                os.chmod(path, stat.S_IWRITE)
+                func(path)
+            
+            shutil.rmtree(carpeta_ot, onerror=handle_remove_readonly)
+            messages.success(request, "🗑️ Carpeta eliminada correctamente.")
+        except Exception as e:
+            messages.warning(request, f"⚠️ Error al eliminar carpeta: {e}")
 
     # Borrar registros en DB
     orden.documentos.all().delete()
     orden.delete()
-    messages.success(request, "🗑️ Orden eliminada de la base de datos correctamente.")
+    messages.success(request, "🗑️ Orden eliminada correctamente.")
     return redirect("administrativa:ordenes:listar_ordenes")
 
 
@@ -206,11 +173,10 @@ def cerrar_orden(request, pk):
     
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
-    orden.fecha_cierre = timezone.now()  # ✅ Registra la fecha y hora exacta del cierre
+    orden.fecha_cierre = timezone.now()
     
-    # ✅ Calcular si el cierre fue a tiempo o tardío
+    # Calcular si el cierre fue a tiempo
     if orden.fecha_envio:
-        # Comparar solo las fechas (sin hora)
         fecha_cierre_solo_fecha = orden.fecha_cierre.date()
         fecha_envio_solo_fecha = orden.fecha_envio
         
@@ -231,15 +197,15 @@ def cerrar_orden(request, pk):
 # =====================================================
 # 📂 DESCARGAR ARCHIVO
 # =====================================================
-def descargar_archivo_render(request, numero_ot, nombre_archivo):
-    try:
-        r = requests.get(f"{NGROK_URL}/Ordenes/{numero_ot}/{nombre_archivo}")
-        if r.status_code == 200:
-            from django.http import HttpResponse
-            response = HttpResponse(r.content, content_type="application/octet-stream")
-            response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-            return response
-        else:
-            raise Http404("Archivo no encontrado")
-    except Exception:
+def descargar_archivo(request, numero_ot, nombre_archivo):
+    """Descargar archivo del disco de Render"""
+    ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{nombre_archivo}")
+    
+    if os.path.exists(ruta_archivo):
+        return FileResponse(
+            open(ruta_archivo, 'rb'), 
+            as_attachment=True, 
+            filename=nombre_archivo
+        )
+    else:
         raise Http404("Archivo no encontrado")
