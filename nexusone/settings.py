@@ -144,8 +144,7 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
     MEDIA_URL = "/media/"
 
-# Crear carpeta si no existe
-os.makedirs(MEDIA_ROOT, exist_ok=True)
+# NO crear carpeta aquí - se creará cuando se necesite en las vistas
 
 # =========================
 # DEFAULT AUTO FIELD
