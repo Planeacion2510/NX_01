@@ -24,6 +24,7 @@ class OrdenTrabajo(models.Model):
         ('torreon', 'Torreon'),
         ('c_u', 'C&U'),
         ('plinco', 'Plinco'),
+        ('nucleo', 'Nucleo'),
         ('urbana', 'Urbana'),
         ('N/E', 'N/E'),
     ]
@@ -33,6 +34,7 @@ class OrdenTrabajo(models.Model):
         ('mallorca', 'Mallorca'),
         ('o2_del_cerro', 'O2 del Cerro'),
         ('antigua', 'Antigua'),
+        ('koa', 'Koa Loft'),
         ('Cocinas Pereira', 'Cocinas Pereira'),
         ('externo', 'Externo'),
     ]
