@@ -14,4 +14,9 @@ urlpatterns = [
     
     # Descargar archivos
     path("descargar/<str:numero_ot>/<str:nombre_archivo>/", views.descargar_archivo, name="descargar_archivo"),
+    
+    # ✅ NUEVAS RUTAS DE NOTIFICACIONES
+    path("notificaciones/", views.obtener_notificaciones, name="obtener_notificaciones"),
+    path("notificaciones/<int:notificacion_id>/leer/", views.marcar_leida, name="marcar_leida"),
+    path("notificaciones/leer-todas/", views.marcar_todas_leidas, name="marcar_todas_leidas"),
 ]
