@@ -601,75 +601,73 @@ cargarNotificaciones();
 .table-modern th,
 .table-modern td {
     white-space: nowrap !important;
-    padding: 10px 8px !important;
+    padding: 12px 10px !important;
     vertical-align: middle !important;
     writing-mode: horizontal-tb !important;
     text-orientation: mixed !important;
     word-break: keep-all !important;
     transform: none !important;
     font-size: 14px;
+    text-align: center;
 }
 
 /* Columnas con anchos optimizados */
 .table-modern th:nth-child(1), .table-modern td:nth-child(1) {
-    width: 70px;
-    text-align: center;
+    width: 75px;
 }
 
 .table-modern th:nth-child(2), .table-modern td:nth-child(2) {
-    width: 115px;
+    width: 120px;
 }
 
 .table-modern th:nth-child(3), .table-modern td:nth-child(3) {
-    width: 115px;
+    width: 120px;
 }
 
 .table-modern th:nth-child(4), .table-modern td:nth-child(4) {
-    width: 100px;
+    width: 110px;
 }
 
 /* ✅ DESCRIPCIÓN alineada y con 2 líneas máximo */
 .table-modern th:nth-child(5) {
-    width: 260px;
+    width: 280px;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    vertical-align: middle !important;
 }
 
 .table-modern td:nth-child(5) {
-    width: 260px;
-    max-width: 260px;
-    white-space: normal !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-height: 1.4;
+    width: 280px;
+    max-width: 280px;
+    height: 60px;
     padding: 10px 12px !important;
     font-size: 13px;
     text-align: left;
     vertical-align: middle !important;
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow: hidden;
+    line-height: 1.4em;
+    max-height: 2.8em; /* Exactamente 2 líneas */
 }
 
 .table-modern th:nth-child(6), .table-modern td:nth-child(6) {
-    width: 135px;
+    width: 145px;
     font-size: 13px;
 }
 
 .table-modern th:nth-child(7), .table-modern td:nth-child(7) {
-    width: 100px;
+    width: 110px;
 }
 
 .table-modern th:nth-child(8), .table-modern td:nth-child(8) {
-    width: 85px;
-    text-align: center;
+    width: 90px;
 }
 
 .table-modern th:nth-child(9), .table-modern td:nth-child(9) {
-    width: 100px;
-    text-align: center;
+    width: 105px;
 }
 
 /* ✅ ACCIONES - Ancho fijo y visible */

@@ -36,6 +36,7 @@ class OrdenTrabajo(models.Model):
         ('antigua', 'Antigua'),
         ('monte_real', 'Monte Real'),
         ('koa', 'Koa Loft'),
+        ('perla nova', 'Perla Nova'),
         ('Cocinas Pereira', 'Cocinas Pereira'),
         ('externo', 'Externo'),
     ]
