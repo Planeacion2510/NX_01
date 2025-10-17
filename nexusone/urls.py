@@ -23,8 +23,7 @@ urlpatterns = [
 
     # Servir archivos desde carpeta Ordenes (para descargas directas)
     re_path(
-        r'^Ordenes/(?P<path>.*)
-,
+        r'^Ordenes/(?P<path>.*)$',
         serve,
         {'document_root': os.path.join(settings.MEDIA_ROOT, 'Ordenes')},
         name='ordenes_files'
