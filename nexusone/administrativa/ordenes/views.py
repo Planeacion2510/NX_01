@@ -3,15 +3,18 @@ import shutil
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 
-from .models import OrdenTrabajo, DocumentoOrden
+from .models import OrdenTrabajo, DocumentoOrden, Notificacion
 from .forms import OrdenTrabajoForm
 
 
 # =====================================================
 # 📋 LISTAR ORDENES
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
 
@@ -38,11 +41,20 @@ def listar_ordenes(request):
 # =====================================================
 # ➕ CREAR ORDEN
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def crear_orden(request):
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES)
         if form.is_valid():
             orden = form.save()
+            
+            # ✅ CREAR NOTIFICACIÓN DE NUEVA ORDEN
+            Notificacion.objects.create(
+                orden=orden,
+                tipo='nueva_orden',
+                mensaje=f"✨ Nueva orden creada: {orden.numero} - {orden.get_proyecto_display()}"
+            )
+            
             archivos = request.FILES.getlist("archivos")
 
             if archivos:
@@ -75,6 +87,7 @@ def crear_orden(request):
 # =====================================================
 # ✏️ EDITAR ORDEN
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
@@ -113,7 +126,7 @@ def editar_orden(request, pk):
     return render(request, "administrativa/ordenes/form.html", {
         "form": form,
         "orden": orden,
-        "archivos_disponibles": archivos_disponibles,  # ✅ Esto es lo que usa el template
+        "archivos_disponibles": archivos_disponibles,
         "title": "Editar Orden de Trabajo",
     })
 
@@ -121,6 +134,7 @@ def editar_orden(request, pk):
 # =====================================================
 # ❌ ELIMINAR DOCUMENTO
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def eliminar_documento(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     archivo = request.GET.get("archivo")
@@ -139,6 +153,7 @@ def eliminar_documento(request, pk):
 # =====================================================
 # ❌ ELIMINAR ORDEN Y CARPETA
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
@@ -168,148 +183,8 @@ def eliminar_orden(request, pk):
 # =====================================================
 # 🚫 CERRAR ORDEN
 # =====================================================
+@login_required(login_url='/accounts/login/')
 def cerrar_orden(request, pk):
-    from django.utils import timezone
-    
-    orden = get_object_or_404(OrdenTrabajo, pk=pk)
-    orden.estado = "cerrada"
-    orden.fecha_cierre = timezone.now()
-    
-    # Calcular si el cierre fue a tiempo
-    if orden.fecha_envio:
-        fecha_cierre_solo_fecha = orden.fecha_cierre.date()
-        fecha_envio_solo_fecha = orden.fecha_envio
-        
-        if fecha_cierre_solo_fecha <= fecha_envio_solo_fecha:
-            orden.cierre_a_tiempo = True
-            messages.success(request, "✅ Orden cerrada A TIEMPO correctamente. 😀")
-        else:
-            orden.cierre_a_tiempo = False
-            messages.warning(request, "⚠️ Orden cerrada TARDÍAMENTE. 😞")
-    else:
-        orden.cierre_a_tiempo = None
-        messages.success(request, "✅ Orden cerrada (sin fecha de envío para comparar).")
-    
-    orden.save()
-    return redirect("administrativa:ordenes:listar_ordenes")
-
-
-# =====================================================
-# 📂 DESCARGAR ARCHIVO
-# =====================================================
-def descargar_archivo(request, numero_ot, nombre_archivo):
-    """Descargar archivo del disco de Render"""
-    ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{nombre_archivo}")
-    
-    if os.path.exists(ruta_archivo):
-        return FileResponse(
-            open(ruta_archivo, 'rb'), 
-            as_attachment=True, 
-            filename=nombre_archivo
-        )
-    else:
-        raise Http404("Archivo no encontrado")
-# Agregar al final de tu views.py existente
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from .models import Notificacion
-
-# =====================================================
-# 🔔 SISTEMA DE NOTIFICACIONES
-# =====================================================
-
-def obtener_notificaciones(request):
-    """Obtiene todas las notificaciones no leídas"""
-    notificaciones = Notificacion.objects.filter(leida=False).select_related('orden')[:20]
-    
-    data = {
-        'count': notificaciones.count(),
-        'notificaciones': [
-            {
-                'id': n.id,
-                'orden_id': n.orden.id,
-                'tipo': n.tipo,
-                'mensaje': n.mensaje,
-                'fecha': timezone.localtime(n.fecha_creacion).strftime('%d/%m/%Y %H:%M')
-            }
-            for n in notificaciones
-        ]
-    }
-    
-    return JsonResponse(data)
-
-
-def marcar_leida(request, notificacion_id):
-    """Marca una notificación como leída"""
-    try:
-        notificacion = Notificacion.objects.get(id=notificacion_id)
-        notificacion.leida = True
-        notificacion.save()
-        return JsonResponse({'success': True})
-    except Notificacion.DoesNotExist:
-        return JsonResponse({'success': False}, status=404)
-
-
-def marcar_todas_leidas(request):
-    """Marca todas las notificaciones como leídas"""
-    Notificacion.objects.filter(leida=False).update(leida=True)
-    return JsonResponse({'success': True})
-
-
-# =====================================================
-# 🔧 MODIFICAR LA FUNCIÓN crear_orden EXISTENTE
-# =====================================================
-# En tu función crear_orden(), después de orden = form.save(), agregar:
-
-def crear_orden(request):
-    if request.method == "POST":
-        form = OrdenTrabajoForm(request.POST, request.FILES)
-        if form.is_valid():
-            orden = form.save()
-            
-            # ✅ CREAR NOTIFICACIÓN DE NUEVA ORDEN
-            Notificacion.objects.create(
-                orden=orden,
-                tipo='nueva_orden',
-                mensaje=f"✨ Nueva orden creada: {orden.numero} - {orden.get_proyecto_display()}"
-            )
-            
-            archivos = request.FILES.getlist("archivos")
-            # ... resto del código igual
-            
-            if archivos:
-                carpeta_ot = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{orden.numero}/")
-                os.makedirs(carpeta_ot, exist_ok=True)
-                
-                for archivo in archivos:
-                    ruta_archivo = os.path.join(carpeta_ot, archivo.name)
-                    with open(ruta_archivo, "wb+") as destino:
-                        for chunk in archivo.chunks():
-                            destino.write(chunk)
-                
-                messages.success(request, "✅ Orden creada y archivos guardados correctamente.")
-            else:
-                messages.success(request, "✅ Orden creada correctamente (sin archivos).")
-
-            return redirect("administrativa:ordenes:listar_ordenes")
-        else:
-            messages.error(request, "⚠️ Corrige los errores del formulario.")
-    else:
-        form = OrdenTrabajoForm()
-
-    return render(request, "administrativa/ordenes/form.html", {
-        "form": form,
-        "title": "Crear Orden de Trabajo",
-    })
-
-
-# =====================================================
-# 🔧 MODIFICAR LA FUNCIÓN cerrar_orden EXISTENTE
-# =====================================================
-def cerrar_orden(request, pk):
-    from django.utils import timezone
-    
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
     orden.fecha_cierre = timezone.now()
@@ -347,3 +222,66 @@ def cerrar_orden(request, pk):
     
     orden.save()
     return redirect("administrativa:ordenes:listar_ordenes")
+
+
+# =====================================================
+# 📂 DESCARGAR ARCHIVO
+# =====================================================
+@login_required(login_url='/accounts/login/')
+def descargar_archivo(request, numero_ot, nombre_archivo):
+    """Descargar archivo del disco de Render"""
+    ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{nombre_archivo}")
+    
+    if os.path.exists(ruta_archivo):
+        return FileResponse(
+            open(ruta_archivo, 'rb'), 
+            as_attachment=True, 
+            filename=nombre_archivo
+        )
+    else:
+        raise Http404("Archivo no encontrado")
+
+
+# =====================================================
+# 🔔 SISTEMA DE NOTIFICACIONES
+# =====================================================
+
+@login_required(login_url='/accounts/login/')
+def obtener_notificaciones(request):
+    """Obtiene todas las notificaciones no leídas"""
+    notificaciones = Notificacion.objects.filter(leida=False).select_related('orden')[:20]
+    
+    data = {
+        'count': notificaciones.count(),
+        'notificaciones': [
+            {
+                'id': n.id,
+                'orden_id': n.orden.id,
+                'tipo': n.tipo,
+                'mensaje': n.mensaje,
+                'fecha': timezone.localtime(n.fecha_creacion).strftime('%d/%m/%Y %H:%M')
+            }
+            for n in notificaciones
+        ]
+    }
+    
+    return JsonResponse(data)
+
+
+@login_required(login_url='/accounts/login/')
+def marcar_leida(request, notificacion_id):
+    """Marca una notificación como leída"""
+    try:
+        notificacion = Notificacion.objects.get(id=notificacion_id)
+        notificacion.leida = True
+        notificacion.save()
+        return JsonResponse({'success': True})
+    except Notificacion.DoesNotExist:
+        return JsonResponse({'success': False}, status=404)
+
+
+@login_required(login_url='/accounts/login/')
+def marcar_todas_leidas(request):
+    """Marca todas las notificaciones como leídas"""
+    Notificacion.objects.filter(leida=False).update(leida=True)
+    return JsonResponse({'success': True})

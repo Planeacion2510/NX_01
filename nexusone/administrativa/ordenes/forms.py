@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django import forms
 from .models import OrdenTrabajo, DocumentoOrden
 from django.forms import modelformset_factory
@@ -7,6 +8,16 @@ class OrdenTrabajoForm(forms.ModelForm):
     class Meta:
         model = OrdenTrabajo
         fields = ["descripcion", "constructora", "proyecto", "proceso", "estado", "fecha_envio"]
+
+        # ✅ AGREGAR LABELS PARA EVITAR PROBLEMAS DE CODIFICACIÓN
+        labels = {
+            'descripcion': 'Descripción',
+            'constructora': 'Constructora',
+            'proyecto': 'Proyecto',
+            'proceso': 'Proceso',
+            'estado': 'Estado',
+            'fecha_envio': 'Fecha de Envío',
+        }
 
         widgets = {
             "descripcion": forms.Textarea(attrs={
@@ -26,6 +37,12 @@ class DocumentoOrdenForm(forms.ModelForm):
     class Meta:
         model = DocumentoOrden
         fields = ["nombre", "archivo"]
+
+        # ✅ AGREGAR LABELS
+        labels = {
+            'nombre': 'Nombre del documento',
+            'archivo': 'Archivo',
+        }
 
         widgets = {
             "nombre": forms.TextInput(attrs={
