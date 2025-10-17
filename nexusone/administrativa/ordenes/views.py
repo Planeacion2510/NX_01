@@ -113,7 +113,7 @@ def editar_orden(request, pk):
     return render(request, "administrativa/ordenes/form.html", {
         "form": form,
         "orden": orden,
-        "archivos_disponibles": archivos_disponibles,
+        "archivos_disponibles": archivos_disponibles,  # ✅ Esto es lo que usa el template
         "title": "Editar Orden de Trabajo",
     })
 
