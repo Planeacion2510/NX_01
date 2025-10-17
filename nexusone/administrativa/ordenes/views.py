@@ -14,7 +14,7 @@ from .forms import OrdenTrabajoForm
 # =====================================================
 # 📋 LISTAR ORDENES
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def listar_ordenes(request):
     ordenes = OrdenTrabajo.objects.all().prefetch_related("documentos").order_by("-id")
 
@@ -41,7 +41,7 @@ def listar_ordenes(request):
 # =====================================================
 # ➕ CREAR ORDEN
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def crear_orden(request):
     if request.method == "POST":
         form = OrdenTrabajoForm(request.POST, request.FILES)
@@ -87,7 +87,7 @@ def crear_orden(request):
 # =====================================================
 # ✏️ EDITAR ORDEN
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def editar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
@@ -134,7 +134,7 @@ def editar_orden(request, pk):
 # =====================================================
 # ❌ ELIMINAR DOCUMENTO
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def eliminar_documento(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     archivo = request.GET.get("archivo")
@@ -153,7 +153,7 @@ def eliminar_documento(request, pk):
 # =====================================================
 # ❌ ELIMINAR ORDEN Y CARPETA
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def eliminar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
 
@@ -183,7 +183,7 @@ def eliminar_orden(request, pk):
 # =====================================================
 # 🚫 CERRAR ORDEN
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def cerrar_orden(request, pk):
     orden = get_object_or_404(OrdenTrabajo, pk=pk)
     orden.estado = "cerrada"
@@ -227,7 +227,7 @@ def cerrar_orden(request, pk):
 # =====================================================
 # 📂 DESCARGAR ARCHIVO
 # =====================================================
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def descargar_archivo(request, numero_ot, nombre_archivo):
     """Descargar archivo del disco de Render"""
     ruta_archivo = os.path.join(settings.MEDIA_ROOT, f"Ordenes/{numero_ot}/{nombre_archivo}")
@@ -246,7 +246,7 @@ def descargar_archivo(request, numero_ot, nombre_archivo):
 # 🔔 SISTEMA DE NOTIFICACIONES
 # =====================================================
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def obtener_notificaciones(request):
     """Obtiene todas las notificaciones no leídas"""
     notificaciones = Notificacion.objects.filter(leida=False).select_related('orden')[:20]
@@ -268,7 +268,7 @@ def obtener_notificaciones(request):
     return JsonResponse(data)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def marcar_leida(request, notificacion_id):
     """Marca una notificación como leída"""
     try:
@@ -280,7 +280,7 @@ def marcar_leida(request, notificacion_id):
         return JsonResponse({'success': False}, status=404)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/login/')
 def marcar_todas_leidas(request):
     """Marca todas las notificaciones como leídas"""
     Notificacion.objects.filter(leida=False).update(leida=True)
