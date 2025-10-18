@@ -1,22 +1,62 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block content %}
 <div class="container mt-4">
-
     <!-- Título -->
     <h2 class="section-title text-center mb-4">
         <i class="fas fa-clipboard-list"></i> {{ title }}
     </h2>
-
     <!-- Formulario -->
     <form method="post" enctype="multipart/form-data" class="form-modern">
         {% csrf_token %}
-        {{ form.as_p }}
+        
+        <!-- Descripción -->
+        <div class="mb-3">
+            <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción:</label>
+            {{ form.descripcion }}
+            {% if form.descripcion.errors %}
+                <div class="text-danger">{{ form.descripcion.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Constructora -->
+        <div class="mb-3">
+            <label for="{{ form.constructora.id_for_label }}" class="form-label">Constructora:</label>
+            {{ form.constructora }}
+            {% if form.constructora.errors %}
+                <div class="text-danger">{{ form.constructora.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Proyecto -->
+        <div class="mb-3">
+            <label for="{{ form.proyecto.id_for_label }}" class="form-label">Proyecto:</label>
+            {{ form.proyecto }}
+            {% if form.proyecto.errors %}
+                <div class="text-danger">{{ form.proyecto.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Proceso -->
+        <div class="mb-3">
+            <label for="{{ form.proceso.id_for_label }}" class="form-label">Proceso:</label>
+            {{ form.proceso }}
+            {% if form.proceso.errors %}
+                <div class="text-danger">{{ form.proceso.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Fecha de Envío -->
+        <div class="mb-3">
+            <label for="{{ form.fecha_envio.id_for_label }}" class="form-label">Fecha de Envío:</label>
+            {{ form.fecha_envio }}
+            {% if form.fecha_envio.errors %}
+                <div class="text-danger">{{ form.fecha_envio.errors }}</div>
+            {% endif %}
+        </div>
 
         <!-- Documentos -->
         <h4 class="mt-4"><i class="fas fa-folder-open"></i> Documentos</h4>
-
         <!-- Archivos existentes -->
         {% if archivos_disponibles %}
         <div class="documentos-box mb-3">
@@ -28,7 +68,6 @@
                     <a href="{% url 'administrativa:ordenes:descargar_archivo' orden.numero archivo %}" target="_blank">
                         <i class="fas fa-paperclip text-primary"></i> {{ archivo }}
                     </a>
-
                     <!-- Eliminar archivo -->
                     <a href="{% url 'administrativa:ordenes:eliminar_documento' orden.id %}?archivo={{ archivo }}" 
                        class="text-danger small"
@@ -44,7 +83,6 @@
             <p class="text-muted">No hay archivos para esta orden.</p>
         </div>
         {% endif %}
-
         <!-- Subir nuevos archivos -->
         <div class="documentos-box mb-3">
             <input 
@@ -57,7 +95,6 @@
             >
             <small class="text-muted">Puedes seleccionar varios archivos. Los nuevos se agregarán a la lista.</small>
         </div>
-
         <!-- Botones -->
         <div class="form-actions text-center mt-4">
             <button type="submit" class="btn btn-primary px-4">
@@ -69,7 +106,6 @@
         </div>
     </form>
 </div>
-
 <style>
 .documentos-box {
     border: 1px solid #ddd;
@@ -83,6 +119,10 @@
 .btn-primary, .btn-secondary {
     border-radius: 8px;
     font-weight: 500;
+}
+.form-label {
+    font-weight: 500;
+    color: #333;
 }
 </style>
 {% endblock %}

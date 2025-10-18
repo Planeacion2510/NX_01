@@ -19,7 +19,7 @@ def generar_numero_ot():
 class OrdenTrabajo(models.Model):
     CONSTRUCTORA_CHOICES = [
         ('consorcio_alfa', 'Consorcio Alfa'),
-        ('la_riviera', 'La Riviera'),
+        ('asul', 'Asul'),
         ('maca', 'Maca'),
         ('torreon', 'Torreon'),
         ('c_u', 'C&U'),
@@ -34,9 +34,10 @@ class OrdenTrabajo(models.Model):
         ('mallorca', 'Mallorca'),
         ('o2_del_cerro', 'O2 del Cerro'),
         ('antigua', 'Antigua'),
-        ('monte_real', 'Monte Real'),
+        ('montreal', 'MontReal'),
         ('koa', 'Koa Loft'),
         ('perla nova', 'Perla Nova'),
+        ('riviera verde', 'Riviera Verde Etp 1'),
         ('Cocinas Pereira', 'Cocinas Pereira'),
         ('externo', 'Externo'),
         ('sala de ventas', 'Sala de Ventas'),
