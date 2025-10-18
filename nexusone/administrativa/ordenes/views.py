@@ -49,12 +49,11 @@ def crear_orden(request):
             orden = form.save()
             
             # ✅ CREAR NOTIFICACIÓN DE NUEVA ORDEN
-            # TEMPORALMENTE COMENTADO HASTA QUE SE EJECUTEN LAS MIGRACIONES
-            # Notificacion.objects.create(
-            #     orden=orden,
-            #     tipo='nueva_orden',
-            #     mensaje=f"✨ Nueva orden creada: {orden.numero} - {orden.get_proyecto_display()}"
-            # )
+            Notificacion.objects.create(
+                orden=orden,
+                tipo='nueva_orden',
+                mensaje=f"✨ Nueva orden creada: {orden.numero} - {orden.get_proyecto_display()}"
+            )
             
             archivos = request.FILES.getlist("archivos")
 
@@ -199,24 +198,22 @@ def cerrar_orden(request, pk):
             orden.cierre_a_tiempo = True
             
             # ✅ CREAR NOTIFICACIÓN DE CIERRE A TIEMPO
-            # TEMPORALMENTE COMENTADO HASTA QUE SE EJECUTEN LAS MIGRACIONES
-            # Notificacion.objects.create(
-            #     orden=orden,
-            #     tipo='a_tiempo',
-            #     mensaje=f"😀 Orden {orden.numero} cerrada A TIEMPO"
-            # )
+            Notificacion.objects.create(
+                orden=orden,
+                tipo='a_tiempo',
+                mensaje=f"😀 Orden {orden.numero} cerrada A TIEMPO"
+            )
             
             messages.success(request, "✅ Orden cerrada A TIEMPO correctamente. 😀")
         else:
             orden.cierre_a_tiempo = False
             
             # ✅ CREAR NOTIFICACIÓN DE CIERRE TARDÍO
-            # TEMPORALMENTE COMENTADO HASTA QUE SE EJECUTEN LAS MIGRACIONES
-            # Notificacion.objects.create(
-            #     orden=orden,
-            #     tipo='tarde',
-            #     mensaje=f"😞 Orden {orden.numero} cerrada TARDÍAMENTE"
-            # )
+            Notificacion.objects.create(
+                orden=orden,
+                tipo='tarde',
+                mensaje=f"😞 Orden {orden.numero} cerrada TARDÍAMENTE"
+            )
             
             messages.warning(request, "⚠️ Orden cerrada TARDÍAMENTE. 😞")
     else:

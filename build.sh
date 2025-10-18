@@ -7,8 +7,14 @@ python --version
 # Instalar dependencias
 pip install -r requirements.txt
 
-# Ejecutar migraciones y recopilar archivos estáticos
+# ✅ EJECUTAR MIGRACIONES (ESTO CREA LA TABLA DE NOTIFICACIONES)
+echo "📦 Creando migraciones..."
+python manage.py makemigrations
+
+echo "🚀 Ejecutando migraciones..."
 python manage.py migrate --noinput
+
+# Recopilar archivos estáticos
 python manage.py collectstatic --noinput
 
 # Crear o actualizar superusuario admin
@@ -44,4 +50,3 @@ print('✅ Usuarios actualizados correctamente.')
 "
 
 echo "🚀 Build finalizado correctamente"
-
