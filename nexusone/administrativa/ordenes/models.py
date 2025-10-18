@@ -39,6 +39,8 @@ class OrdenTrabajo(models.Model):
         ('perla nova', 'Perla Nova'),
         ('Cocinas Pereira', 'Cocinas Pereira'),
         ('externo', 'Externo'),
+        ('sala de ventas', 'Sala de Ventas'),
+        ('apto modelo', 'Apto Modelo'),
     ]
     PROCESO_CHOICES = [
         ('mecanizado', 'Mecanizado'),
