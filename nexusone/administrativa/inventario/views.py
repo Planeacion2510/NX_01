@@ -180,3 +180,235 @@ def eliminar_movimiento(request, pk):
     
     # Confirmación de eliminación
     return render(request, "administrativa/inventario/kardex/confirmar_eliminar.html", {"movimiento": movimiento})
+
+# ==============================
+# 📥 IMPORTAR DESDE EXCEL
+# Agregar esta función AL FINAL de tu archivo inventario/views.py
+# ==============================
+
+def importar_excel(request):
+    """
+    Vista para importar insumos desde Excel
+    Solo lee la hoja "Inventario_Procesado" (ignora hoja 2)
+    Columnas esperadas: Código, Nombre, Stock
+    """
+    
+    if request.method == 'POST':
+        archivo = request.FILES.get('archivo_excel')
+        limpiar = request.POST.get('limpiar') == 'on'
+        
+        # Validaciones
+        if not archivo:
+            messages.error(request, '❌ Debes seleccionar un archivo')
+            return redirect('administrativa:inventario:importar_excel')
+        
+        if not archivo.name.endswith(('.xlsx', '.xls')):
+            messages.error(request, '❌ El archivo debe ser .xlsx o .xls')
+            return redirect('administrativa:inventario:importar_excel')
+        
+        try:
+            import openpyxl
+            
+            # Leer el archivo Excel
+            wb = openpyxl.load_workbook(archivo)
+            
+            # Buscar hoja "Inventario_Procesado" o usar la primera
+            if 'Inventario_Procesado' in wb.sheetnames:
+                ws = wb['Inventario_Procesado']
+            else:
+                ws = wb.active
+                messages.warning(request, f'⚠️ Usando hoja: {ws.title}')
+            
+            # Limpiar base de datos si se solicita
+            if limpiar:
+                count = Insumo.objects.count()
+                Insumo.objects.all().delete()
+                messages.warning(request, f'🗑️ Se eliminaron {count} insumos existentes')
+            
+            # Contadores
+            creados = 0
+            actualizados = 0
+            errores = []
+            
+            # Procesar cada fila (empezar desde fila 2, omitir encabezado)
+            for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                
+                # Validar que la fila tenga datos
+                if not row or len(row) < 3:
+                    continue
+                
+                # Leer solo las 3 primeras columnas
+                codigo = str(row[0]).strip() if row[0] else None
+                nombre = str(row[1]).strip() if row[1] else None
+                
+                # Convertir stock a entero
+                try:
+                    stock_inicial = int(row[2]) if row[2] else 0
+                except (ValueError, TypeError):
+                    stock_inicial = 0
+                
+                # Validar datos obligatorios
+                if not codigo or not nombre:
+                    errores.append(f'Fila {idx}: código o nombre vacío')
+                    continue
+                
+                try:
+                    # Crear o actualizar insumo
+                    insumo, created = Insumo.objects.update_or_create(
+                        codigo=codigo,
+                        defaults={
+                            'nombre': nombre,
+                            'descripcion': 'Importado desde Excel',
+                            'unidad': 'UND',
+                            'precio_unitario': Decimal('0.00'),
+                            'stock_minimo': 0,
+                            'stock_maximo': 1000,
+                            'iva': Decimal('19.00'),
+                            'descuento_proveedor': Decimal('0.00'),
+                        }
+                    )
+                    
+                    # Si es nuevo Y tiene stock, crear movimiento de entrada
+                    if created and stock_inicial > 0:
+                        MovimientoKardex.objects.create(
+                            insumo=insumo,
+                            tipo='entrada',
+                            cantidad=stock_inicial,
+                            observacion='Stock inicial importado desde Excel',
+                            fecha=timezone.now()
+                        )
+                        creados += 1
+                    else:
+                        actualizados += 1
+                
+                except Exception as e:
+                    errores.append(f'Fila {idx} ({codigo}): {str(e)}')
+            
+            # Mostrar resultados
+            if creados > 0:
+                messages.success(request, f'✅ {creados} insumos creados con stock inicial')
+            
+            if actualizados > 0:
+                messages.info(request, f'🔄 {actualizados} insumos ya existían (no se modificó su stock)')
+            
+            if errores:
+                # Mostrar máximo 5 errores
+                for error in errores[:5]:
+                    messages.warning(request, f'⚠️ {error}')
+                if len(errores) > 5:
+                    messages.warning(request, f'⚠️ ... y {len(errores) - 5} errores más')
+            
+            # Redirigir si hubo éxito
+            if creados > 0 or actualizados > 0:
+                messages.success(request, '🎉 ¡Importación completada!')
+                return redirect('administrativa:inventario:lista_insumo')
+        
+        except ImportError:
+            messages.error(request, '❌ Instala openpyxl: pip install openpyxl')
+        except Exception as e:
+            messages.error(request, f'❌ Error al procesar: {str(e)}')
+        
+        return redirect('administrativa:inventario:importar_excel')
+    
+    # GET: Mostrar formulario de importación
+    return render(request, 'administrativa/inventario/insumos/importar_excel.html')
+
+# ==============================
+# 📤 EXPORTAR A EXCEL
+# Agregar esta función en tu inventario/views.py
+# ==============================
+
+def exportar_excel(request):
+    """
+    Exporta el inventario actual a Excel en tiempo real
+    Solo una hoja: Inventario (Código, Nombre, Stock Actual)
+    """
+    from django.http import HttpResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from datetime import datetime
+    
+    # Obtener todos los insumos
+    insumos = Insumo.objects.all().order_by('codigo')
+    
+    # Crear libro de Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
+    
+    # ========================================
+    # ESTILOS
+    # ========================================
+    
+    # Estilo del encabezado (amarillo)
+    header_fill = PatternFill(start_color="FACC15", end_color="FACC15", fill_type="solid")
+    header_font = Font(bold=True, size=12, color="000000")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    
+    # Bordes
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # ========================================
+    # ENCABEZADOS
+    # ========================================
+    headers = ['Código', 'Nombre', 'Stock']
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # ========================================
+    # DATOS
+    # ========================================
+    for row_num, insumo in enumerate(insumos, 2):
+        # Código
+        cell = ws.cell(row=row_num, column=1)
+        cell.value = insumo.codigo
+        cell.border = thin_border
+        cell.alignment = Alignment(horizontal="center")
+        
+        # Nombre
+        cell = ws.cell(row=row_num, column=2)
+        cell.value = insumo.nombre
+        cell.border = thin_border
+        
+        # Stock Actual
+        cell = ws.cell(row=row_num, column=3)
+        cell.value = insumo.stock_actual
+        cell.border = thin_border
+        cell.alignment = Alignment(horizontal="center")
+    
+    # ========================================
+    # AJUSTAR ANCHO DE COLUMNAS
+    # ========================================
+    ws.column_dimensions['A'].width = 15  # Código
+    ws.column_dimensions['B'].width = 60  # Nombre
+    ws.column_dimensions['C'].width = 12  # Stock
+    
+    # ========================================
+    # PREPARAR RESPUESTA HTTP
+    # ========================================
+    
+    # Nombre del archivo con fecha actual
+    fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    nombre_archivo = f"Inventario_{fecha_actual}.xlsx"
+    
+    # Configurar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+    
+    # Guardar el archivo en la respuesta
+    wb.save(response)
+    
+    return response

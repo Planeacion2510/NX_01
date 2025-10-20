@@ -11,6 +11,8 @@ urlpatterns = [
     path("insumos/nuevo/", views.nuevo_insumo, name="nuevo_insumo"),
     path("insumos/editar/<int:pk>/", views.editar_insumo, name="editar_insumo"),
     path("insumos/eliminar/<int:pk>/", views.eliminar_insumo, name="eliminar_insumo"),
+    path('importar-excel/', views.importar_excel, name='importar_excel'),
+    path('exportar-excel/', views.exportar_excel, name='exportar_excel'),
 
     # ---- Maquinaria ----
     path("maquinaria/", views.lista_maquinaria, name="lista_maquinaria"),

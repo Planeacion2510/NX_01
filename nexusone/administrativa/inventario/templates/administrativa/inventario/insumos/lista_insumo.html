@@ -25,10 +25,23 @@
             <input type="text" id="buscarInsumo" class="form-control" placeholder="Buscar insumo...">
         </div>
 
-        <!-- Botón Nuevo Insumo -->
-        <a href="{% url 'administrativa:inventario:nuevo_insumo' %}" class="btn-amarillo">
-            <i class="fas fa-plus"></i> Nuevo Insumo
-        </a>
+        <!-- Botones de Acción -->
+        <div class="d-flex gap-2">
+            <!-- Botón Exportar Excel -->
+            <a href="{% url 'administrativa:inventario:exportar_excel' %}" class="btn-verde">
+                <i class="fas fa-file-export"></i> Exportar Excel
+            </a>
+            
+            <!-- Botón Importar Excel -->
+            <a href="{% url 'administrativa:inventario:importar_excel' %}" class="btn-verde">
+                <i class="fas fa-file-import"></i> Importar
+            </a>
+            
+            <!-- Botón Nuevo Insumo -->
+            <a href="{% url 'administrativa:inventario:nuevo_insumo' %}" class="btn-amarillo">
+                <i class="fas fa-plus"></i> Nuevo Insumo
+            </a>
+        </div>
     </div>
 
     <!-- Tabla -->
