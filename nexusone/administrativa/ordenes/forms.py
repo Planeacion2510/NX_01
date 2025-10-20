@@ -7,7 +7,8 @@ from django.forms import modelformset_factory
 class OrdenTrabajoForm(forms.ModelForm):
     class Meta:
         model = OrdenTrabajo
-        fields = ["descripcion", "constructora", "proyecto", "proceso", "estado", "fecha_envio"]
+        # ✅ CAMPO "estado" ELIMINADO - Se manejará automáticamente
+        fields = ["descripcion", "constructora", "proyecto", "proceso", "fecha_envio"]
 
         # ✅ AGREGAR LABELS PARA EVITAR PROBLEMAS DE CODIFICACIÓN
         labels = {
@@ -15,7 +16,6 @@ class OrdenTrabajoForm(forms.ModelForm):
             'constructora': 'Constructora',
             'proyecto': 'Proyecto',
             'proceso': 'Proceso',
-            'estado': 'Estado',
             'fecha_envio': 'Fecha de Envío',
         }
 
@@ -28,7 +28,6 @@ class OrdenTrabajoForm(forms.ModelForm):
             "constructora": forms.Select(attrs={"class": "form-control"}),
             "proyecto": forms.Select(attrs={"class": "form-control"}),
             "proceso": forms.Select(attrs={"class": "form-control"}),
-            "estado": forms.Select(attrs={"class": "form-control"}),
             "fecha_envio": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
         }
 
