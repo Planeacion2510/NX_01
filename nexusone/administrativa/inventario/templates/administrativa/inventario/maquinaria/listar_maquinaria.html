@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Botón volver -->
+    <div style="margin-bottom:20px;">
+        <a href="{% url 'administrativa:inventario:index_inventario' %}" class="btn-module" style="background:#facc15; color:#000;">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Título -->
+    <h2 class="section-title">
+        <i class="fas fa-screwdriver-wrench"></i> Inventario de Maquinaria
+    </h2>
+
+    <!-- Barra de búsqueda -->
+    <input type="text" id="buscador" class="form-control mb-3" placeholder="🔍 Buscar maquinaria...">
+
+    <!-- Acciones -->
+    <div class="actions text-center mb-4">
+        <a href="{% url 'administrativa:inventario:nueva_maquinaria' %}" class="btn-module" style="background:#facc15; color:#000;">
+            <i class="fas fa-plus"></i> Registrar Maquinaria
+        </a>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-container">
+        <table class="table-modern table-yellow" id="tabla-maquinaria">
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Fecha de Compra</th>
+                    <th>Años de Uso</th>
+                    <th>Cantidad</th>
+                    <th>Responsable</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in maquinas %}
+                    <tr>
+                        <td>{{ m.serial }}</td>
+                        <td>{{ m.nombre }}</td>
+                        <td>{{ m.marca }}</td>
+                        <td>{{ m.fecha_compra|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if m.fecha_compra %}
+                                {{ m.anios_uso }} años
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ m.cantidad }}</td>
+                        <td>{{ m.responsable }}</td>
+                        <td class="acciones-cell">
+                            <a href="{% url 'administrativa:inventario:editar_maquinaria' m.id %}" class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{% url 'administrativa:inventario:eliminar_maquinaria' m.id %}" class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Seguro que deseas eliminar esta máquina?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No hay maquinaria registrada.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById("buscador").addEventListener("keyup", function() {
+    let value = this.value.toLowerCase();
+    document.querySelectorAll("#tabla-maquinaria tr").forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+{% endblock %}

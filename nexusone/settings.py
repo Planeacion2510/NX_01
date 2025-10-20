@@ -48,8 +48,9 @@ INSTALLED_APPS = [
     "nexusone",
     "nexusone.administrativa",
     "nexusone.administrativa.ordenes",
+    "nexusone.administrativa.inventario",
+    "nexusone.administrativa.compras",
 ]
-
 # =========================
 # MIDDLEWARE
 # =========================

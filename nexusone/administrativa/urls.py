@@ -4,9 +4,11 @@ from . import views
 app_name = "administrativa"
 
 urlpatterns = [
-    # 👉 Ruta al menú administrativo principal
-    path("menu/", views.menu_administrativa, name="menu_administrativa"),
-
-    # 👉 Subrutas existentes (por ejemplo: órdenes)
+    # Menú principal de Dirección Administrativa
+    path("", views.menu_administrativa, name="menu_administrativa"),
+    
+    # Submódulos
     path("ordenes/", include("nexusone.administrativa.ordenes.urls")),
+    path("inventario/", include("nexusone.administrativa.inventario.urls")),
+    path("compras/", include("nexusone.administrativa.compras.urls")),
 ]

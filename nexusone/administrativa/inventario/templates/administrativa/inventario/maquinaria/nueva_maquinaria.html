@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title"><i class="fas fa-plus-circle"></i> Registrar Nueva Maquinaria</h2>
+
+    <form method="post" class="form-modern">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_serial">Serial:</label>
+            {{ form.serial }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_nombre">Nombre:</label>
+            {{ form.nombre }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_marca">Marca:</label>
+            {{ form.marca }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_fecha_compra">Fecha de Compra:</label>
+            {{ form.fecha_compra }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_cantidad">Cantidad:</label>
+            {{ form.cantidad }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_responsable">Responsable:</label>
+            {{ form.responsable }}
+        </div>
+
+        <div class="form-actions text-center mt-4">
+            <button type="submit" class="btn-module">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+            <a href="{% url 'administrativa:inventario:lista_maquinaria' %}" class="btn-module cancel">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

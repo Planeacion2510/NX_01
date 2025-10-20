@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Encabezado -->
+    <h2 class="section-title">
+        <i class="fas fa-truck text-success"></i> Proveedores
+    </h2>
+
+    <!-- Barra de búsqueda + botones -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 w-100">
+        
+        <!-- Botón Atrás al menú de compras -->
+        <a href="{% url 'administrativa:compras:index_compras' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Atrás
+        </a>
+
+        <!-- Buscador -->
+        <div class="input-group" style="max-width: 320px;">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text" id="buscarProveedor" class="form-control" placeholder="Buscar proveedor...">
+        </div>
+
+        <!-- Botón Registrar -->
+        <a href="{% url 'administrativa:compras:nuevo_proveedor' %}" class="btn-module">
+            <i class="fas fa-plus"></i> Registrar Proveedor
+        </a>
+    </div>
+
+    <!-- Tabla de proveedores (verde) -->
+    <div class="table-container w-100">
+        <table class="table-modern table-green">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>NIT</th>
+                    <th>Dirección</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-proveedores">
+                {% for proveedor in proveedores %}
+                    <tr>
+                        <td>{{ proveedor.nombre }}</td>
+                        <td>{{ proveedor.nit }}</td>
+                        <td>{{ proveedor.direccion }}</td>
+                        <td>{{ proveedor.telefono }}</td>
+                        <td>{{ proveedor.email }}</td>
+                        <td>
+                            <a href="{% url 'administrativa:compras:editar_proveedor' proveedor.id %}" 
+                               class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{% url 'administrativa:compras:eliminar_proveedor' proveedor.id %}" 
+                               class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Seguro que deseas eliminar este proveedor?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No hay proveedores registrados.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Script búsqueda -->
+<script>
+document.getElementById("buscarProveedor").addEventListener("keyup", function() {
+    let value = this.value.toLowerCase();
+    document.querySelectorAll("#tabla-proveedores tr").forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+{% endblock %}

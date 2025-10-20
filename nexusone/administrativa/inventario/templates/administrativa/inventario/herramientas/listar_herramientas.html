@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Botón volver -->
+    <div style="margin-bottom:20px;">
+        <a href="{% url 'administrativa:inventario:index_inventario' %}" class="btn-module" style="background:#facc15; color:#000;">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Título -->
+    <h2 class="section-title"><i class="fas fa-tools"></i> Inventario de Herramientas</h2>
+
+    <!-- Barra de búsqueda -->
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; border:1px solid #e6e9ee; border-radius:8px; overflow:hidden; background:#fff;">
+            <span style="padding:8px 10px; color:#6b7280;"><i class="fas fa-search"></i></span>
+            <input id="buscador" type="text" placeholder="Buscar herramienta..." 
+                   style="border:0; outline:none; padding:8px 10px; min-width:220px;" />
+        </div>
+
+        <!-- Botón nueva herramienta -->
+        <a href="{% url 'administrativa:inventario:nueva_herramienta' %}" class="btn-module" style="background:#facc15; color:#000;">
+            <i class="fas fa-plus"></i> Nueva Herramienta
+        </a>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-container">
+        <table class="table-modern table-yellow">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Responsable</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-herramientas">
+                {% for h in herramientas %}
+                    <tr>
+                        <td>{{ h.nombre }}</td>
+                        <td>{{ h.descripcion }}</td>
+                        <td>{{ h.cantidad }}</td>
+                        <td>{{ h.responsable }}</td>
+                        <td class="acciones-cell">
+                            <a href="{% url 'administrativa:inventario:editar_herramienta' h.id %}" class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{% url 'administrativa:inventario:eliminar_herramienta' h.id %}" class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Seguro que deseas eliminar esta herramienta?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No hay herramientas registradas.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Script buscador -->
+<script>
+document.getElementById("buscador").addEventListener("keyup", function() {
+    let value = this.value.toLowerCase();
+    document.querySelectorAll("#tabla-herramientas tr").forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+
+<!-- Estilo especial tabla amarilla -->
+<style>
+.table-yellow th {
+    background: #facc15 !important;
+    color: #000 !important;
+}
+.table-yellow tr:hover {
+    background-color: #fef9c3 !important; /* un amarillo suave al pasar el mouse */
+}
+</style>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title">
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Editar Orden de Compra
+        {% else %}
+            <i class="fas fa-plus-circle"></i> Nueva Orden de Compra
+        {% endif %}
+    </h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="card p-3 mb-4">
+            <h5>Datos de la Orden</h5>
+
+            <!-- Mostrar número de orden solo si ya existe -->
+            {% if form.instance.pk %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Número de Orden</label>
+                    <input type="text" class="form-control" value="{{ form.instance.numero }}" readonly>
+                </div>
+            {% endif %}
+
+            {{ form.as_p }}
+        </div>
+
+        <div class="card p-3 mb-4">
+            <h5>Detalles de la Orden</h5>
+            {{ formset.management_form }}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in formset %}
+                        <tr>
+                            <td>{{ f.producto }}</td>
+                            <td>{{ f.cantidad }}</td>
+                            <td>{{ f.precio_unitario }}</td>
+                            <td class="text-center">
+                                {% if f.DELETE %}
+                                    {{ f.DELETE }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn-module">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+            <a href="{% url 'administrativa:compras:lista_ordenes' %}" class="btn-module cancel">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

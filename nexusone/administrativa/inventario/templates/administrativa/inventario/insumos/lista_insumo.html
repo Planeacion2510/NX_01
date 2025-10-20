@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static currency_filters %}
+
+{% block content %}
+<div class="container mt-5">
+
+  <!-- Botón volver -->
+  <div style="margin-bottom:20px;">
+    <a href="{% url 'administrativa:inventario:index_inventario' %}" class="btn-warning-module">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <!-- Título -->
+  <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario de Insumos</h2>
+
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <!-- Buscador -->
+    <div style="display:flex; align-items:center; border:1px solid #e6e9ee; border-radius:8px; overflow:hidden; background:#fff;">
+      <span style="padding:8px 10px; color:#6b7280;"><i class="fas fa-search"></i></span>
+      <input id="buscarInsumo" type="text" placeholder="Buscar insumo..." 
+             style="border:0; outline:none; padding:8px 10px; min-width:220px;" />
+    </div>
+
+    <!-- Botón nuevo insumo -->
+    <a href="{% url 'administrativa:inventario:nuevo_insumo' %}" class="btn-warning-module">
+      <i class="fas fa-plus"></i> Nuevo Insumo
+    </a>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-container">
+    <table class="table-modern table-modern-yellow" id="tablaInsumos">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Stock</th>
+          <th>Precio Unitario</th>
+          <th>Precio con IVA</th>
+          <th>Descuento Proveedor</th>
+          <th>Precio Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for insumo in insumos %}
+        <tr>
+          <td>{{ insumo.codigo }}</td>
+          <td>{{ insumo.nombre }}</td>
+          <td>{{ insumo.stock_actual }}</td>
+          <td>${{ insumo.precio_unitario|currency }}</td>
+          <td>${{ insumo.precio_con_iva|currency }}</td>
+          <td>{{ insumo.descuento_proveedor|default:"0" }}%</td>
+          <td>${{ insumo.precio_total|currency }}</td>
+          <td>
+            <a href="{% url 'inventario:editar_insumo' insumo.pk %}" class="btn-icon edit"><i class="fas fa-edit"></i></a>
+            <a href="{% url 'inventario:eliminar_insumo' insumo.pk %}" class="btn-icon delete"
+               onclick="return confirm('¿Seguro que deseas eliminar este insumo?');">
+              <i class="fas fa-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="6" style="text-align:right;">Total Inventario:</th>
+          <th colspan="2">${{ total_inventario|currency }}</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- Script buscador -->
+<script>
+document.getElementById('buscarInsumo').addEventListener('keyup', function() {
+  const filtro = this.value.toLowerCase();
+  const filas = document.querySelectorAll('#tablaInsumos tbody tr');
+  filas.forEach(fila => {
+    const texto = fila.textContent.toLowerCase();
+    fila.style.display = texto.includes(filtro) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

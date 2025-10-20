@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title text-success">
+        <i class="fas fa-user-plus"></i> Registrar Proveedor
+    </h2>
+
+    <div class="form-container">
+        <form method="POST" class="form-modern">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_nombre">Nombre</label>
+                {{ form.nombre }}
+            </div>
+            <div class="form-group">
+                <label for="id_nit">NIT</label>
+                {{ form.nit }}
+            </div>
+            <div class="form-group">
+                <label for="id_direccion">Dirección</label>
+                {{ form.direccion }}
+            </div>
+            <div class="form-group">
+                <label for="id_telefono">Teléfono</label>
+                {{ form.telefono }}
+            </div>
+            <div class="form-group">
+                <label for="id_email">Correo</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-actions text-center mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <a href="{% url 'administrativa:compras:lista_proveedores' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
