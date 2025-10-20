@@ -3,40 +3,71 @@
 
 {% block content %}
 <div class="container mt-5">
+    
+    <!-- Título dinámico -->
     <h2 class="section-title text-success">
-        <i class="fas fa-user-plus"></i> Registrar Proveedor
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Editar Proveedor
+        {% else %}
+            <i class="fas fa-user-plus"></i> Registrar Proveedor
+        {% endif %}
     </h2>
 
-    <div class="form-container">
-        <form method="POST" class="form-modern">
+    <!-- Formulario -->
+    <div class="card p-4 shadow-sm mx-auto" style="max-width: 700px;">
+        <form method="POST">
             {% csrf_token %}
 
-            <div class="form-group">
-                <label for="id_nombre">Nombre</label>
+            <!-- Nombre -->
+            <div class="mb-3">
+                <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre</label>
                 {{ form.nombre }}
             </div>
-            <div class="form-group">
-                <label for="id_nit">NIT</label>
+
+            <!-- NIT -->
+            <div class="mb-3">
+                <label for="{{ form.nit.id_for_label }}" class="form-label">NIT</label>
                 {{ form.nit }}
             </div>
-            <div class="form-group">
-                <label for="id_direccion">Dirección</label>
+
+            <!-- Dirección -->
+            <div class="mb-3">
+                <label for="{{ form.direccion.id_for_label }}" class="form-label">Dirección</label>
                 {{ form.direccion }}
             </div>
-            <div class="form-group">
-                <label for="id_telefono">Teléfono</label>
+
+            <!-- Teléfono -->
+            <div class="mb-3">
+                <label for="{{ form.telefono.id_for_label }}" class="form-label">Teléfono</label>
                 {{ form.telefono }}
             </div>
-            <div class="form-group">
-                <label for="id_email">Correo</label>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Correo Electrónico</label>
                 {{ form.email }}
             </div>
 
-            <div class="form-actions text-center mt-4">
-                <button type="submit" class="btn btn-success">
+            <!-- Contacto -->
+            <div class="mb-3">
+                <label for="{{ form.contacto.id_for_label }}" class="form-label">Persona de Contacto</label>
+                {{ form.contacto }}
+            </div>
+
+            <!-- Activo -->
+            <div class="mb-3 form-check">
+                {{ form.activo }}
+                <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                    Proveedor Activo
+                </label>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-verde">
                     <i class="fas fa-save"></i> Guardar
                 </button>
-                <a href="{% url 'administrativa:compras:lista_proveedores' %}" class="btn btn-outline-secondary">
+                <a href="{% url 'administrativa:compras:lista_proveedores' %}" class="btn-outline">
                     <i class="fas fa-arrow-left"></i> Cancelar
                 </a>
             </div>

@@ -4,82 +4,82 @@
 {% block content %}
 <div class="container mt-5">
 
-  <!-- Título dinámico -->
-  <h2 class="section-title text-center mb-4">
-    {% if form.instance.pk %}
-      <i class="fas fa-edit"></i> Editar Insumo
-    {% else %}
-      <i class="fas fa-plus"></i> Nuevo Insumo
-    {% endif %}
-  </h2>
+    <!-- Título dinámico -->
+    <h2 class="section-title text-warning">
+        {% if form.instance.pk %}
+            <i class="fas fa-edit"></i> Editar Insumo
+        {% else %}
+            <i class="fas fa-plus"></i> Nuevo Insumo
+        {% endif %}
+    </h2>
 
-  <!-- Formulario -->
-  <div class="card p-4 shadow-sm mx-auto" style="max-width: 700px;">
-    <form method="post">
-      {% csrf_token %}
+    <!-- Formulario -->
+    <div class="card p-4 shadow-sm mx-auto" style="max-width: 800px;">
+        <form method="POST">
+            {% csrf_token %}
 
-      <!-- FILA 1: Código y Nombre -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="{{ form.codigo.id_for_label }}">Código</label>
-          {{ form.codigo }}
-        </div>
-        <div class="col-md-6">
-          <label for="{{ form.nombre.id_for_label }}">Nombre</label>
-          {{ form.nombre }}
-        </div>
-      </div>
+            <!-- Código y Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.codigo.id_for_label }}" class="form-label">Código</label>
+                    {{ form.codigo }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre</label>
+                    {{ form.nombre }}
+                </div>
+            </div>
 
-      <!-- FILA 2: Descripción y Unidad -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
-          {{ form.descripcion }}
-        </div>
-        <div class="col-md-6">
-          <label for="{{ form.unidad.id_for_label }}">Unidad</label>
-          {{ form.unidad }}
-        </div>
-      </div>
+            <!-- Descripción y Unidad -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.unidad.id_for_label }}" class="form-label">Unidad</label>
+                    {{ form.unidad }}
+                </div>
+            </div>
 
-      <!-- FILA 3: Precio Unitario y Stock mínimo/máximo -->
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="{{ form.precio_unitario.id_for_label }}">Precio Unitario</label>
-          {{ form.precio_unitario }}
-        </div>
-        <div class="col-md-4">
-          <label for="{{ form.stock_minimo.id_for_label }}">Stock Mínimo</label>
-          {{ form.stock_minimo }}
-        </div>
-        <div class="col-md-4">
-          <label for="{{ form.stock_maximo.id_for_label }}">Stock Máximo</label>
-          {{ form.stock_maximo }}
-        </div>
-      </div>
+            <!-- Precio, Stock Mín y Máx -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="{{ form.precio_unitario.id_for_label }}" class="form-label">Precio Unitario</label>
+                    {{ form.precio_unitario }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.stock_minimo.id_for_label }}" class="form-label">Stock Mínimo</label>
+                    {{ form.stock_minimo }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.stock_maximo.id_for_label }}" class="form-label">Stock Máximo</label>
+                    {{ form.stock_maximo }}
+                </div>
+            </div>
 
-      <!-- FILA 4: IVA y Descuento Proveedor -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="{{ form.iva.id_for_label }}">IVA (%)</label>
-          {{ form.iva }}
-        </div>
-        <div class="col-md-6">
-          <label for="{{ form.descuento_proveedor.id_for_label }}">Descuento Proveedor (%)</label>
-          {{ form.descuento_proveedor }}
-        </div>
-      </div>
+            <!-- IVA y Descuento -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.iva.id_for_label }}" class="form-label">IVA (%)</label>
+                    {{ form.iva }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.descuento_proveedor.id_for_label }}" class="form-label">Descuento Proveedor (%)</label>
+                    {{ form.descuento_proveedor }}
+                </div>
+            </div>
 
-      <!-- Botones de acción -->
-      <div class="form-actions text-center mt-4">
-        <button type="submit" class="btn-module">
-          <i class="fas fa-save"></i> Guardar
-        </button>
-        <a href="{% url 'administrativa:inventario:lista_insumo' %}" class="btn-secondary-module">
-          <i class="fas fa-arrow-left"></i> Cancelar
-        </a>
-      </div>
-    </form>
-  </div>
+            <!-- Botones -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-amarillo">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <a href="{% url 'administrativa:inventario:lista_insumo' %}" class="btn-outline">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

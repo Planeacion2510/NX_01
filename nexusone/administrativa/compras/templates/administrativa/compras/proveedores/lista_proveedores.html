@@ -10,10 +10,10 @@
     </h2>
 
     <!-- Barra de búsqueda + botones -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 w-100">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         
-        <!-- Botón Atrás al menú de compras -->
-        <a href="{% url 'administrativa:compras:index_compras' %}" class="btn-back">
+        <!-- Botón Atrás -->
+        <a href="{% url 'administrativa:compras:index_compras' %}" class="btn-volver">
             <i class="fas fa-arrow-left"></i> Atrás
         </a>
 
@@ -25,14 +25,14 @@
             <input type="text" id="buscarProveedor" class="form-control" placeholder="Buscar proveedor...">
         </div>
 
-        <!-- Botón Registrar -->
-        <a href="{% url 'administrativa:compras:nuevo_proveedor' %}" class="btn-module">
+        <!-- Botón Registrar Proveedor -->
+        <a href="{% url 'administrativa:compras:nuevo_proveedor' %}" class="btn-verde">
             <i class="fas fa-plus"></i> Registrar Proveedor
         </a>
     </div>
 
-    <!-- Tabla de proveedores (verde) -->
-    <div class="table-container w-100">
+    <!-- Tabla de proveedores -->
+    <div class="table-container">
         <table class="table-modern table-green">
             <thead>
                 <tr>
@@ -49,10 +49,10 @@
                     <tr>
                         <td>{{ proveedor.nombre }}</td>
                         <td>{{ proveedor.nit }}</td>
-                        <td>{{ proveedor.direccion }}</td>
-                        <td>{{ proveedor.telefono }}</td>
-                        <td>{{ proveedor.email }}</td>
-                        <td>
+                        <td>{{ proveedor.direccion|default:"—" }}</td>
+                        <td>{{ proveedor.telefono|default:"—" }}</td>
+                        <td>{{ proveedor.email|default:"—" }}</td>
+                        <td class="text-center">
                             <a href="{% url 'administrativa:compras:editar_proveedor' proveedor.id %}" 
                                class="btn-icon edit" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
@@ -66,7 +66,9 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted">No hay proveedores registrados.</td>
+                        <td colspan="6" class="text-center text-muted">
+                            No hay proveedores registrados.
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -77,7 +79,7 @@
 <!-- Script búsqueda -->
 <script>
 document.getElementById("buscarProveedor").addEventListener("keyup", function() {
-    let value = this.value.toLowerCase();
+    const value = this.value.toLowerCase();
     document.querySelectorAll("#tabla-proveedores tr").forEach(function(row) {
         row.style.display = row.textContent.toLowerCase().includes(value) ? "" : "none";
     });

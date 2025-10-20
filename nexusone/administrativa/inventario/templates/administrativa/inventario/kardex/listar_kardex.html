@@ -4,8 +4,8 @@
 {% block content %}
 <div class="container mt-5">
     <!-- Botón volver -->
-    <div style="margin-bottom:20px;">
-        <a href="{% url 'administrativa:inventario:index_inventario' %}" class="btn-module" style="background:#facc15; color:#000;">
+    <div class="mb-3">
+        <a href="{% url 'administrativa:inventario:index_inventario' %}" class="btn-amarillo">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -13,30 +13,30 @@
     <h2 class="section-title"><i class="fas fa-file-alt"></i> Kardex</h2>
 
     <!-- Botón para nuevo movimiento -->
-    <div class="actions text-center mb-4">
-        <a href="{% url 'administrativa:inventario:nuevo_movimiento'%}" class="btn-warning-module">
+    <div class="text-center mb-4">
+        <a href="{% url 'administrativa:inventario:nuevo_movimiento'%}" class="btn-amarillo">
             <i class="fas fa-plus"></i> Nuevo Movimiento
         </a>
     </div>
 
     <!-- FILTROS -->
-    <form method="GET" class="filter-form mb-4">
-        <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
-            <div style="display:flex; flex-direction:column;">
-                <label for="fecha_inicio"><strong>Desde:</strong></label>
+    <form method="GET" class="mb-4">
+        <div class="d-flex justify-content-center align-items-end flex-wrap" style="gap:20px;">
+            <div class="d-flex flex-column">
+                <label for="fecha_inicio" class="form-label"><strong>Desde:</strong></label>
                 <input type="date" name="fecha_inicio" id="fecha_inicio"
-                       value="{{ fecha_inicio }}" class="form-modern">
+                       value="{{ fecha_inicio }}" class="form-control">
             </div>
-            <div style="display:flex; flex-direction:column;">
-                <label for="fecha_fin"><strong>Hasta:</strong></label>
+            <div class="d-flex flex-column">
+                <label for="fecha_fin" class="form-label"><strong>Hasta:</strong></label>
                 <input type="date" name="fecha_fin" id="fecha_fin"
-                       value="{{ fecha_fin }}" class="form-modern">
+                       value="{{ fecha_fin }}" class="form-control">
             </div>
-            <div style="display:flex; align-items:flex-end; gap:12px;">
-                <button type="submit" class="btn-warning-module">
+            <div class="d-flex" style="gap:12px;">
+                <button type="submit" class="btn-amarillo">
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
-                <a href="{% url 'administrativa:inventario:listar_kardex' %}" class="btn-warning-module">
+                <a href="{% url 'administrativa:inventario:listar_kardex' %}" class="btn-outline">
                     <i class="fas fa-undo"></i> Limpiar
                 </a>
             </div>
@@ -64,7 +64,7 @@
                     <td>{{ movimiento.cantidad }}</td>
                     <td>{{ movimiento.observacion|default:"—" }}</td>
                     <td>{{ movimiento.fecha|date:"d/m/Y H:i" }}</td>
-                    <td class="acciones-cell">
+                    <td class="text-center">
                         <a href="{% url 'administrativa:inventario:editar_movimiento' movimiento.id %}" 
                            class="btn-icon edit" title="Editar">
                             <i class="fas fa-pencil-alt"></i>

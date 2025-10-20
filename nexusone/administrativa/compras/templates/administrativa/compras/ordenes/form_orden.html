@@ -3,7 +3,9 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="section-title">
+    
+    <!-- Título dinámico -->
+    <h2 class="section-title text-success">
         {% if form.instance.pk %}
             <i class="fas fa-edit"></i> Editar Orden de Compra
         {% else %}
@@ -14,8 +16,11 @@
     <form method="POST">
         {% csrf_token %}
 
-        <div class="card p-3 mb-4">
-            <h5>Datos de la Orden</h5>
+        <!-- Datos de la Orden -->
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="mb-3">
+                <i class="fas fa-info-circle text-success"></i> Datos de la Orden
+            </h5>
 
             <!-- Mostrar número de orden solo si ya existe -->
             {% if form.instance.pk %}
@@ -25,43 +30,87 @@
                 </div>
             {% endif %}
 
-            {{ form.as_p }}
+            <!-- Proveedor -->
+            <div class="mb-3">
+                <label for="{{ form.proveedor.id_for_label }}" class="form-label">Proveedor</label>
+                {{ form.proveedor }}
+            </div>
+
+            <!-- Fecha de Entrega -->
+            <div class="mb-3">
+                <label for="{{ form.fecha_entrega.id_for_label }}" class="form-label">Fecha de Entrega</label>
+                {{ form.fecha_entrega }}
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                {{ form.descripcion }}
+            </div>
+
+            <!-- Estado -->
+            <div class="mb-3">
+                <label for="{{ form.estado.id_for_label }}" class="form-label">Estado</label>
+                {{ form.estado }}
+            </div>
+
+            <!-- Destino -->
+            <div class="mb-3">
+                <label for="{{ form.destino.id_for_label }}" class="form-label">Destino</label>
+                {{ form.destino }}
+            </div>
+
+            <!-- Orden de Trabajo (opcional) -->
+            {% if form.orden_trabajo %}
+            <div class="mb-3">
+                <label for="{{ form.orden_trabajo.id_for_label }}" class="form-label">Orden de Trabajo (Opcional)</label>
+                {{ form.orden_trabajo }}
+            </div>
+            {% endif %}
         </div>
 
-        <div class="card p-3 mb-4">
-            <h5>Detalles de la Orden</h5>
+        <!-- Detalles de la Orden -->
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="mb-3">
+                <i class="fas fa-list text-success"></i> Detalles de la Orden
+            </h5>
+            
             {{ formset.management_form }}
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                        <th>Eliminar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for f in formset %}
+            
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
                         <tr>
-                            <td>{{ f.producto }}</td>
-                            <td>{{ f.cantidad }}</td>
-                            <td>{{ f.precio_unitario }}</td>
-                            <td class="text-center">
-                                {% if f.DELETE %}
-                                    {{ f.DELETE }}
-                                {% endif %}
-                            </td>
+                            <th style="width: 40%;">Producto</th>
+                            <th style="width: 20%;">Cantidad</th>
+                            <th style="width: 25%;">Precio Unitario</th>
+                            <th style="width: 15%;" class="text-center">Eliminar</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for f in formset %}
+                            <tr>
+                                <td>{{ f.producto }}</td>
+                                <td>{{ f.cantidad }}</td>
+                                <td>{{ f.precio_unitario }}</td>
+                                <td class="text-center">
+                                    {% if f.DELETE %}
+                                        {{ f.DELETE }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <!-- Botones de acción -->
         <div class="text-center">
-            <button type="submit" class="btn-module">
-                <i class="fas fa-save"></i> Guardar
+            <button type="submit" class="btn-verde">
+                <i class="fas fa-save"></i> Guardar Orden
             </button>
-            <a href="{% url 'administrativa:compras:lista_ordenes' %}" class="btn-module cancel">
+            <a href="{% url 'administrativa:compras:lista_ordenes' %}" class="btn-outline">
                 <i class="fas fa-arrow-left"></i> Cancelar
             </a>
         </div>

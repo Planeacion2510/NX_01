@@ -8,6 +8,8 @@
     --secondary-hover: #1a75d1;
     --warning: #facc15;
     --warning-hover: #eab308;
+    --success: #10b981;
+    --success-hover: #059669;
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --gray: #6b7280;
@@ -20,25 +22,30 @@
 /* ============================================
    🔹 BASE Y RESETEO
 ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--light-bg);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text);
-    margin: 0;
-    padding: 0;
+    line-height: 1.6;
 }
 
 /* ============================================
    🔹 LAYOUT GENERAL
 ============================================ */
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
-.top-bar, .barra-superior {
+.top-bar,
+.barra-superior {
     background: var(--primary);
     height: 60px;
     width: 100%;
@@ -48,224 +55,201 @@ body {
 }
 
 /* ============================================
-   🔹 TEXTOS Y ENCABEZADOS
+   🔹 TIPOGRAFÍA
 ============================================ */
-h1, h2, .section-title {
+h1 {
+    font-size: 28px;
     text-align: center;
+    margin: 20px 0 0.5rem;
     color: var(--dark);
 }
 
-h1 { font-size: 28px; margin: 20px 0 0.5rem 0; }
-h2.section-title { margin: 30px 0 15px 0; font-size: 22px; font-weight: bold; }
+h2,
+.section-title {
+    text-align: center;
+    margin: 30px 0 15px;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--dark);
+}
 
-.subtitle { text-align: center; font-size: 16px; color: #555; margin-bottom: 20px; }
+.subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
 
 /* ============================================
-   🔹 BOTONES
+   🔘 BOTONES - Sistema Unificado
 ============================================ */
-.btn-module {
+
+/* Botón Principal - Azul */
+.btn-module,
+.btn-primary-custom {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white;
-    font-weight: bold;
-    padding: 12px 28px;
-    border-radius: 50px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-size: 1rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     text-decoration: none;
     border: none;
+    cursor: pointer;
 }
-.btn-module:hover {
-    background: linear-gradient(135deg, var(--primary-hover), #003f7f);
+
+.btn-module:hover,
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, var(--primary-hover), #003d82);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+/* Botón Amarillo - Inventario */
+.btn-amarillo {
+    background: var(--warning);
+    color: #000;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-amarillo:hover {
+    background: var(--warning-hover);
+    transform: translateY(-2px);
+    color: #000;
+}
+
+/* Botón Verde - Compras */
+.btn-verde {
+    background: var(--success);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-verde:hover {
+    background: var(--success-hover);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Botón Volver/Atrás */
+.btn-volver,
+.btn-back {
+    background: var(--gray);
+    color: white;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-volver:hover,
+.btn-back:hover {
+    background: var(--gray-hover);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Botón Outline */
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
     transform: translateY(-2px);
 }
 
-/* Botones de acción */
+/* Botones de Iconos (Editar, Eliminar, etc.) */
 .btn-icon {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border-radius: 6px;
     background: #f8f9fa;
-    transition: all 0.2s;
-}
-.btn-icon i { font-size: 16px; }
-.btn-icon:hover { background: #e2e6ea; transform: scale(1.1); }
-
-.btn-icon.edit { background: var(--secondary); color: white; }
-.btn-icon.close { background: var(--warning); color: black; }
-.btn-icon.delete { background: var(--danger); color: white; }
-.btn-icon.folder { color: #ffc107; background: transparent !important; }
-.btn-icon.folder:hover { transform: scale(1.2); }
-
-/* ============================================
-   🔹 TABLAS
-============================================ */
-.table-container { overflow-x: auto; margin-top: 20px; }
-
-.table-modern {
-    width: 100%;
-    border-collapse: collapse;
-    border-radius: 10px;
-    overflow: hidden;
-    background: white;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-.table-modern th {
-    background: var(--primary);
-    color: white;
-    padding: 12px;
-    text-align: center;
-    font-size: 14px;
-}
-.table-modern td {
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-    font-size: 14px;
-}
-.table-modern tr:hover { background-color: #f1f5f9; }
-
-/* ============================================
-   🔹 LOGOS
-============================================ */
-.logo-animado { transition: transform 0.3s ease-in-out; }
-.logo-animado:hover { transform: scale(1.15); }
-
-/* ============================================
-   🔹 MODAL DE DOCUMENTOS
-============================================ */
-.document-modal {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.55);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-}
-
-.document-modal.active { display: flex; }
-
-.document-modal-content {
-    background: #fff;
-    width: 85vw;
-    max-width: 1000px;
-    max-height: 90vh;
-    border-radius: 12px;
-    overflow-y: auto;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-.document-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-}
-.document-modal-header h5 { margin: 0; color: var(--primary); }
-.document-modal-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.document-list li {
-    list-style: none;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.document-list li:last-child { border-bottom: none; }
-.btn-icon-mini {
-    width: 26px; height: 26px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #f3f3f3;
-    border-radius: 5px;
     transition: all 0.2s ease;
-}
-.btn-icon-mini:hover { background: #e2e6ea; transform: scale(1.1); }
-/* ===============================
-   📂 MODAL DE DOCUMENTOS CENTRADO
-================================ */
-.modal-doc {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-.modal-doc.active {
-    display: flex;
-}
-.modal-doc-content {
-    background: #fff;
-    border-radius: 12px;
-    width: 70vw;
-    max-width: 900px;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 20px 30px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-    animation: zoomIn 0.25s ease;
-}
-@keyframes zoomIn {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-.modal-doc-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-.modal-doc-header h5 {
-    margin: 0;
-    font-size: 18px;
-    color: var(--primary);
-}
-.modal-doc-close {
-    background: none;
+    text-decoration: none;
     border: none;
-    font-size: 24px;
-    color: var(--gray);
     cursor: pointer;
 }
-.modal-doc-close:hover {
-    color: var(--danger);
+
+.btn-icon:hover {
+    background: #e2e6ea;
+    transform: scale(1.1);
 }
-.document-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+
+.btn-icon i {
+    font-size: 16px;
 }
-.document-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    padding: 8px 0;
+
+.btn-icon.edit {
+    background: var(--secondary);
+    color: white;
 }
-.document-list li:last-child {
-    border-bottom: none;
+
+.btn-icon.close {
+    background: var(--warning);
+    color: black;
 }
+
+.btn-icon.delete {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-icon.folder {
+    color: #ffc107;
+    background: transparent !important;
+}
+
+.btn-icon.folder:hover {
+    transform: scale(1.2);
+}
+
+/* Botones Mini (Modales) */
 .btn-icon-mini {
     width: 26px;
     height: 26px;
@@ -275,9 +259,286 @@ h2.section-title { margin: 30px 0 15px 0; font-size: 22px; font-weight: bold; }
     background: #f3f3f3;
     border-radius: 5px;
     transition: all 0.2s ease;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
 }
+
 .btn-icon-mini:hover {
     background: #e2e6ea;
     transform: scale(1.1);
 }
 
+/* ============================================
+   📊 TABLAS
+============================================ */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-modern th {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.table-modern td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.table-modern tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Tabla Amarilla - Inventario */
+.table-yellow,
+.table-modern-yellow {
+    background: #fffbe6;
+    border: 1px solid var(--warning);
+}
+
+.table-yellow th,
+.table-modern-yellow th {
+    background: var(--warning);
+    color: #000;
+}
+
+.table-yellow td,
+.table-modern-yellow td {
+    border-bottom: 1px solid #fde68a;
+}
+
+.table-yellow tr:hover,
+.table-modern-yellow tr:hover {
+    background-color: #fef9c3;
+}
+
+/* Tabla Verde - Compras */
+.table-green {
+    background: #ecfdf5;
+    border: 1px solid var(--success);
+}
+
+.table-green th {
+    background: var(--success);
+    color: white;
+}
+
+.table-green td {
+    border-bottom: 1px solid #bbf7d0;
+}
+
+.table-green tr:hover {
+    background-color: #d1fae5;
+}
+
+/* ============================================
+   🖼️ TARJETAS (Cards)
+============================================ */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-header-bar {
+    background-color: var(--success);
+    height: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* ============================================
+   📂 MODAL DE DOCUMENTOS
+============================================ */
+.modal-doc,
+.document-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-doc.active,
+.document-modal.active {
+    display: flex;
+}
+
+.modal-doc-content,
+.document-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    width: 70vw;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    animation: zoomIn 0.25s ease;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-doc-header,
+.document-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-doc-header h5,
+.document-modal-header h5 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--primary);
+}
+
+.modal-doc-close,
+.document-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-doc-close:hover,
+.document-modal-close:hover {
+    color: var(--danger);
+}
+
+.document-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.document-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+}
+
+.document-list li:last-child {
+    border-bottom: none;
+}
+
+/* ============================================
+   🖼️ LOGOS
+============================================ */
+.logo-animado,
+.login-logo,
+.home-logos img {
+    transition: transform 0.3s ease-in-out, filter 0.3s ease;
+    cursor: pointer;
+}
+
+.logo-animado:hover,
+.login-logo:hover,
+.home-logos img:hover {
+    transform: scale(1.15) rotate(2deg);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================
+   🎯 UTILIDADES
+============================================ */
+.text-center {
+    text-align: center;
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+
+/* ============================================
+   📱 RESPONSIVE
+============================================ */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    h2, .section-title {
+        font-size: 20px;
+    }
+
+    .btn-module,
+    .btn-primary-custom,
+    .btn-amarillo,
+    .btn-verde,
+    .btn-volver {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .modal-doc-content,
+    .document-modal-content {
+        width: 90vw;
+        padding: 15px 20px;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
