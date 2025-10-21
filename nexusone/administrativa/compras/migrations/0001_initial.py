@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('ordenes', '0003_alter_ordentrabajo_constructora_and_more'),
+        # ('ordenes', '0003_alter_ordentrabajo_constructora_and_more'),  # ← Comentado temporalmente
     ]
 
     operations = [
