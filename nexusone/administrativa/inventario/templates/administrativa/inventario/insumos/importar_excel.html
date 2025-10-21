@@ -1,79 +1,145 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
-
-{% block title %}Importar Excel | Inventario{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-  <div class="card shadow-sm border-0 rounded-4">
-    <div class="card-header bg-primary text-white rounded-top-4">
-      <h4 class="mb-0">
-        <i class="bi bi-upload"></i> Importar Inventario desde Excel
-      </h4>
+    
+    <!-- Botón volver -->
+    <div class="mb-3">
+        <a href="{% url 'administrativa:inventario:lista_insumo' %}" class="btn-volver">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
     </div>
 
-    <div class="card-body p-4">
-      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="mb-3">
-          <label for="archivo" class="form-label fw-semibold">
-            Selecciona el archivo Excel (.xlsx o .xls)
-          </label>
-          <input
-            type="file"
-            name="archivo"
-            id="archivo"
-            accept=".xlsx, .xls"
-            class="form-control"
-            required
-          />
-          <div class="invalid-feedback">Por favor selecciona un archivo válido.</div>
-        </div>
+    <!-- Título -->
+    <h2 class="section-title">
+        <i class="fas fa-file-excel text-success"></i> Importar Insumos desde Excel
+    </h2>
 
-        <div class="d-flex justify-content-end mt-4">
-          <a href="{% url 'inventario:lista_insumo' %}" class="btn btn-secondary me-2">
-            <i class="bi bi-arrow-left"></i> Volver
-          </a>
-          <button type="submit" class="btn btn-success">
-            <i class="bi bi-file-earmark-excel"></i> Importar Datos
-          </button>
-        </div>
-      </form>
-    </div>
-
+    <!-- Mensajes -->
     {% if messages %}
-    <div class="card-footer bg-light">
-      {% for message in messages %}
-      <div
-        class="alert alert-{{ message.tags }} mb-2 rounded-3"
-        role="alert"
-      >
-        {{ message }}
-      </div>
-      {% endfor %}
-    </div>
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
     {% endif %}
-  </div>
-</div>
 
-<script>
-  // Bootstrap form validation
-  (() => {
-    "use strict";
-    const forms = document.querySelectorAll(".needs-validation");
-    Array.from(forms).forEach((form) => {
-      form.addEventListener(
-        "submit",
-        (event) => {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          form.classList.add("was-validated");
-        },
-        false
-      );
-    });
-  })();
-</script>
+    <!-- Instrucciones -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">
+                <i class="fas fa-info-circle text-primary"></i> Instrucciones
+            </h5>
+            <ol class="mb-0">
+                <li>El archivo debe ser formato <strong>.xlsx</strong> o <strong>.xls</strong></li>
+                <li>Debe contener una hoja llamada <strong>"Inventario_Procesado"</strong></li>
+                <li>Las columnas deben ser: <strong>Código, Nombre, Stock</strong></li>
+                <li>Los registros deben empezar desde la fila 2 (la fila 1 es el encabezado)</li>
+                <li>⚠️ Si el insumo ya existe (mismo código), NO se modificará su stock actual</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Formulario de importación -->
+    <div class="card p-4 shadow-sm mx-auto" style="max-width: 700px;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Selector de archivo -->
+            <div class="mb-4">
+                <label for="archivo_excel" class="form-label">
+                    <i class="fas fa-file-excel"></i> Selecciona el archivo Excel:
+                </label>
+                <input type="file" 
+                       class="form-control" 
+                       id="archivo_excel" 
+                       name="archivo_excel" 
+                       accept=".xlsx,.xls"
+                       required>
+                <small class="text-muted">
+                    Formatos aceptados: .xlsx, .xls
+                </small>
+            </div>
+
+            <!-- Opción limpiar base de datos -->
+            <div class="mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" 
+                           type="checkbox" 
+                           id="limpiar" 
+                           name="limpiar"
+                           onclick="return confirm('⚠️ ADVERTENCIA: Esto eliminará TODOS los insumos existentes y su historial de Kardex. ¿Estás seguro?')">
+                    <label class="form-check-label" for="limpiar">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        <strong class="text-danger">Limpiar base de datos antes de importar</strong>
+                        <br>
+                        <small class="text-danger">
+                            ⚠️ Esto eliminará todos los insumos y movimientos de kardex existentes
+                        </small>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Vista previa del formato esperado -->
+            <div class="mb-4">
+                <h6 class="mb-2">
+                    <i class="fas fa-table"></i> Formato esperado en el Excel:
+                </h6>
+                <div class="table-container">
+                    <table class="table-modern table-yellow">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>00001</td>
+                                <td>TORNILLO AGLOMERADO 1"</td>
+                                <td>150</td>
+                            </tr>
+                            <tr>
+                                <td>00002</td>
+                                <td>BISAGRA CAZOLETA 110°</td>
+                                <td>48</td>
+                            </tr>
+                            <tr>
+                                <td>00003</td>
+                                <td>PEGANTE PVC 240 ML</td>
+                                <td>25</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="text-center">
+                <button type="submit" class="btn-amarillo">
+                    <i class="fas fa-file-import"></i> Importar Datos
+                </button>
+                <a href="{% url 'administrativa:inventario:lista_insumo' %}" class="btn-outline">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="alert alert-info mt-4 mx-auto" style="max-width: 700px;">
+        <h6><i class="fas fa-lightbulb"></i> ℹ️ Información importante:</h6>
+        <ul class="mb-0">
+            <li>Los insumos se crean con valores por defecto: IVA 19%, Descuento 0%, Precio $0.00</li>
+            <li>Puedes editar estos valores después desde la lista de insumos</li>
+            <li>El stock inicial se registra como un movimiento de entrada en el Kardex</li>
+            <li>Si un código ya existe, se actualizará el nombre pero NO el stock</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
