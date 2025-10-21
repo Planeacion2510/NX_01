@@ -1,15 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.contrib import messages  # ← ESTE ES EL QUE FALTABA
+from django.http import HttpResponse
+from decimal import Decimal
+
+# Imports de openpyxl para Excel
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from datetime import datetime
+
+# Modelos y formularios
 from .models import Insumo, Maquinaria, Herramienta, MovimientoKardex
 from .forms import InsumoForm, MaquinariaForm, HerramientaForm, MovimientoKardexForm
-from django.utils import timezone
-
-
-def index_inventario(request):
-    return render(request, "administrativa/inventario/index.html")
-from decimal import Decimal
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Insumo
-from .forms import InsumoForm
 
 # ==============================
 # 📌 INSUMOS
