@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from datetime import date
 from nexusone.administrativa.compras.models import Proveedor  # 🔗 importamos
 
 # ---------------------------
@@ -67,6 +68,7 @@ class MovimientoKardex(models.Model):
     def __str__(self):
         return f"{self.tipo} {self.cantidad} {self.insumo.nombre} ({self.fecha.date()})"
 
+
 # ---------------------------
 # HERRAMIENTAS
 # ---------------------------
@@ -107,7 +109,53 @@ class Maquinaria(models.Model):
     fecha_compra = models.DateField("Fecha de Compra", null=True, blank=True)
     cantidad = models.PositiveIntegerField("Cantidad", default=1)
     responsable = models.CharField("Responsable", max_length=100, blank=True)
+
+    manual = models.FileField(
+        "Manual",
+        upload_to='manuales/',
+        null=True,
+        blank=True,
+        help_text="Archivo PDF del manual de la maquinaria"
+    )
+
     creado = models.DateTimeField(auto_now_add=True)
+
+    # 🆕 MÉTODO PARA CALCULAR TIEMPO DE USO
+    @property
+    def tiempo_uso(self):
+        """
+        Calcula el tiempo de uso desde la fecha de compra hasta hoy
+        Retorna un string en formato: "X años Y días" o "X días"
+        """
+        if not self.fecha_compra:
+            return "Sin fecha de compra"
+        
+        hoy = date.today()
+        diferencia = hoy - self.fecha_compra
+        dias_totales = diferencia.days
+        
+        # Si es menos de un año, solo mostrar días
+        if dias_totales < 365:
+            return f"{dias_totales} días"
+        
+        # Calcular años y días restantes
+        años = dias_totales // 365
+        dias_restantes = dias_totales % 365
+        
+        # Formato de salida
+        if dias_restantes == 0:
+            return f"{años} año{'s' if años != 1 else ''}"
+        else:
+            return f"{años} año{'s' if años != 1 else ''} {dias_restantes} día{'s' if dias_restantes != 1 else ''}"
+    
+    # 🔄 MÉTODO ANTERIOR (para compatibilidad)
+    @property
+    def anios_uso(self):
+        """Método antiguo que retorna solo los años (para compatibilidad)"""
+        if not self.fecha_compra:
+            return 0
+        diferencia = date.today() - self.fecha_compra
+        return diferencia.days // 365
 
     def __str__(self):
         return f"{self.nombre} ({self.marca})"
@@ -121,4 +169,3 @@ class MovimientoMaquinaria(models.Model):
 
     def __str__(self):
         return f"{self.maquinaria.nombre} - {self.cantidad}"
-

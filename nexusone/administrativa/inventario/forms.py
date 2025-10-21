@@ -10,7 +10,7 @@ class InsumoForm(forms.ModelForm):
         fields = [
             "codigo", 
             "nombre", 
-            "proveedor",  # 🆕 CAMBIO: Reemplaza "descripcion"
+            "proveedor",
             "unidad", 
             "precio_unitario", 
             "stock_minimo", 
@@ -27,7 +27,6 @@ class InsumoForm(forms.ModelForm):
                 "class": "form-control", 
                 "placeholder": "Nombre del insumo"
             }),
-            # 🆕 CAMBIO: Select de Proveedor (reemplaza Textarea de descripción)
             "proveedor": forms.Select(attrs={
                 "class": "form-control",
             }),
@@ -62,37 +61,80 @@ class InsumoForm(forms.ModelForm):
         }
 
 # ==============================
-# 📌 MAQUINARIA
+# 🔧 MAQUINARIA (CON MANUAL)
 # ==============================
 class MaquinariaForm(forms.ModelForm):
     class Meta:
         model = Maquinaria
-        fields = ["serial", "nombre", "marca", "fecha_compra", "cantidad", "responsable"]
+        fields = [
+            "serial", 
+            "nombre", 
+            "marca", 
+            "fecha_compra", 
+            "cantidad", 
+            "responsable",
+            "manual"  # 🆕 CAMPO AGREGADO
+        ]
         widgets = {
-            "serial": forms.TextInput(attrs={"class": "form-control", "placeholder": "Número de serie"}),
-            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre de la maquinaria"}),
-            "marca": forms.TextInput(attrs={"class": "form-control", "placeholder": "Marca"}),
-            "fecha_compra": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
-            "responsable": forms.TextInput(attrs={"class": "form-control", "placeholder": "Responsable"}),
+            "serial": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Número de serie"
+            }),
+            "nombre": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Nombre de la maquinaria"
+            }),
+            "marca": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Marca"
+            }),
+            "fecha_compra": forms.DateInput(attrs={
+                "class": "form-control", 
+                "type": "date"
+            }),
+            "cantidad": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "1"
+            }),
+            "responsable": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Responsable"
+            }),
+            # 🆕 WIDGET PARA EL MANUAL
+            "manual": forms.FileInput(attrs={
+                "class": "form-control",
+                "accept": ".pdf,.doc,.docx"
+            }),
         }
 
 # ==============================
-# 📌 HERRAMIENTAS
+# 🔨 HERRAMIENTAS
 # ==============================
 class HerramientaForm(forms.ModelForm):
     class Meta:
         model = Herramienta
         fields = ["nombre", "descripcion", "cantidad", "responsable"]
         widgets = {
-            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre de la herramienta"}),
-            "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
-            "responsable": forms.TextInput(attrs={"class": "form-control", "placeholder": "Responsable"}),
+            "nombre": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Nombre de la herramienta"
+            }),
+            "descripcion": forms.Textarea(attrs={
+                "class": "form-control", 
+                "rows": 3
+            }),
+            "cantidad": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "0"
+            }),
+            "responsable": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Responsable"
+            }),
         }
 
 # ==============================
-# 📌 KARDEX
+# 📋 KARDEX
 # ==============================
 class MovimientoKardexForm(forms.ModelForm):
     class Meta:
@@ -101,7 +143,17 @@ class MovimientoKardexForm(forms.ModelForm):
         widgets = {
             "insumo": forms.Select(attrs={"class": "form-control"}),
             "tipo": forms.Select(attrs={"class": "form-control"}),
-            "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
-            "observacion": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Observación del movimiento..."}),
-            "fecha": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "cantidad": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "1"
+            }),
+            "observacion": forms.Textarea(attrs={
+                "class": "form-control", 
+                "rows": 3, 
+                "placeholder": "Observación del movimiento..."
+            }),
+            "fecha": forms.DateInput(attrs={
+                "class": "form-control", 
+                "type": "date"
+            }),
         }

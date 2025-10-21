@@ -75,7 +75,7 @@ def eliminar_insumo(request, pk):
 
 
 # ============================================
-# MAQUINARIA
+# MAQUINARIA (🆕 CON request.FILES)
 # ============================================
 def lista_maquinaria(request):
     maquinas = Maquinaria.objects.all()
@@ -83,7 +83,8 @@ def lista_maquinaria(request):
 
 def nueva_maquinaria(request):
     if request.method == "POST":
-        form = MaquinariaForm(request.POST)
+        # 🆕 AGREGADO request.FILES para archivos
+        form = MaquinariaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect("administrativa:inventario:lista_maquinaria")
@@ -94,7 +95,8 @@ def nueva_maquinaria(request):
 def editar_maquinaria(request, pk):
     maquina = get_object_or_404(Maquinaria, pk=pk)
     if request.method == "POST":
-        form = MaquinariaForm(request.POST, instance=maquina)
+        # 🆕 AGREGADO request.FILES para archivos
+        form = MaquinariaForm(request.POST, request.FILES, instance=maquina)
         if form.is_valid():
             form.save()
             return redirect("administrativa:inventario:lista_maquinaria")
