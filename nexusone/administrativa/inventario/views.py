@@ -1,11 +1,17 @@
+# nexusone/administrativa/inventario/views.py
+# ESTRUCTURA COMPLETA DEL ARCHIVO
+
+# ============================================
+# IMPORTS
+# ============================================
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.contrib import messages  # ← ESTE ES EL QUE FALTABA
+from django.contrib import messages
 from django.http import HttpResponse
 from decimal import Decimal
 
-# Imports de openpyxl para Excel
+# Para Excel
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from datetime import datetime
@@ -14,19 +20,25 @@ from datetime import datetime
 from .models import Insumo, Maquinaria, Herramienta, MovimientoKardex
 from .forms import InsumoForm, MaquinariaForm, HerramientaForm, MovimientoKardexForm
 
-# ==============================
-# 📌 INSUMOS
-# ==============================
+
+# ============================================
+# VISTA PRINCIPAL INVENTARIO
+# ============================================
+def index_inventario(request):
+    """Menú principal del módulo de inventario"""
+    return render(request, "administrativa/inventario/index.html")
+
+
+# ============================================
+# INSUMOS
+# ============================================
 def lista_insumo(request):
     insumos = Insumo.objects.all()
-
-    # Calculamos el total del inventario usando la propiedad precio_total
     total_inventario = sum(insumo.precio_total for insumo in insumos)
-
     return render(
         request,
         "administrativa/inventario/insumos/lista_insumo.html",
-        {"proveedores": insumos, "total_inventario": total_inventario}
+        {"insumos": insumos, "total_inventario": total_inventario}
     )
 
 def nuevo_insumo(request):
@@ -34,13 +46,10 @@ def nuevo_insumo(request):
         form = InsumoForm(request.POST)
         if form.is_valid():
             insumo = form.save(commit=False)
-
-            # Guardamos solo los valores editables
             insumo.iva = Decimal(request.POST.get("iva", 0))
             insumo.descuento_proveedor = Decimal(request.POST.get("descuento_proveedor", 0))
             insumo.save()
-
-            return redirect("inventario:lista_insumo")
+            return redirect("administrativa:inventario:lista_insumo")
     else:
         form = InsumoForm()
     return render(request, "administrativa/inventario/insumos/form_insumo.html", {"form": form})
@@ -51,13 +60,10 @@ def editar_insumo(request, pk):
         form = InsumoForm(request.POST, instance=insumo)
         if form.is_valid():
             insumo = form.save(commit=False)
-
-            # Actualizamos solo campos editables
             insumo.iva = Decimal(request.POST.get("iva", 0))
             insumo.descuento_proveedor = Decimal(request.POST.get("descuento_proveedor", 0))
             insumo.save()
-
-            return redirect("inventario:lista_insumo")
+            return redirect("administrativa:inventario:lista_insumo")
     else:
         form = InsumoForm(instance=insumo)
     return render(request, "administrativa/inventario/insumos/form_insumo.html", {"form": form})
@@ -65,20 +71,22 @@ def editar_insumo(request, pk):
 def eliminar_insumo(request, pk):
     insumo = get_object_or_404(Insumo, pk=pk)
     insumo.delete()
-    return redirect("inventario:lista_insumo")
-# ==============================
-# 📌 MAQUINARIA
-# ==============================
+    return redirect("administrativa:inventario:lista_insumo")
+
+
+# ============================================
+# MAQUINARIA
+# ============================================
 def lista_maquinaria(request):
-    maquinaria = Maquinaria.objects.all()
-    return render(request, "administrativa/inventario/maquinaria/listar_maquinaria.html", {"maquinaria": maquinaria})
+    maquinas = Maquinaria.objects.all()
+    return render(request, "administrativa/inventario/maquinaria/listar_maquinaria.html", {"maquinas": maquinas})
 
 def nueva_maquinaria(request):
     if request.method == "POST":
         form = MaquinariaForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("inventario:lista_maquinaria")
+            return redirect("administrativa:inventario:lista_maquinaria")
     else:
         form = MaquinariaForm()
     return render(request, "administrativa/inventario/maquinaria/nueva_maquinaria.html", {"form": form})
@@ -89,7 +97,7 @@ def editar_maquinaria(request, pk):
         form = MaquinariaForm(request.POST, instance=maquina)
         if form.is_valid():
             form.save()
-            return redirect("inventario:lista_maquinaria")
+            return redirect("administrativa:inventario:lista_maquinaria")
     else:
         form = MaquinariaForm(instance=maquina)
     return render(request, "administrativa/inventario/maquinaria/nueva_maquinaria.html", {"form": form})
@@ -98,12 +106,13 @@ def eliminar_maquinaria(request, pk):
     maquina = get_object_or_404(Maquinaria, pk=pk)
     if request.method == "POST":
         maquina.delete()
-        return redirect("inventario:lista_maquinaria")
+        return redirect("administrativa:inventario:lista_maquinaria")
     return render(request, "administrativa/inventario/maquinaria/nueva_maquinaria.html", {"form": None, "delete": True})
 
-# ==============================
-# 📌 HERRAMIENTAS
-# ==============================
+
+# ============================================
+# HERRAMIENTAS
+# ============================================
 def lista_herramientas(request):
     herramientas = Herramienta.objects.all()
     return render(request, "administrativa/inventario/herramientas/listar_herramientas.html", {"herramientas": herramientas})
@@ -113,7 +122,7 @@ def nueva_herramienta(request):
         form = HerramientaForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("inventario:lista_herramientas")
+            return redirect("administrativa:inventario:lista_herramientas")
     else:
         form = HerramientaForm()
     return render(request, "administrativa/inventario/herramientas/nueva_herramienta.html", {"form": form})
@@ -124,7 +133,7 @@ def editar_herramienta(request, pk):
         form = HerramientaForm(request.POST, instance=herramienta)
         if form.is_valid():
             form.save()
-            return redirect("inventario:lista_herramientas")
+            return redirect("administrativa:inventario:lista_herramientas")
     else:
         form = HerramientaForm(instance=herramienta)
     return render(request, "administrativa/inventario/herramientas/nueva_herramienta.html", {"form": form})
@@ -133,12 +142,13 @@ def eliminar_herramienta(request, pk):
     herramienta = get_object_or_404(Herramienta, pk=pk)
     if request.method == "POST":
         herramienta.delete()
-        return redirect("inventario:lista_herramientas")
+        return redirect("administrativa:inventario:lista_herramientas")
     return render(request, "administrativa/inventario/herramientas/nueva_herramienta.html", {"form": None, "delete": True})
 
-# ==============================
-# 📌 KARDEX
-# ==============================
+
+# ============================================
+# KARDEX
+# ============================================
 def listar_kardex(request):
     """Listar todos los movimientos del Kardex."""
     movimientos = MovimientoKardex.objects.all().order_by('-fecha')
@@ -150,13 +160,11 @@ def registrar_movimiento_kardex(request):
         form = MovimientoKardexForm(request.POST)
         if form.is_valid():
             movimiento = form.save(commit=False)
-            # Si no se envía fecha, usar la fecha actual
             if not movimiento.fecha:
                 movimiento.fecha = timezone.now()
             movimiento.save()
-            return redirect("inventario:listar_kardex")
+            return redirect("administrativa:inventario:listar_kardex")
     else:
-        # Inicializamos el formulario con fecha actual
         form = MovimientoKardexForm(initial={"fecha": timezone.now()})
     return render(request, "administrativa/inventario/kardex/nuevo_movimiento.html", {"form": form})
 
@@ -167,11 +175,10 @@ def editar_movimiento(request, pk):
         form = MovimientoKardexForm(request.POST, instance=movimiento)
         if form.is_valid():
             movimiento = form.save(commit=False)
-            # Si no hay fecha, asignar la actual
             if not movimiento.fecha:
                 movimiento.fecha = timezone.now()
             movimiento.save()
-            return redirect("inventario:listar_kardex")
+            return redirect("administrativa:inventario:listar_kardex")
     else:
         form = MovimientoKardexForm(instance=movimiento)
     return render(request, "administrativa/inventario/kardex/nuevo_movimiento.html", {"form": form})
@@ -179,28 +186,19 @@ def editar_movimiento(request, pk):
 def eliminar_movimiento(request, pk):
     movimiento = get_object_or_404(MovimientoKardex, pk=pk)
     movimiento.delete()
-    return redirect("inventario:listar_kardex")
-    
-    # Confirmación de eliminación
-    return render(request, "administrativa/inventario/kardex/confirmar_eliminar.html", {"movimiento": movimiento})
+    return redirect("administrativa:inventario:listar_kardex")
 
-# ==============================
-# 📥 IMPORTAR DESDE EXCEL
-# Agregar esta función AL FINAL de tu archivo inventario/views.py
-# ==============================
 
+# ============================================
+# IMPORTAR DESDE EXCEL
+# ============================================
 def importar_excel(request):
-    """
-    Vista para importar insumos desde Excel
-    Solo lee la hoja "Inventario_Procesado" (ignora hoja 2)
-    Columnas esperadas: Código, Nombre, Stock
-    """
+    """Vista para importar insumos desde Excel (solo hoja Inventario_Procesado)"""
     
     if request.method == 'POST':
         archivo = request.FILES.get('archivo_excel')
         limpiar = request.POST.get('limpiar') == 'on'
         
-        # Validaciones
         if not archivo:
             messages.error(request, '❌ Debes seleccionar un archivo')
             return redirect('administrativa:inventario:importar_excel')
@@ -212,51 +210,40 @@ def importar_excel(request):
         try:
             import openpyxl
             
-            # Leer el archivo Excel
             wb = openpyxl.load_workbook(archivo)
             
-            # Buscar hoja "Inventario_Procesado" o usar la primera
             if 'Inventario_Procesado' in wb.sheetnames:
                 ws = wb['Inventario_Procesado']
             else:
                 ws = wb.active
                 messages.warning(request, f'⚠️ Usando hoja: {ws.title}')
             
-            # Limpiar base de datos si se solicita
             if limpiar:
                 count = Insumo.objects.count()
                 Insumo.objects.all().delete()
                 messages.warning(request, f'🗑️ Se eliminaron {count} insumos existentes')
             
-            # Contadores
             creados = 0
             actualizados = 0
             errores = []
             
-            # Procesar cada fila (empezar desde fila 2, omitir encabezado)
             for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-                
-                # Validar que la fila tenga datos
                 if not row or len(row) < 3:
                     continue
-                
-                # Leer solo las 3 primeras columnas
+                    
                 codigo = str(row[0]).strip() if row[0] else None
                 nombre = str(row[1]).strip() if row[1] else None
                 
-                # Convertir stock a entero
                 try:
                     stock_inicial = int(row[2]) if row[2] else 0
                 except (ValueError, TypeError):
                     stock_inicial = 0
                 
-                # Validar datos obligatorios
                 if not codigo or not nombre:
                     errores.append(f'Fila {idx}: código o nombre vacío')
                     continue
                 
                 try:
-                    # Crear o actualizar insumo
                     insumo, created = Insumo.objects.update_or_create(
                         codigo=codigo,
                         defaults={
@@ -271,7 +258,6 @@ def importar_excel(request):
                         }
                     )
                     
-                    # Si es nuevo Y tiene stock, crear movimiento de entrada
                     if created and stock_inicial > 0:
                         MovimientoKardex.objects.create(
                             insumo=insumo,
@@ -287,7 +273,6 @@ def importar_excel(request):
                 except Exception as e:
                     errores.append(f'Fila {idx} ({codigo}): {str(e)}')
             
-            # Mostrar resultados
             if creados > 0:
                 messages.success(request, f'✅ {creados} insumos creados con stock inicial')
             
@@ -295,13 +280,11 @@ def importar_excel(request):
                 messages.info(request, f'🔄 {actualizados} insumos ya existían (no se modificó su stock)')
             
             if errores:
-                # Mostrar máximo 5 errores
                 for error in errores[:5]:
                     messages.warning(request, f'⚠️ {error}')
                 if len(errores) > 5:
                     messages.warning(request, f'⚠️ ... y {len(errores) - 5} errores más')
             
-            # Redirigir si hubo éxito
             if creados > 0 or actualizados > 0:
                 messages.success(request, '🎉 ¡Importación completada!')
                 return redirect('administrativa:inventario:lista_insumo')
@@ -313,54 +296,32 @@ def importar_excel(request):
         
         return redirect('administrativa:inventario:importar_excel')
     
-    # GET: Mostrar formulario de importación
     return render(request, 'administrativa/inventario/insumos/importar_excel.html')
 
-# ==============================
-# 📤 EXPORTAR A EXCEL
-# Agregar esta función en tu inventario/views.py
-# ==============================
 
+# ============================================
+# EXPORTAR A EXCEL
+# ============================================
 def exportar_excel(request):
-    """
-    Exporta el inventario actual a Excel en tiempo real
-    Solo una hoja: Inventario (Código, Nombre, Stock Actual)
-    """
-    from django.http import HttpResponse
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    from datetime import datetime
+    """Exporta el inventario actual a Excel en tiempo real"""
     
-    # Obtener todos los insumos
     insumos = Insumo.objects.all().order_by('codigo')
     
-    # Crear libro de Excel
     wb = Workbook()
     ws = wb.active
     ws.title = "Inventario"
     
-    # ========================================
-    # ESTILOS
-    # ========================================
-    
-    # Estilo del encabezado (amarillo)
+    # Estilos
     header_fill = PatternFill(start_color="FACC15", end_color="FACC15", fill_type="solid")
     header_font = Font(bold=True, size=12, color="000000")
     header_alignment = Alignment(horizontal="center", vertical="center")
-    
-    # Bordes
     thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
     )
     
-    # ========================================
-    # ENCABEZADOS
-    # ========================================
+    # Encabezados
     headers = ['Código', 'Nombre', 'Stock']
-    
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num)
         cell.value = header
@@ -369,49 +330,25 @@ def exportar_excel(request):
         cell.alignment = header_alignment
         cell.border = thin_border
     
-    # ========================================
-    # DATOS
-    # ========================================
+    # Datos
     for row_num, insumo in enumerate(insumos, 2):
-        # Código
-        cell = ws.cell(row=row_num, column=1)
-        cell.value = insumo.codigo
-        cell.border = thin_border
-        cell.alignment = Alignment(horizontal="center")
-        
-        # Nombre
-        cell = ws.cell(row=row_num, column=2)
-        cell.value = insumo.nombre
-        cell.border = thin_border
-        
-        # Stock Actual
-        cell = ws.cell(row=row_num, column=3)
-        cell.value = insumo.stock_actual
-        cell.border = thin_border
-        cell.alignment = Alignment(horizontal="center")
+        ws.cell(row=row_num, column=1, value=insumo.codigo).border = thin_border
+        ws.cell(row=row_num, column=2, value=insumo.nombre).border = thin_border
+        ws.cell(row=row_num, column=3, value=insumo.stock_actual).border = thin_border
     
-    # ========================================
-    # AJUSTAR ANCHO DE COLUMNAS
-    # ========================================
-    ws.column_dimensions['A'].width = 15  # Código
-    ws.column_dimensions['B'].width = 60  # Nombre
-    ws.column_dimensions['C'].width = 12  # Stock
+    # Ajustar columnas
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 60
+    ws.column_dimensions['C'].width = 12
     
-    # ========================================
-    # PREPARAR RESPUESTA HTTP
-    # ========================================
-    
-    # Nombre del archivo con fecha actual
+    # Preparar descarga
     fecha_actual = datetime.now().strftime("%Y-%m-%d_%H-%M")
     nombre_archivo = f"Inventario_{fecha_actual}.xlsx"
     
-    # Configurar respuesta HTTP
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-    
-    # Guardar el archivo en la respuesta
     wb.save(response)
     
     return response
