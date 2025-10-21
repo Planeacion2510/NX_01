@@ -8,7 +8,17 @@ from nexusone.administrativa.compras.models import Proveedor  # 🔗 importamos
 class Insumo(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
+    
+    # 🆕 PROVEEDOR (reemplaza descripción)
+    proveedor = models.ForeignKey(
+        Proveedor, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='insumos',
+        verbose_name='Proveedor'
+    )
+    
     unidad = models.CharField(max_length=20, help_text="Ej: kg, litros, unidades")
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
@@ -16,7 +26,7 @@ class Insumo(models.Model):
     stock_minimo = models.PositiveIntegerField(default=0)
     stock_maximo = models.PositiveIntegerField(default=0)
 
-    # Nuevos campos
+    # IVA y Descuento
     iva = models.DecimalField("IVA (%)", max_digits=5, decimal_places=2, default=19)
     descuento_proveedor = models.DecimalField("Descuento Proveedor (%)", max_digits=5, decimal_places=2, default=0)
 
@@ -56,7 +66,6 @@ class MovimientoKardex(models.Model):
 
     def __str__(self):
         return f"{self.tipo} {self.cantidad} {self.insumo.nombre} ({self.fecha.date()})"
-
 
 # ---------------------------
 # HERRAMIENTAS

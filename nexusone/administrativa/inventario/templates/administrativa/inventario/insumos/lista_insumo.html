@@ -51,6 +51,7 @@
                 <tr>
                     <th>Código</th>
                     <th>Nombre</th>
+                    <th>Proveedor</th> <!-- 🆕 NUEVA COLUMNA -->
                     <th>Stock</th>
                     <th>Precio Unitario</th>
                     <th>Precio con IVA</th>
@@ -64,6 +65,17 @@
                 <tr>
                     <td><strong>{{ insumo.codigo }}</strong></td>
                     <td>{{ insumo.nombre }}</td>
+                    
+                    <!-- 🆕 COLUMNA PROVEEDOR -->
+                    <td>
+                        {% if insumo.proveedor %}
+                            <i class="fas fa-truck text-success"></i> 
+                            {{ insumo.proveedor.nombre }}
+                        {% else %}
+                            <span class="text-muted">Sin proveedor</span>
+                        {% endif %}
+                    </td>
+                    
                     <td>{{ insumo.stock_actual }}</td>
                     <td>${{ insumo.precio_unitario|currency }}</td>
                     <td>${{ insumo.precio_con_iva|currency }}</td>
@@ -83,7 +95,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted">
+                    <td colspan="9" class="text-center text-muted">
                         No hay insumos registrados.
                     </td>
                 </tr>
@@ -91,7 +103,7 @@
             </tbody>
             <tfoot>
                 <tr class="table-warning">
-                    <th colspan="6" class="text-end">Total Inventario:</th>
+                    <th colspan="7" class="text-end">Total Inventario:</th>
                     <th colspan="2"><strong>${{ total_inventario|currency }}</strong></th>
                 </tr>
             </tfoot>

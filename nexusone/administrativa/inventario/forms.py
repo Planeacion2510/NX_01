@@ -2,26 +2,63 @@ from django import forms
 from .models import Insumo, Maquinaria, Herramienta, MovimientoKardex
 
 # ==============================
-# 📌 INSUMOS
+# 📦 INSUMOS
 # ==============================
 class InsumoForm(forms.ModelForm):
     class Meta:
         model = Insumo
         fields = [
-            "codigo", "nombre", "descripcion", "unidad", 
-            "precio_unitario", "stock_minimo", "stock_maximo",
-            "iva", "descuento_proveedor" 
+            "codigo", 
+            "nombre", 
+            "proveedor",  # 🆕 CAMBIO: Reemplaza "descripcion"
+            "unidad", 
+            "precio_unitario", 
+            "stock_minimo", 
+            "stock_maximo",
+            "iva", 
+            "descuento_proveedor" 
         ]
         widgets = {
-            "codigo": forms.TextInput(attrs={"class": "form-control", "placeholder": "Código del insumo"}),
-            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del insumo"}),
-            "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Descripción del insumo"}),
-            "unidad": forms.TextInput(attrs={"class": "form-control", "placeholder": "Unidad (kg, litros, unidades)"}),
-            "precio_unitario": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "0.01"}),
-            "stock_minimo": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
-            "stock_maximo": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
-            "iva": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),  
-            "descuento_proveedor": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0", "max": "100"}),
+            "codigo": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Código del insumo"
+            }),
+            "nombre": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Nombre del insumo"
+            }),
+            # 🆕 CAMBIO: Select de Proveedor (reemplaza Textarea de descripción)
+            "proveedor": forms.Select(attrs={
+                "class": "form-control",
+            }),
+            "unidad": forms.TextInput(attrs={
+                "class": "form-control", 
+                "placeholder": "Unidad (kg, litros, unidades)"
+            }),
+            "precio_unitario": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "0", 
+                "step": "0.01"
+            }),
+            "stock_minimo": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "0"
+            }),
+            "stock_maximo": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "min": "0"
+            }),
+            "iva": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "step": "0.01", 
+                "min": "0"
+            }),  
+            "descuento_proveedor": forms.NumberInput(attrs={
+                "class": "form-control", 
+                "step": "0.01", 
+                "min": "0", 
+                "max": "100"
+            }),
         }
 
 # ==============================
@@ -40,7 +77,6 @@ class MaquinariaForm(forms.ModelForm):
             "responsable": forms.TextInput(attrs={"class": "form-control", "placeholder": "Responsable"}),
         }
 
-
 # ==============================
 # 📌 HERRAMIENTAS
 # ==============================
@@ -54,7 +90,6 @@ class HerramientaForm(forms.ModelForm):
             "cantidad": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
             "responsable": forms.TextInput(attrs={"class": "form-control", "placeholder": "Responsable"}),
         }
-
 
 # ==============================
 # 📌 KARDEX

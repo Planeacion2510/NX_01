@@ -542,3 +542,28 @@ h2,
         font-size: 12px;
     }
 }
+.table-modern td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+/* Columna de Acciones - Más ancha */
+.table-modern th:last-child,
+.table-modern td:last-child {
+    width: 120px;
+    min-width: 120px;
+}
+
+/* Botones de acción en horizontal */
+.table-modern td:last-child {
+    white-space: nowrap;
+}
+
+.table-modern .text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
