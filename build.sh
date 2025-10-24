@@ -1,34 +1,35 @@
+
 #!/usr/bin/env bash
 echo "🔧 Forzando Python 3.11.9 en Render..."
 pyenv install -s 3.11.9
 pyenv global 3.11.9
 python --version
 
-# Instalar dependencias
+# 🧩 Instalar dependencias del proyecto
+echo "📦 Instalando dependencias..."
 pip install -r requirements.txt
 
-# ✅ EJECUTAR MIGRACIONES (ESTO CREA LA TABLA DE NOTIFICACIONES)
-echo "📦 Creando migraciones..."
-python manage.py makemigrations
+# ⚠️ No ejecutar migraciones aquí (la base aún no está activa en el build)
+# python manage.py makemigrations
+# python manage.py migrate --noinput
 
-echo "🚀 Ejecutando migraciones..."
-python manage.py migrate --noinput
-
-# Recopilar archivos estáticos
+# 🧱 Compilar archivos estáticos
+echo "🎨 Recopilando archivos estáticos..."
 python manage.py collectstatic --noinput
 
-# Crear o actualizar superusuario admin
-python manage.py createsuperuser --noinput --username admin --email admin@example.com || true
+# 👤 Crear o actualizar superusuario admin (solo si no existe)
+echo "👤 Configurando usuario administrador..."
 python manage.py shell -c "
 from django.contrib.auth.models import User;
-u = User.objects.get(username='admin')
+u, created = User.objects.get_or_create(username='admin', defaults={'email': 'admin@example.com'});
 u.is_superuser = True
 u.is_staff = True
 u.set_password('admin123')
 u.save()
 "
 
-# Crear usuarios adicionales
+# 👥 Crear usuarios predefinidos
+echo "👥 Creando usuarios de sistema..."
 python manage.py shell -c "
 from django.contrib.auth.models import User;
 usuarios = [
@@ -41,7 +42,7 @@ usuarios = [
     ('TalentoHumano', 'Dinnova2510H'),
 ];
 for nombre, clave in usuarios:
-    u, creado = User.objects.get_or_create(username=nombre)
+    u, _ = User.objects.get_or_create(username=nombre)
     u.set_password(clave)
     u.is_staff = False
     u.is_superuser = False
@@ -49,4 +50,4 @@ for nombre, clave in usuarios:
 print('✅ Usuarios actualizados correctamente.')
 "
 
-echo "🚀 Build finalizado correctamente"
+echo "🚀 Build completado correctamente. Las migraciones se aplicarán al iniciar el servicio."

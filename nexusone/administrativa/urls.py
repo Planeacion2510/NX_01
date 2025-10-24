@@ -9,6 +9,7 @@ urlpatterns = [
     
     # Submódulos
     path("ordenes/", include("nexusone.administrativa.ordenes.urls")),
+    path("proyectos/", include("nexusone.administrativa.proyectos.urls")), 
     path("inventario/", include("nexusone.administrativa.inventario.urls")),
     path("compras/", include("nexusone.administrativa.compras.urls")),
 ]

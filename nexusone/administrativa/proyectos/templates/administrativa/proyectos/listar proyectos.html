@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- Título -->
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-building"></i> Gestión de Proyectos
+    </h2>
+    
+    <!-- Botones de acción principales -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'administrativa:proyectos:crear_constructora' %}" class="btn-primary-custom">
+            <i class="fas fa-plus"></i> Registrar Constructora
+        </a>
+        <a href="{% url 'administrativa:proyectos:crear_proyecto' %}" class="btn-primary-custom">
+            <i class="fas fa-plus"></i> Registrar Proyecto
+        </a>
+        <a href="{% url 'administrativa:menu_administrativa' %}" class="btn-volver">
+            <i class="fas fa-arrow-left"></i> Volver al Menú
+        </a>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="buscar" class="form-label">Buscar:</label>
+                    <input 
+                        type="text" 
+                        name="buscar" 
+                        id="buscar" 
+                        class="form-control" 
+                        placeholder="Buscar por nombre, código o constructora..."
+                        value="{{ buscar }}"
+                    >
+                </div>
+                <div class="col-md-4">
+                    <label for="estado" class="form-label">Estado:</label>
+                    <select name="estado" id="estado" class="form-control">
+                        <option value="">Todos los estados</option>
+                        {% for valor, etiqueta in ESTADO_CHOICES %}
+                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabs: Constructoras y Proyectos -->
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="constructoras-tab" data-bs-toggle="tab" data-bs-target="#constructoras" type="button" role="tab">
+                <i class="fas fa-building"></i> Constructoras ({{ constructoras.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="proyectos-tab" data-bs-toggle="tab" data-bs-target="#proyectos" type="button" role="tab">
+                <i class="fas fa-hard-hat"></i> Todos los Proyectos ({{ proyectos.count }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        
+        <!-- TAB 1: CONSTRUCTORAS -->
+        <div class="tab-pane fade show active" id="constructoras" role="tabpanel">
+            {% if constructoras %}
+            <div class="row g-4">
+                {% for constructora in constructoras %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header-bar"></div>
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-building text-primary"></i> 
+                                {{ constructora.razon_social }}
+                            </h5>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-id-card"></i> NIT: {{ constructora.nit }}
+                            </p>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-phone"></i> {{ constructora.telefono }}
+                            </p>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-envelope"></i> {{ constructora.correo }}
+                            </p>
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-map-marker-alt"></i> {{ constructora.ubicacion|truncatewords:5 }}
+                            </p>
+                            
+                            <!-- Estadísticas -->
+                            <div class="d-flex justify-content-around mb-3">
+                                <div class="text-center">
+                                    <div class="h4 mb-0 text-primary">{{ constructora.total_proyectos }}</div>
+                                    <small class="text-muted">Proyectos</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="h4 mb-0 text-success">{{ constructora.proyectos_activos }}</div>
+                                    <small class="text-muted">Activos</small>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="{% url 'administrativa:proyectos:detalle_constructora' constructora.pk %}" 
+                                   class="btn btn-sm btn-info" title="Ver proyectos">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'administrativa:proyectos:editar_constructora' constructora.pk %}" 
+                                   class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'administrativa:proyectos:eliminar_constructora' constructora.pk %}" 
+                                   class="btn btn-sm btn-danger" 
+                                   title="Eliminar"
+                                   onclick="return confirm('¿Seguro que deseas eliminar esta constructora?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> No hay constructoras registradas.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- TAB 2: TODOS LOS PROYECTOS -->
+        <div class="tab-pane fade" id="proyectos" role="tabpanel">
+            {% if proyectos %}
+            <div class="table-container">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Proyecto</th>
+                            <th>Constructora</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Fecha Inicio</th>
+                            <th>Contrato</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proyecto in proyectos %}
+                        <tr>
+                            <td><strong>{{ proyecto.codigo }}</strong></td>
+                            <td>{{ proyecto.nombre }}</td>
+                            <td>{{ proyecto.constructora.razon_social|truncatewords:3 }}</td>
+                            <td>{{ proyecto.get_tipo_proyecto_display }}</td>
+                            <td>
+                                {% if proyecto.estado == 'en_curso' %}
+                                <span class="badge bg-success">{{ proyecto.get_estado_display }}</span>
+                                {% elif proyecto.estado == 'planeacion' %}
+                                <span class="badge bg-info">{{ proyecto.get_estado_display }}</span>
+                                {% elif proyecto.estado == 'pausado' %}
+                                <span class="badge bg-warning">{{ proyecto.get_estado_display }}</span>
+                                {% elif proyecto.estado == 'finalizado' %}
+                                <span class="badge bg-secondary">{{ proyecto.get_estado_display }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ proyecto.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if proyecto.fecha_inicio %}
+                                {{ proyecto.fecha_inicio|date:"d/m/Y" }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if proyecto.contrato %}
+                                <a href="{% url 'administrativa:proyectos:descargar_contrato' proyecto.pk %}" 
+                                   class="btn-icon folder" title="Descargar contrato">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="{% url 'administrativa:proyectos:editar_proyecto' proyecto.pk %}" 
+                                       class="btn-icon edit" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'administrativa:proyectos:eliminar_proyecto' proyecto.pk %}" 
+                                       class="btn-icon delete" title="Eliminar"
+                                       onclick="return confirm('¿Seguro que deseas eliminar este proyecto?');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> No hay proyectos que coincidan con los filtros.
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap JS para tabs -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

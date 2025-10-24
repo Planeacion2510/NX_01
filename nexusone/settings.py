@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "nexusone",
     "nexusone.administrativa",
     "nexusone.administrativa.ordenes",
+    "nexusone.administrativa.proyectos",
     "nexusone.administrativa.inventario",
     "nexusone.administrativa.compras",
 ]

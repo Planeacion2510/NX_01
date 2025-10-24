@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- Título -->
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-hard-hat"></i> {{ title }}
+    </h2>
+
+    <!-- Formulario -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" class="form-modern">
+                        {% csrf_token %}
+
+                        <!-- Sección: Información Básica -->
+                        <h5 class="mb-3">
+                            <i class="fas fa-info-circle text-primary"></i> Información Básica
+                        </h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.constructora.id_for_label }}" class="form-label">
+                                    Constructora: <span class="text-danger">*</span>
+                                </label>
+                                {{ form.constructora }}
+                                {% if form.constructora.errors %}
+                                <div class="text-danger small">{{ form.constructora.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.codigo.id_for_label }}" class="form-label">
+                                    Código del Proyecto: <span class="text-danger">*</span>
+                                </label>
+                                {{ form.codigo }}
+                                {% if form.codigo.errors %}
+                                <div class="text-danger small">{{ form.codigo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                                Nombre del Proyecto: <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                            <div class="text-danger small">{{ form.nombre.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tipo_proyecto.id_for_label }}" class="form-label">
+                                    Tipo de Proyecto: <span class="text-danger">*</span>
+                                </label>
+                                {{ form.tipo_proyecto }}
+                                {% if form.tipo_proyecto.errors %}
+                                <div class="text-danger small">{{ form.tipo_proyecto.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.numero_unidades.id_for_label }}" class="form-label">
+                                    Número de Unidades:
+                                </label>
+                                {{ form.numero_unidades }}
+                                {% if form.numero_unidades.errors %}
+                                <div class="text-danger small">{{ form.numero_unidades.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.ubicacion_proyecto.id_for_label }}" class="form-label">
+                                Ubicación del Proyecto: <span class="text-danger">*</span>
+                            </label>
+                            {{ form.ubicacion_proyecto }}
+                            {% if form.ubicacion_proyecto.errors %}
+                            <div class="text-danger small">{{ form.ubicacion_proyecto.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sección: Fechas y Estado -->
+                        <h5 class="mb-3 mt-4">
+                            <i class="fas fa-calendar-alt text-primary"></i> Fechas y Estado
+                        </h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">
+                                    Fecha de Inicio:
+                                </label>
+                                {{ form.fecha_inicio }}
+                                {% if form.fecha_inicio.errors %}
+                                <div class="text-danger small">{{ form.fecha_inicio.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.fecha_fin_estimada.id_for_label }}" class="form-label">
+                                    Fecha Fin Estimada:
+                                </label>
+                                {{ form.fecha_fin_estimada }}
+                                {% if form.fecha_fin_estimada.errors %}
+                                <div class="text-danger small">{{ form.fecha_fin_estimada.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.fecha_fin_real.id_for_label }}" class="form-label">
+                                    Fecha Fin Real:
+                                </label>
+                                {{ form.fecha_fin_real }}
+                                {% if form.fecha_fin_real.errors %}
+                                <div class="text-danger small">{{ form.fecha_fin_real.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label">
+                                    Estado: <span class="text-danger">*</span>
+                                </label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                <div class="text-danger small">{{ form.estado.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.presupuesto.id_for_label }}" class="form-label">
+                                    Presupuesto ($):
+                                </label>
+                                {{ form.presupuesto }}
+                                {% if form.presupuesto.errors %}
+                                <div class="text-danger small">{{ form.presupuesto.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Sección: Contrato -->
+                        <h5 class="mb-3 mt-4">
+                            <i class="fas fa-file-contract text-primary"></i> Contrato
+                        </h5>
+
+                        {% if proyecto and proyecto.contrato %}
+                        <div class="documentos-box mb-3">
+                            <h6><i class="fas fa-file-pdf text-danger"></i> Contrato actual:</h6>
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <a href="{% url 'administrativa:proyectos:descargar_contrato' proyecto.pk %}" target="_blank">
+                                    <i class="fas fa-paperclip text-primary"></i> {{ proyecto.contrato.name|slice:"-30:" }}
+                                </a>
+                                <a href="{% url 'administrativa:proyectos:eliminar_contrato' proyecto.pk %}" 
+                                   class="text-danger small"
+                                   onclick="return confirm('¿Seguro que deseas eliminar este contrato?');">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.contrato.id_for_label }}" class="form-label">
+                                {% if proyecto and proyecto.contrato %}
+                                Reemplazar contrato:
+                                {% else %}
+                                Subir contrato (PDF):
+                                {% endif %}
+                            </label>
+                            {{ form.contrato }}
+                            <small class="text-muted d-block">Solo archivos PDF</small>
+                            {% if form.contrato.errors %}
+                            <div class="text-danger small">{{ form.contrato.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sección: Descripción y Observaciones -->
+                        <h5 class="mb-3 mt-4">
+                            <i class="fas fa-sticky-note text-primary"></i> Información Adicional
+                        </h5>
+
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                                Descripción:
+                            </label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                            <div class="text-danger small">{{ form.descripcion.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.observaciones.id_for_label }}" class="form-label">
+                                Observaciones:
+                            </label>
+                            {{ form.observaciones }}
+                            {% if form.observaciones.errors %}
+                            <div class="text-danger small">{{ form.observaciones.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Estado activo -->
+                        <div class="form-check mb-4">
+                            {{ form.activo }}
+                            <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                Proyecto activo
+                            </label>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="form-actions text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save"></i> Guardar Proyecto
+                            </button>
+                            <a href="{% url 'administrativa:proyectos:listar_proyectos' %}" class="btn btn-secondary px-4">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.documentos-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    background: #f9f9f9;
+}
+.documentos-box:hover {
+    background-color: #f1f7ff;
+}
+.form-label {
+    font-weight: 500;
+    color: #333;
+}
+.card {
+    border-radius: 12px;
+}
+</style>
+{% endblock %}
