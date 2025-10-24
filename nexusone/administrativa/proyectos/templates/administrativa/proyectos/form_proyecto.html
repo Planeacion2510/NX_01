@@ -283,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formatear número a pesos colombianos
     function formatearPesos(valor) {
         if (!valor) return '';
-        // Convertir a número y formatear
         const numero = parseFloat(valor);
         if (isNaN(numero)) return valor;
         return numero.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
@@ -292,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Limpiar formato para obtener solo números
     function limpiarFormato(valor) {
         if (!valor) return '';
-        return valor.replace(/\./g, '').replace(/,/g, '.');
+        return valor.toString().replace(/\./g, '').replace(/,/g, '.');
     }
 
     // Función para calcular el presupuesto total
@@ -314,7 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('presupuesto-total').textContent = 
             '$' + total.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
-        // Actualizar campo oculto de presupuesto
         const presupuestoInput = document.getElementById('{{ form.presupuesto.id_for_label }}');
         if (presupuestoInput) {
             presupuestoInput.value = total.toFixed(2);
@@ -332,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         input.addEventListener('focus', function() {
-            // Al hacer focus, mostrar valor sin formato para facilitar edición
             if (this.value) {
                 const valorLimpio = limpiarFormato(this.value);
                 this.value = valorLimpio;
@@ -340,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Agregar event listeners para calcular presupuesto al cambiar valores
+    // Agregar event listeners para calcular presupuesto
     function addCalculationListeners(row) {
         const cantidadInput = row.querySelector('.cantidad-item');
         const valorInput = row.querySelector('.valor-unitario-item');
@@ -362,7 +359,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.item-row').forEach(row => {
         addCalculationListeners(row);
         
-        // Listener para eliminar item
         const deleteBtn = row.querySelector('.remove-item');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
@@ -382,7 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Botón para agregar nuevo item
     document.getElementById('add-item').addEventListener('click', function() {
         if (!emptyFormTemplate) {
-            // Crear un template básico si no existe
             emptyFormTemplate = document.createElement('tr');
             emptyFormTemplate.className = 'item-row';
             emptyFormTemplate.innerHTML = `
@@ -397,19 +392,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const newForm = emptyFormTemplate.cloneNode(true);
         const formIdx = parseInt(totalForms.value);
         
-        // Reemplazar __prefix__ con el índice actual
         newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIdx);
-        
-        // Agregar al tbody
         itemsTableBody.appendChild(newForm);
-        
-        // Incrementar el contador de formularios
         totalForms.value = formIdx + 1;
         
-        // Agregar listeners
         addCalculationListeners(newForm);
         
-        // Listener para eliminar
         const deleteBtn = newForm.querySelector('.remove-item');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
@@ -421,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calcularPresupuesto();
     });
 
-    // Ocultar el campo de presupuesto (ya que se calcula automáticamente)
+    // Ocultar el campo de presupuesto
     const presupuestoField = document.getElementById('{{ form.presupuesto.id_for_label }}');
     if (presupuestoField) {
         presupuestoField.type = 'hidden';
@@ -435,7 +423,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Calcular presupuesto inicial
+    // CRÍTICO: Limpiar formato antes de enviar el formulario
+    document.getElementById('proyectoForm').addEventListener('submit', function(e) {
+        // Limpiar formato de todos los campos antes de enviar
+        document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
+            if (input.value) {
+                input.value = limpiarFormato(input.value);
+            }
+        });
+        
+        // Permitir que el formulario se envíe normalmente
+        return true;
+    });
+
     calcularPresupuesto();
 });
 </script>
