@@ -152,6 +152,7 @@ class ProyectoForm(forms.ModelForm):
         # Filtrar solo constructoras activas en el formulario
         self.fields['constructora'].queryset = Constructora.objects.filter(activa=True)
 
+
 # ===================================
 # 📋 FORMULARIO ITEM CONTRATADO
 # ===================================
@@ -171,17 +172,13 @@ class ItemContratadoForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Ej: unidad, m², m³'
             }),
-            'cantidad': forms.NumberInput(attrs={
+            'cantidad': forms.TextInput(attrs={
                 'class': 'form-control cantidad-item',
-                'min': '0',
-                'step': '0.01',
-                'placeholder': '0.00'
+                'placeholder': '0'
             }),
-            'valor_unitario': forms.NumberInput(attrs={
+            'valor_unitario': forms.TextInput(attrs={
                 'class': 'form-control valor-unitario-item',
-                'min': '0',
-                'step': '0.01',
-                'placeholder': '0.00'
+                'placeholder': '0'
             }),
         }
 

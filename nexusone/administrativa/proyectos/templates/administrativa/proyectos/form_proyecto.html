@@ -280,6 +280,21 @@ document.addEventListener('DOMContentLoaded', function() {
         emptyFormTemplate = itemsTableBody.children[itemsTableBody.children.length - 1].cloneNode(true);
     }
 
+    // Formatear número a pesos colombianos
+    function formatearPesos(valor) {
+        if (!valor) return '';
+        // Convertir a número y formatear
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) return valor;
+        return numero.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+    }
+
+    // Limpiar formato para obtener solo números
+    function limpiarFormato(valor) {
+        if (!valor) return '';
+        return valor.replace(/\./g, '').replace(/,/g, '.');
+    }
+
     // Función para calcular el presupuesto total
     function calcularPresupuesto() {
         let total = 0;
@@ -290,8 +305,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const valorInput = row.querySelector('.valor-unitario-item');
             
             if (cantidadInput && valorInput) {
-                const cantidad = parseFloat(cantidadInput.value) || 0;
-                const valor = parseFloat(valorInput.value) || 0;
+                const cantidad = parseFloat(limpiarFormato(cantidadInput.value)) || 0;
+                const valor = parseFloat(limpiarFormato(valorInput.value)) || 0;
                 total += cantidad * valor;
             }
         });
@@ -306,13 +321,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Aplicar formato a un input
+    function aplicarFormato(input) {
+        input.addEventListener('blur', function() {
+            if (this.value) {
+                const valorLimpio = limpiarFormato(this.value);
+                const valorFormateado = formatearPesos(valorLimpio);
+                this.value = valorFormateado;
+            }
+        });
+
+        input.addEventListener('focus', function() {
+            // Al hacer focus, mostrar valor sin formato para facilitar edición
+            if (this.value) {
+                const valorLimpio = limpiarFormato(this.value);
+                this.value = valorLimpio;
+            }
+        });
+    }
+
     // Agregar event listeners para calcular presupuesto al cambiar valores
     function addCalculationListeners(row) {
-        const inputs = row.querySelectorAll('.cantidad-item, .valor-unitario-item');
-        inputs.forEach(input => {
-            input.addEventListener('input', calcularPresupuesto);
-            input.addEventListener('change', calcularPresupuesto);
-        });
+        const cantidadInput = row.querySelector('.cantidad-item');
+        const valorInput = row.querySelector('.valor-unitario-item');
+        
+        if (cantidadInput) {
+            aplicarFormato(cantidadInput);
+            cantidadInput.addEventListener('input', calcularPresupuesto);
+            cantidadInput.addEventListener('change', calcularPresupuesto);
+        }
+        
+        if (valorInput) {
+            aplicarFormato(valorInput);
+            valorInput.addEventListener('input', calcularPresupuesto);
+            valorInput.addEventListener('change', calcularPresupuesto);
+        }
     }
 
     // Agregar listeners a las filas existentes
@@ -345,8 +388,8 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyFormTemplate.innerHTML = `
                 <td><input type="text" name="${formsetPrefix}-__prefix__-item" class="form-control" placeholder="Ej: Apartamento Tipo A"></td>
                 <td><input type="text" name="${formsetPrefix}-__prefix__-medida" class="form-control" placeholder="Ej: unidad"></td>
-                <td><input type="number" name="${formsetPrefix}-__prefix__-cantidad" class="form-control cantidad-item" step="0.01" placeholder="0.00"></td>
-                <td><input type="number" name="${formsetPrefix}-__prefix__-valor_unitario" class="form-control valor-unitario-item" step="0.01" placeholder="0.00"></td>
+                <td><input type="text" name="${formsetPrefix}-__prefix__-cantidad" class="form-control cantidad-item" placeholder="0"></td>
+                <td><input type="text" name="${formsetPrefix}-__prefix__-valor_unitario" class="form-control valor-unitario-item" placeholder="0"></td>
                 <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="fas fa-trash"></i></button></td>
             `;
         }
@@ -383,6 +426,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (presupuestoField) {
         presupuestoField.type = 'hidden';
     }
+
+    // Formatear valores existentes al cargar
+    document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
+        if (input.value) {
+            const valorLimpio = limpiarFormato(input.value);
+            input.value = formatearPesos(valorLimpio);
+        }
+    });
 
     // Calcular presupuesto inicial
     calcularPresupuesto();
