@@ -151,3 +151,47 @@ class ProyectoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Filtrar solo constructoras activas en el formulario
         self.fields['constructora'].queryset = Constructora.objects.filter(activa=True)
+
+# ===================================
+# 📋 FORMULARIO ITEM CONTRATADO
+# ===================================
+from django.forms import inlineformset_factory
+from .models import ItemContratado
+
+class ItemContratadoForm(forms.ModelForm):
+    class Meta:
+        model = ItemContratado
+        fields = ['item', 'medida', 'cantidad', 'valor_unitario']
+        widgets = {
+            'item': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Apartamento Tipo A'
+            }),
+            'medida': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: unidad, m², m³'
+            }),
+            'cantidad': forms.NumberInput(attrs={
+                'class': 'form-control cantidad-item',
+                'min': '0',
+                'step': '0.01',
+                'placeholder': '0.00'
+            }),
+            'valor_unitario': forms.NumberInput(attrs={
+                'class': 'form-control valor-unitario-item',
+                'min': '0',
+                'step': '0.01',
+                'placeholder': '0.00'
+            }),
+        }
+
+
+# Crear el formset para los ítems contratados
+ItemContratadoFormSet = inlineformset_factory(
+    Proyecto,
+    ItemContratado,
+    form=ItemContratadoForm,
+    extra=1,
+    can_delete=True,
+    fields=['item', 'medida', 'cantidad', 'valor_unitario']
+)

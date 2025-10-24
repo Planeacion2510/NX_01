@@ -260,3 +260,63 @@ class Proyecto(models.Model):
             porcentaje = (self.dias_transcurridos / self.duracion_dias) * 100
             return min(porcentaje, 100)  # No más del 100%
         return None
+    @property
+    def presupuesto_calculado(self):
+        """Calcula el presupuesto total sumando todos los ítems contratados"""
+        total = sum(item.valor_total for item in self.items_contratados.all())
+        return total if total > 0 else None
+
+
+# ===================================
+# 📋 ITEM CONTRATADO
+# ===================================
+class ItemContratado(models.Model):
+    proyecto = models.ForeignKey(
+        Proyecto,
+        on_delete=models.CASCADE,
+        related_name='items_contratados',
+        verbose_name='Proyecto'
+    )
+    
+    item = models.CharField(
+        "Item",
+        max_length=200,
+        help_text="Nombre del ítem contratado"
+    )
+    
+    medida = models.CharField(
+        "Unidad de Medida",
+        max_length=50,
+        help_text="Ej: m², m³, unidad, kg, etc."
+    )
+    
+    cantidad = models.DecimalField(
+        "Cantidad",
+        max_digits=10,
+        decimal_places=2,
+        help_text="Cantidad contratada"
+    )
+    
+    valor_unitario = models.DecimalField(
+        "Valor Unitario",
+        max_digits=15,
+        decimal_places=2,
+        help_text="Valor por unidad"
+    )
+    
+    # Campos de control
+    creado = models.DateTimeField("Fecha de Registro", auto_now_add=True)
+    actualizado = models.DateTimeField("Última Actualización", auto_now=True)
+    
+    class Meta:
+        verbose_name = "Item Contratado"
+        verbose_name_plural = "Items Contratados"
+        ordering = ['creado']
+    
+    def __str__(self):
+        return f"{self.item} - {self.cantidad} {self.medida}"
+    
+    @property
+    def valor_total(self):
+        """Calcula el valor total del ítem (cantidad * valor_unitario)"""
+        return self.cantidad * self.valor_unitario

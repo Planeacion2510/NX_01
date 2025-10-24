@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import FileResponse, Http404
+from django.db import transaction
 from .models import Constructora, Proyecto
-from .forms import ConstructoraForm, ProyectoForm
+from .forms import ConstructoraForm, ProyectoForm, ItemContratadoFormSet
 import os
 
 
@@ -138,13 +139,36 @@ def detalle_constructora(request, pk):
 # ===================================
 @login_required(login_url='/login/')
 def crear_proyecto(request):
-    """Crear un nuevo proyecto"""
+    """Crear un nuevo proyecto con items contratados"""
     if request.method == 'POST':
         form = ProyectoForm(request.POST, request.FILES)
+        
         if form.is_valid():
-            proyecto = form.save()
-            messages.success(request, f'✅ Proyecto "{proyecto.nombre}" creado exitosamente.')
-            return redirect('administrativa:proyectos:listar_proyectos')
+            with transaction.atomic():
+                # Guardar el proyecto
+                proyecto = form.save(commit=False)
+                proyecto.save()
+                
+                # Crear el formset con los datos POST
+                formset = ItemContratadoFormSet(request.POST, instance=proyecto)
+                
+                if formset.is_valid():
+                    # Guardar los items
+                    formset.save()
+                    
+                    # Calcular y actualizar el presupuesto
+                    presupuesto_total = proyecto.presupuesto_calculado
+                    if presupuesto_total:
+                        proyecto.presupuesto = presupuesto_total
+                        proyecto.save()
+                    
+                    messages.success(request, f'✅ Proyecto "{proyecto.nombre}" creado exitosamente con {proyecto.items_contratados.count()} items.')
+                    return redirect('administrativa:proyectos:listar_proyectos')
+                else:
+                    # Si el formset tiene errores, mostrarlos
+                    for error in formset.errors:
+                        if error:
+                            messages.error(request, f'Error en items: {error}')
     else:
         # Preseleccionar constructora si viene en la URL
         constructora_id = request.GET.get('constructora')
@@ -152,9 +176,11 @@ def crear_proyecto(request):
         if constructora_id:
             initial['constructora'] = constructora_id
         form = ProyectoForm(initial=initial)
+        formset = ItemContratadoFormSet()
     
     context = {
         'form': form,
+        'formset': formset,
         'title': 'Registrar Proyecto',
         'action': 'crear'
     }
@@ -166,20 +192,44 @@ def crear_proyecto(request):
 # ===================================
 @login_required(login_url='/login/')
 def editar_proyecto(request, pk):
-    """Editar un proyecto existente"""
+    """Editar un proyecto existente con items contratados"""
     proyecto = get_object_or_404(Proyecto, pk=pk)
     
     if request.method == 'POST':
         form = ProyectoForm(request.POST, request.FILES, instance=proyecto)
+        
         if form.is_valid():
-            form.save()
-            messages.success(request, f'✅ Proyecto "{proyecto.nombre}" actualizado exitosamente.')
-            return redirect('administrativa:proyectos:listar_proyectos')
+            with transaction.atomic():
+                # Guardar el proyecto
+                proyecto = form.save()
+                
+                # Crear el formset con los datos POST
+                formset = ItemContratadoFormSet(request.POST, instance=proyecto)
+                
+                if formset.is_valid():
+                    # Guardar los items
+                    formset.save()
+                    
+                    # Calcular y actualizar el presupuesto
+                    presupuesto_total = proyecto.presupuesto_calculado
+                    if presupuesto_total:
+                        proyecto.presupuesto = presupuesto_total
+                        proyecto.save()
+                    
+                    messages.success(request, f'✅ Proyecto "{proyecto.nombre}" actualizado exitosamente.')
+                    return redirect('administrativa:proyectos:listar_proyectos')
+                else:
+                    # Si el formset tiene errores, mostrarlos
+                    for error in formset.errors:
+                        if error:
+                            messages.error(request, f'Error en items: {error}')
     else:
         form = ProyectoForm(instance=proyecto)
+        formset = ItemContratadoFormSet(instance=proyecto)
     
     context = {
         'form': form,
+        'formset': formset,
         'proyecto': proyecto,
         'title': 'Editar Proyecto',
         'action': 'editar'

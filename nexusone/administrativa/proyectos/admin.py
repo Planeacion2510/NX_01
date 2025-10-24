@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Constructora, Proyecto
+from .models import Constructora, Proyecto, ItemContratado
 
 
 # ===================================
@@ -49,6 +49,23 @@ class ConstructoraAdmin(admin.ModelAdmin):
 
 
 # ===================================
+# 📋 ADMIN ITEM CONTRATADO (INLINE)
+# ===================================
+class ItemContratadoInline(admin.TabularInline):
+    model = ItemContratado
+    extra = 1
+    fields = ['item', 'medida', 'cantidad', 'valor_unitario', 'valor_total_display']
+    readonly_fields = ['valor_total_display']
+    
+    def valor_total_display(self, obj):
+        """Muestra el valor total del ítem"""
+        if obj.id:
+            return f"${obj.valor_total:,.2f}"
+        return "—"
+    valor_total_display.short_description = 'Valor Total'
+
+
+# ===================================
 # 🏗️ ADMIN PROYECTO
 # ===================================
 @admin.register(Proyecto)
@@ -69,6 +86,7 @@ class ProyectoAdmin(admin.ModelAdmin):
     search_fields = ['codigo', 'nombre', 'constructora__razon_social', 'ubicacion_proyecto']
     readonly_fields = ['creado', 'actualizado', 'duracion_dias', 'dias_transcurridos', 'porcentaje_tiempo']
     date_hierarchy = 'fecha_inicio'
+    inlines = [ItemContratadoInline]
     
     fieldsets = (
         ('Información Básica', {
@@ -89,10 +107,6 @@ class ProyectoAdmin(admin.ModelAdmin):
         }),
         ('Contrato', {
             'fields': ('contrato',)
-        }),
-        ('Descripciones', {
-            'fields': ('descripcion', 'observaciones'),
-            'classes': ('collapse',)
         }),
         ('Control', {
             'fields': ('activo', 'creado', 'actualizado'),
@@ -116,3 +130,19 @@ class ProyectoAdmin(admin.ModelAdmin):
             return f"{obj.porcentaje_tiempo:.1f}%"
         return '—'
     porcentaje_tiempo.short_description = '% Tiempo'
+
+
+# ===================================
+# 📋 ADMIN ITEM CONTRATADO (STANDALONE)
+# ===================================
+@admin.register(ItemContratado)
+class ItemContratadoAdmin(admin.ModelAdmin):
+    list_display = ['item', 'proyecto', 'medida', 'cantidad', 'valor_unitario', 'valor_total_display', 'creado']
+    list_filter = ['proyecto__constructora', 'creado']
+    search_fields = ['item', 'proyecto__nombre', 'proyecto__codigo']
+    readonly_fields = ['creado', 'actualizado', 'valor_total_display']
+    
+    def valor_total_display(self, obj):
+        """Muestra el valor total del ítem"""
+        return f"${obj.valor_total:,.2f}"
+    valor_total_display.short_description = 'Valor Total'
