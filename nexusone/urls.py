@@ -20,7 +20,8 @@ urlpatterns = [
 
     # 🏢 Aplicaciones internas
     path("administrativa/", include("nexusone.administrativa.urls")),
-    path("produccion/", include("nexusone.produccion.urls")),   # 👈 AGREGA ESTA LÍNEA
+    path("produccion/", include("nexusone.produccion.urls")),
+    path("talento-humano/", include("nexusone.talento_humano.urls")),
 
     # 📂 Servir archivos desde carpeta Ordenes (para descargas directas)
     re_path(

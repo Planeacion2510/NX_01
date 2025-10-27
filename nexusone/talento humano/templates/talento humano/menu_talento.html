@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Talento Humano - NexusOne{% endblock %}
+{% block content %}
+
+<div class="container text-center">
+    <h1 class="mb-4"><i class="fas fa-user-tie"></i> Módulo de Talento Humano</h1>
+    <div class="row g-4 justify-content-center">
+
+        <!-- Gestión de empleados -->
+        <div class="col-md-3">
+            <a href="{% url 'talento_humano:lista_empleados' %}" class="text-decoration-none text-dark">
+                <div class="card card-module shadow-sm p-4">
+                    <div class="card-icon text-success mb-3"><i class="fas fa-users"></i></div>
+                    <h5>Gestión de Empleados</h5>
+                    <p>Consulta, crea o edita información del personal.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Contratos -->
+        <div class="col-md-3">
+            <a href="{% url 'talento_humano:nuevo_contrato' %}" class="text-decoration-none text-dark">
+                <div class="card card-module shadow-sm p-4">
+                    <div class="card-icon text-primary mb-3"><i class="fas fa-file-signature"></i></div>
+                    <h5>Contratos</h5>
+                    <p>Administra contratos laborales activos o terminados.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Vacaciones -->
+        <div class="col-md-3">
+            <a href="{% url 'talento_humano:lista_vacaciones' %}" class="text-decoration-none text-dark">
+                <div class="card card-module shadow-sm p-4">
+                    <div class="card-icon text-warning mb-3"><i class="fas fa-umbrella-beach"></i></div>
+                    <h5>Vacaciones</h5>
+                    <p>Registra y aprueba vacaciones del personal.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Permisos -->
+        <div class="col-md-3">
+            <a href="{% url 'talento_humano:lista_permisos' %}" class="text-decoration-none text-dark">
+                <div class="card card-module shadow-sm p-4">
+                    <div class="card-icon text-danger mb-3"><i class="fas fa-clipboard-list"></i></div>
+                    <h5>Permisos y Ausencias</h5>
+                    <p>Gestiona permisos, ausencias y licencias.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Reglamentos -->
+        <div class="col-md-3">
+            <a href="#" class="text-decoration-none text-dark">
+                <div class="card card-module shadow-sm p-4">
+                    <div class="card-icon text-secondary mb-3"><i class="fas fa-book"></i></div>
+                    <h5>Documentos y Reglamentos</h5>
+                    <p>Consulta reglamentos internos y políticas.</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

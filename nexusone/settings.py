@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     "nexusone.administrativa.proyectos",
     "nexusone.administrativa.inventario",
     "nexusone.administrativa.compras",
-    "nexusone.produccion",  # 👈 agrega la app de producción (faltaba)
+    "nexusone.produccion",
+    "nexusone.talento_humano",
 ]
 
 # =========================
