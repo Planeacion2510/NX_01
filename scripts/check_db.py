@@ -4,6 +4,13 @@ Verifica el estado de la base de datos y determina la estrategia de migración
 """
 import os
 import sys
+
+# IMPORTANTE: Agregar el directorio padre al path
+# Para que funcione desde scripts/ o desde cualquier ubicación
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_dir = os.path.dirname(script_dir)
+sys.path.insert(0, project_dir)
+
 import django
 
 # Setup Django
@@ -66,13 +73,10 @@ def check_database_state():
             
             # Lógica de decisión
             if migrations_count == 0 and tables_count > 1:
-                # Tablas existen pero no hay migraciones registradas
                 return 'needs_sync'
             elif migrations_count == 0 and tables_count <= 1:
-                # Base de datos vacía
                 return 'empty'
             else:
-                # Base de datos con migraciones
                 return 'synced'
                 
     except Exception as e:
