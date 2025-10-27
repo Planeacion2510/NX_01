@@ -1,223 +1,155 @@
+# nexusone/administrativa/compras/models.py
 from django.db import models
 from django.utils import timezone
 
 
 # ==================================================
-# CONSTRUCTORA
+# PROVEEDOR
 # ==================================================
-class Constructora(models.Model):
-    nombre = models.CharField("Nombre", max_length=200)
-    nit = models.CharField("NIT", max_length=50, unique=True)
-    direccion = models.CharField("Dirección", max_length=250, blank=True, null=True)
-    telefono = models.CharField("Teléfono", max_length=50, blank=True, null=True)
-    email = models.EmailField("Correo electrónico", blank=True, null=True)
-    contacto = models.CharField("Persona de contacto", max_length=150, blank=True, null=True)
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=150, verbose_name="Nombre / Razón Social")
+    nit = models.CharField(max_length=20, unique=True, verbose_name="NIT / Documento")
+    direccion = models.CharField(max_length=200, blank=True, null=True)
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    contacto = models.CharField(max_length=100, blank=True, null=True, verbose_name="Persona de contacto")
     activo = models.BooleanField(default=True)
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Constructora"
-        verbose_name_plural = "Constructoras"
+        verbose_name = "Proveedor"
+        verbose_name_plural = "Proveedores"
         ordering = ["nombre"]
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.nit})"
 
 
 # ==================================================
-# PROYECTO
+# ORDEN DE COMPRA
 # ==================================================
-class Proyecto(models.Model):
+class OrdenCompra(models.Model):
     ESTADOS = [
-        ("planeado", "Planeado"),
-        ("ejecucion", "En Ejecución"),
-        ("finalizado", "Finalizado"),
-        ("suspendido", "Suspendido"),
+        ("generada", "Generada"),
+        ("borrador", "Borrador"),
+        ("pendiente", "Pendiente Aprobación"),
+        ("aprobada", "Aprobada"),
+        ("ejecutada", "Ejecutada"),
+        ("recibida", "Recibida"),
+        ("rechazada", "Rechazada"),
+        ("cerrada", "Cerrada"),
     ]
-    ESTADOS_FINANCIEROS = [
-        ("estable", "Estable"),
-        ("critico", "Crítico"),
-        ("sin_definir", "Sin definir"),
+
+    DESTINOS = [
+        ("constructora", "Constructora"),
+        ("proyecto", "Proyecto"),
+        ("interna", "Compra Interna"),
     ]
 
-    constructora = models.ForeignKey(
-        Constructora,
-        on_delete=models.CASCADE,
-        related_name="proyectos"
-    )
-    codigo = models.CharField("Código", max_length=50, unique=True)
-    nombre = models.CharField("Nombre del Proyecto", max_length=200)
-    descripcion = models.TextField("Descripción", blank=True, null=True)
-    ubicacion = models.CharField("Ubicación", max_length=250, blank=True, null=True)
-    estado = models.CharField("Estado", max_length=20, choices=ESTADOS, default="planeado")
-    estado_financiero = models.CharField("Estado Financiero", max_length=20, choices=ESTADOS_FINANCIEROS, default="sin_definir")
-    porcentaje_avance = models.DecimalField("Avance (%)", max_digits=5, decimal_places=2, default=0)
-    valor_total = models.DecimalField("Valor Total", max_digits=15, decimal_places=2, default=0)
-    valor_pagado = models.DecimalField("Valor Pagado", max_digits=15, decimal_places=2, default=0)
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
-    activo = models.BooleanField(default=True)
+    ORIGEN_CHOICES = [
+        ("manual", "Manual"),
+        ("automatica", "Automática"),
+    ]
 
-    class Meta:
-        verbose_name = "Proyecto"
-        verbose_name_plural = "Proyectos"
-        ordering = ["-creado"]
-
-    def __str__(self):
-        return f"{self.codigo} - {self.nombre}"
-
-
-# ==================================================
-# PRESUPUESTO DE COMPRAS
-# ==================================================
-class PresupuestoCompras(models.Model):
-    """
-    Control de presupuestos asignados a un proyecto específico.
-    Se usa para vincular las órdenes de compra (OrdenCompra)
-    y controlar cuánto se ha comprometido o ejecutado.
-    """
-    proyecto = models.ForeignKey(
-        Proyecto,
-        on_delete=models.CASCADE,
-        related_name='presupuestos_compras',
-        verbose_name='Proyecto'
+    proveedor = models.ForeignKey(
+        Proveedor,
+        on_delete=models.PROTECT,
+        related_name="ordenes",
+        null=True,
+        blank=True
     )
 
-    nombre = models.CharField(
-        max_length=150,
-        verbose_name='Nombre del Presupuesto',
-        help_text='Ejemplo: Presupuesto Fase 1 - Estructura'
-    )
-
-    descripcion = models.TextField(
+    orden_trabajo = models.ForeignKey(
+        "ordenes.OrdenTrabajo",
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        verbose_name='Descripción o alcance del presupuesto'
+        related_name="ordenes_compra"
     )
 
-    monto_total = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        default=0,
-        verbose_name='Monto Total Asignado'
-    )
-
-    monto_comprometido = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        default=0,
-        verbose_name='Monto Comprometido (OC aprobadas)'
-    )
-
-    monto_ejecutado = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        default=0,
-        verbose_name='Monto Ejecutado (OC recibidas / cerradas)'
-    )
-
-    creado = models.DateTimeField(
-        default=timezone.now,
-        verbose_name='Fecha de Creación'
-    )
-
-    actualizado = models.DateTimeField(
-        auto_now=True,
-        verbose_name='Última Actualización'
-    )
-
-    activo = models.BooleanField(
-        default=True,
-        verbose_name='Presupuesto Activo'
-    )
-
-    class Meta:
-        verbose_name = 'Presupuesto de Compras'
-        verbose_name_plural = 'Presupuestos de Compras'
-        ordering = ['-creado']
-
-    def __str__(self):
-        return f"{self.nombre} - {self.proyecto.nombre}"
-
-    @property
-    def monto_libre(self):
-        """Saldo disponible"""
-        return self.monto_total - (self.monto_comprometido + self.monto_ejecutado)
-
-    @property
-    def porcentaje_ejecutado(self):
-        if self.monto_total > 0:
-            return round((self.monto_ejecutado / self.monto_total) * 100, 2)
-        return 0
-
-    @property
-    def porcentaje_comprometido(self):
-        if self.monto_total > 0:
-            return round((self.monto_comprometido / self.monto_total) * 100, 2)
-        return 0
-
-
-# ==================================================
-# ITEM CONTRATADO
-# ==================================================
-class ItemContratado(models.Model):
-    proyecto = models.ForeignKey(
-        Proyecto,
-        on_delete=models.CASCADE,
-        related_name="items_contratados"
-    )
-    item = models.CharField("Descripción del ítem", max_length=200)
-    unidad = models.CharField("Unidad", max_length=50, blank=True, null=True)
-    cantidad = models.DecimalField("Cantidad", max_digits=10, decimal_places=2, default=0)
-    valor_unitario = models.DecimalField("Valor Unitario", max_digits=15, decimal_places=2, default=0)
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Item Contratado"
-        verbose_name_plural = "Items Contratados"
-        ordering = ["proyecto", "item"]
-
-    @property
-    def valor_total(self):
-        return self.cantidad * self.valor_unitario
-
-    def __str__(self):
-        return f"{self.item} ({self.proyecto.nombre})"
-
-
-# ==================================================
-# APU (Análisis de Precios Unitarios)
-# ==================================================
-class APU(models.Model):
-    codigo = models.CharField(max_length=50, unique=True)
-    nombre = models.CharField(max_length=200)
-    categoria = models.CharField(max_length=150, blank=True, null=True)
+    numero = models.CharField(max_length=30, unique=True, verbose_name="N° Orden", editable=False)
+    fecha_emision = models.DateField(default=timezone.now)
+    fecha_entrega = models.DateField(blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
-    unidad = models.CharField(max_length=50, blank=True, null=True)
-    costo_materiales = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    costo_mano_obra = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    costo_equipos = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    otros_costos = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    imagen = models.ImageField(upload_to="apu_imagenes/", null=True, blank=True)
-    activo = models.BooleanField(default=True)
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="borrador")
+    destino = models.CharField(max_length=20, choices=DESTINOS, default="proyecto", verbose_name="Destino de la orden")
+
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    impuestos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    origen = models.CharField(
+        "Origen",
+        max_length=15,
+        choices=ORIGEN_CHOICES,
+        default="manual",
+        help_text="Manual: creada por usuario. Automática: generada por el sistema"
+    )
+
+    proyecto = models.ForeignKey(
+        "proyectos.Proyecto",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ordenes_compra",
+        verbose_name="Proyecto"
+    )
+
+    presupuesto_compras = models.ForeignKey(
+        "proyectos.PresupuestoCompras",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ordenes_compra",
+        verbose_name="Presupuesto de Compras"
+    )
+
+    presupuesto_disponible_al_crear = models.DecimalField(
+        "Presupuesto Disponible al Crear",
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    presupuesto_suficiente = models.BooleanField("Presupuesto Suficiente", default=True)
 
     class Meta:
-        verbose_name = "APU"
-        verbose_name_plural = "APUs"
-        ordering = ["nombre"]
+        verbose_name = "Orden de Compra"
+        verbose_name_plural = "Órdenes de Compra"
+        ordering = ["-fecha_emision"]
 
-    @property
-    def costo_total(self):
-        return (
-            self.costo_materiales +
-            self.costo_mano_obra +
-            self.costo_equipos +
-            self.otros_costos
-        )
+    def save(self, *args, **kwargs):
+        if not self.numero:
+            ultimo = OrdenCompra.objects.order_by("id").last()
+            nuevo_numero = int(ultimo.numero) + 1 if ultimo else 1
+            self.numero = str(nuevo_numero).zfill(5)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.codigo} - {self.nombre}"
+        if self.proyecto:
+            return f"Orden {self.numero} - {self.proyecto.nombre}"
+        elif self.proveedor:
+            return f"Orden {self.numero} - {self.proveedor.nombre}"
+        else:
+            return f"Orden {self.numero}"
+
+
+# ==================================================
+# DETALLE ORDEN
+# ==================================================
+class DetalleOrden(models.Model):
+    orden = models.ForeignKey(OrdenCompra, on_delete=models.CASCADE, related_name="detalles")
+    producto = models.CharField(max_length=200, verbose_name="Producto / Servicio")
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    precio_unitario = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        verbose_name = "Detalle de Orden"
+        verbose_name_plural = "Detalles de Órdenes"
+
+    @property
+    def total(self):
+        return self.cantidad * self.precio_unitario
+
+    def __str__(self):
+        return f"{self.producto} x {self.cantidad} (Orden {self.orden.numero})"
