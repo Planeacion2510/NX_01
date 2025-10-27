@@ -3,24 +3,22 @@ from .models import Constructora, Proyecto
 
 
 # ===================================
-# 🏢 FORMULARIO CONSTRUCTORA
+# 🏢 FORMULARIO CONSTRUCTORA (corregido)
 # ===================================
 class ConstructoraForm(forms.ModelForm):
     class Meta:
         model = Constructora
         fields = [
-            'razon_social',
+            'nombre',
             'nit',
+            'direccion',
             'telefono',
-            'ubicacion',
-            'correo',
-            'representante_legal',
-            'contacto_adicional',
-            'observaciones',
-            'activa',
+            'email',
+            'contacto',
+            'activo',
         ]
         widgets = {
-            'razon_social': forms.TextInput(attrs={
+            'nombre': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: Constructora ABC S.A.S.'
             }),
@@ -28,33 +26,23 @@ class ConstructoraForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': '123456789-0'
             }),
+            'direccion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Calle 123 # 45-67, Ciudad'
+            }),
             'telefono': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '+57 311 1234567'
             }),
-            'ubicacion': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Calle 123 # 45-67, Ciudad'
-            }),
-            'correo': forms.EmailInput(attrs={
+            'email': forms.EmailInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'contacto@constructora.com'
             }),
-            'representante_legal': forms.TextInput(attrs={
+            'contacto': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Nombre completo del representante'
+                'placeholder': 'Persona de contacto o representante'
             }),
-            'contacto_adicional': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Otros teléfonos, emails o contactos importantes...'
-            }),
-            'observaciones': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Notas generales sobre la constructora...'
-            }),
-            'activa': forms.CheckboxInput(attrs={
+            'activo': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
             }),
         }
@@ -70,18 +58,17 @@ class ProyectoForm(forms.ModelForm):
             'constructora',
             'nombre',
             'codigo',
-            'tipo_proyecto',
-            'ubicacion_proyecto',
-            'contrato',
+            'ubicacion',
+            'descripcion',
+            'estado',
+            'estado_financiero',
+            'porcentaje_avance',
             'fecha_inicio',
             'fecha_fin_estimada',
             'fecha_fin_real',
-            'estado',
-            'presupuesto',
-            'descripcion',
-            'numero_unidades',
+            'valor_total',
+            'valor_pagado',
             'observaciones',
-            'activo',
         ]
         widgets = {
             'constructora': forms.Select(attrs={
@@ -95,16 +82,27 @@ class ProyectoForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'PROJ-2025-001'
             }),
-            'tipo_proyecto': forms.Select(attrs={
-                'class': 'form-control',
-            }),
-            'ubicacion_proyecto': forms.TextInput(attrs={
+            'ubicacion': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Dirección del proyecto'
             }),
-            'contrato': forms.FileInput(attrs={
+            'descripcion': forms.Textarea(attrs={
                 'class': 'form-control',
-                'accept': '.pdf'
+                'rows': 4,
+                'placeholder': 'Descripción detallada del proyecto...'
+            }),
+            'estado': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'estado_financiero': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'porcentaje_avance': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '100',
+                'step': '0.01',
+                'placeholder': '0.00'
             }),
             'fecha_inicio': forms.DateInput(attrs={
                 'class': 'form-control',
@@ -118,39 +116,29 @@ class ProyectoForm(forms.ModelForm):
                 'class': 'form-control',
                 'type': 'date'
             }),
-            'estado': forms.Select(attrs={
-                'class': 'form-control',
-            }),
-            'presupuesto': forms.NumberInput(attrs={
+            'valor_total': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
                 'step': '0.01',
                 'placeholder': '0.00'
             }),
-            'descripcion': forms.Textarea(attrs={
+            'valor_pagado': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'rows': 4,
-                'placeholder': 'Descripción detallada del proyecto...'
-            }),
-            'numero_unidades': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '1',
-                'placeholder': 'Número de unidades (apartamentos, casas, etc.)'
+                'min': '0',
+                'step': '0.01',
+                'placeholder': '0.00'
             }),
             'observaciones': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Notas adicionales...'
             }),
-            'activo': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Filtrar solo constructoras activas en el formulario
-        self.fields['constructora'].queryset = Constructora.objects.filter(activa=True)
+        self.fields['constructora'].queryset = Constructora.objects.filter(activo=True)
 
 
 # ===================================
@@ -159,16 +147,17 @@ class ProyectoForm(forms.ModelForm):
 from django.forms import inlineformset_factory
 from .models import ItemContratado
 
+
 class ItemContratadoForm(forms.ModelForm):
     class Meta:
         model = ItemContratado
-        fields = ['item', 'medida', 'cantidad', 'valor_unitario']
+        fields = ['item', 'unidad', 'cantidad', 'valor_unitario', 'observaciones']
         widgets = {
             'item': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: Apartamento Tipo A'
             }),
-            'medida': forms.TextInput(attrs={
+            'unidad': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: unidad, m², m³'
             }),
@@ -180,6 +169,11 @@ class ItemContratadoForm(forms.ModelForm):
                 'class': 'form-control valor-unitario-item',
                 'placeholder': '0'
             }),
+            'observaciones': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Notas adicionales del ítem...'
+            }),
         }
 
 
@@ -190,5 +184,5 @@ ItemContratadoFormSet = inlineformset_factory(
     form=ItemContratadoForm,
     extra=1,
     can_delete=True,
-    fields=['item', 'medida', 'cantidad', 'valor_unitario']
+    fields=['item', 'unidad', 'cantidad', 'valor_unitario', 'observaciones']
 )
