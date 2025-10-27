@@ -4,132 +4,97 @@
 {% block content %}
 <div class="container mt-4">
     
-    <!-- Título -->
-    <h2 class="section-title text-center mb-4">
-        <i class="fas fa-hard-hat"></i> {{ title }}
+    <h2 class="text-center mb-4">
+        <i class="fas fa-hard-hat"></i> {{ title|default:"Registrar Proyecto" }}
     </h2>
 
-    <!-- Formulario -->
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data" class="form-modern" id="proyectoForm">
+                    
+                    {% if form.errors or formset.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Errores en el formulario</strong>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="proyectoForm">
                         {% csrf_token %}
 
-                        <!-- Sección: Información Básica -->
+                        <!-- Información Básica -->
                         <h5 class="mb-3">
                             <i class="fas fa-info-circle text-primary"></i> Información Básica
                         </h5>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="{{ form.constructora.id_for_label }}" class="form-label">
-                                    Constructora: <span class="text-danger">*</span>
-                                </label>
+                                <label class="form-label">Constructora: <span class="text-danger">*</span></label>
                                 {{ form.constructora }}
-                                {% if form.constructora.errors %}
-                                <div class="text-danger small">{{ form.constructora.errors }}</div>
-                                {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label for="{{ form.codigo.id_for_label }}" class="form-label">
-                                    Código del Proyecto: <span class="text-danger">*</span>
-                                </label>
+                                <label class="form-label">Código del Proyecto: <span class="text-danger">*</span></label>
                                 {{ form.codigo }}
-                                {% if form.codigo.errors %}
-                                <div class="text-danger small">{{ form.codigo.errors }}</div>
-                                {% endif %}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.nombre.id_for_label }}" class="form-label">
-                                Nombre del Proyecto: <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Nombre del Proyecto: <span class="text-danger">*</span></label>
                             {{ form.nombre }}
-                            {% if form.nombre.errors %}
-                            <div class="text-danger small">{{ form.nombre.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.tipo_proyecto.id_for_label }}" class="form-label">
-                                    Tipo de Proyecto: <span class="text-danger">*</span>
-                                </label>
-                                {{ form.tipo_proyecto }}
-                                {% if form.tipo_proyecto.errors %}
-                                <div class="text-danger small">{{ form.tipo_proyecto.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.numero_unidades.id_for_label }}" class="form-label">
-                                    Número de Unidades:
-                                </label>
-                                {{ form.numero_unidades }}
-                                {% if form.numero_unidades.errors %}
-                                <div class="text-danger small">{{ form.numero_unidades.errors }}</div>
-                                {% endif %}
-                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.ubicacion_proyecto.id_for_label }}" class="form-label">
-                                Ubicación del Proyecto: <span class="text-danger">*</span>
-                            </label>
-                            {{ form.ubicacion_proyecto }}
-                            {% if form.ubicacion_proyecto.errors %}
-                            <div class="text-danger small">{{ form.ubicacion_proyecto.errors }}</div>
-                            {% endif %}
+                            <label class="form-label">Ubicación del Proyecto:</label>
+                            {{ form.ubicacion }}
                         </div>
 
-                        <!-- Sección: Fechas y Estado -->
+                        <div class="mb-3">
+                            <label class="form-label">Descripción:</label>
+                            {{ form.descripcion }}
+                        </div>
+
+                        <!-- Fechas y Estado -->
                         <h5 class="mb-3 mt-4">
                             <i class="fas fa-calendar-alt text-primary"></i> Fechas y Estado
                         </h5>
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">
-                                    Fecha de Inicio:
-                                </label>
+                                <label class="form-label">Fecha de Inicio:</label>
                                 {{ form.fecha_inicio }}
-                                {% if form.fecha_inicio.errors %}
-                                <div class="text-danger small">{{ form.fecha_inicio.errors }}</div>
-                                {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.fecha_fin_estimada.id_for_label }}" class="form-label">
-                                    Fecha Fin Estimada:
-                                </label>
+                                <label class="form-label">Fecha Fin Estimada:</label>
                                 {{ form.fecha_fin_estimada }}
-                                {% if form.fecha_fin_estimada.errors %}
-                                <div class="text-danger small">{{ form.fecha_fin_estimada.errors }}</div>
-                                {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.fecha_fin_real.id_for_label }}" class="form-label">
-                                    Fecha Fin Real:
-                                </label>
+                                <label class="form-label">Fecha Fin Real:</label>
                                 {{ form.fecha_fin_real }}
-                                {% if form.fecha_fin_real.errors %}
-                                <div class="text-danger small">{{ form.fecha_fin_real.errors }}</div>
-                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Estado: <span class="text-danger">*</span></label>
+                                {{ form.estado }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Estado Financiero:</label>
+                                {{ form.estado_financiero }}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.estado.id_for_label }}" class="form-label">
-                                Estado: <span class="text-danger">*</span>
-                            </label>
-                            {{ form.estado }}
-                            {% if form.estado.errors %}
-                            <div class="text-danger small">{{ form.estado.errors }}</div>
-                            {% endif %}
+                            <label class="form-label">Porcentaje de Avance (%):</label>
+                            {{ form.porcentaje_avance }}
                         </div>
 
-                        <!-- Sección: Items Contratados -->
+                        <!-- Items Contratados -->
                         <h5 class="mb-3 mt-4">
                             <i class="fas fa-list text-primary"></i> Items Contratados
                         </h5>
@@ -142,23 +107,23 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th width="35%">Item</th>
-                                            <th width="15%">Medida</th>
+                                            <th width="15%">Unidad</th>
                                             <th width="15%">Cantidad</th>
                                             <th width="20%">Valor Unitario ($)</th>
                                             <th width="15%">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="items-tbody">
-                                        {% for form in formset %}
+                                        {% for item_form in formset %}
                                         <tr class="item-row">
                                             <td>
-                                                {{ form.id }}
-                                                {{ form.item }}
-                                                {{ form.DELETE }}
+                                                {{ item_form.id }}
+                                                {{ item_form.item }}
+                                                {{ item_form.DELETE }}
                                             </td>
-                                            <td>{{ form.medida }}</td>
-                                            <td>{{ form.cantidad }}</td>
-                                            <td>{{ form.valor_unitario }}</td>
+                                            <td>{{ item_form.unidad }}</td>
+                                            <td>{{ item_form.cantidad }}</td>
+                                            <td>{{ item_form.valor_unitario }}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger remove-item">
                                                     <i class="fas fa-trash"></i>
@@ -170,69 +135,46 @@
                                 </table>
                             </div>
 
-                            <button type="button" class="btn btn-sm btn-success" id="add-item">
+                            <button type="button" id="add-item" class="btn btn-success btn-sm">
                                 <i class="fas fa-plus"></i> Agregar Item
                             </button>
                         </div>
 
-                        <!-- Presupuesto Total (calculado automáticamente) -->
-                        <div class="alert alert-info d-flex justify-content-between align-items-center">
-                            <span><strong><i class="fas fa-calculator"></i> Presupuesto Total:</strong></span>
-                            <span class="h4 mb-0" id="presupuesto-total">$0.00</span>
+                        <!-- Presupuesto Total -->
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-calculator"></i> Presupuesto Total:</h5>
+                            <h3 id="presupuesto-total">$0,00</h3>
                         </div>
-                        {{ form.presupuesto }}
 
-                        <!-- Sección: Contrato -->
+                        <!-- Valores Financieros -->
                         <h5 class="mb-3 mt-4">
-                            <i class="fas fa-file-contract text-primary"></i> Contrato
+                            <i class="fas fa-dollar-sign text-primary"></i> Valores Financieros
                         </h5>
 
-                        {% if proyecto and proyecto.contrato %}
-                        <div class="documentos-box mb-3">
-                            <h6><i class="fas fa-file-pdf text-danger"></i> Contrato actual:</h6>
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <a href="{% url 'administrativa:proyectos:descargar_contrato' proyecto.pk %}" target="_blank">
-                                    <i class="fas fa-paperclip text-primary"></i> {{ proyecto.contrato.name|slice:"-30:" }}
-                                </a>
-                                <a href="{% url 'administrativa:proyectos:eliminar_contrato' proyecto.pk %}" 
-                                   class="text-danger small"
-                                   onclick="return confirm('¿Seguro que deseas eliminar este contrato?');">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </a>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Valor Total del Proyecto:</label>
+                                {{ form.valor_total }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Valor Pagado:</label>
+                                {{ form.valor_pagado }}
                             </div>
                         </div>
-                        {% endif %}
 
+                        <!-- Observaciones -->
                         <div class="mb-3">
-                            <label for="{{ form.contrato.id_for_label }}" class="form-label">
-                                {% if proyecto and proyecto.contrato %}
-                                Reemplazar contrato:
-                                {% else %}
-                                Subir contrato (PDF):
-                                {% endif %}
-                            </label>
-                            {{ form.contrato }}
-                            <small class="text-muted d-block">Solo archivos PDF</small>
-                            {% if form.contrato.errors %}
-                            <div class="text-danger small">{{ form.contrato.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Estado activo -->
-                        <div class="form-check mb-4">
-                            {{ form.activo }}
-                            <label class="form-check-label" for="{{ form.activo.id_for_label }}">
-                                Proyecto activo
-                            </label>
+                            <label class="form-label">Observaciones:</label>
+                            {{ form.observaciones }}
                         </div>
 
                         <!-- Botones -->
-                        <div class="form-actions text-center mt-4">
+                        <div class="text-center mt-4">
                             <button type="submit" class="btn btn-primary px-4">
                                 <i class="fas fa-save"></i> Guardar Proyecto
                             </button>
                             <a href="{% url 'administrativa:proyectos:listar_proyectos' %}" class="btn btn-secondary px-4">
-                                <i class="fas fa-arrow-left"></i> Cancelar
+                                <i class="fas fa-times"></i> Cancelar
                             </a>
                         </div>
 
@@ -242,57 +184,13 @@
         </div>
     </div>
 </div>
-<style>
-.documentos-box {
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-    background: #f9f9f9;
-}
-.documentos-box:hover {
-    background-color: #f1f7ff;
-}
-.form-label {
-    font-weight: 500;
-    color: #333;
-}
-.card {
-    border-radius: 12px;
-}
-.item-row.to-delete {
-    opacity: 0.5;
-    text-decoration: line-through;
-}
-#items-table input {
-    font-size: 0.9rem;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const itemsTableBody = document.getElementById('items-tbody');
+    const totalForms = document.querySelector('input[name$="-TOTAL_FORMS"]');
     const formsetPrefix = '{{ formset.prefix }}';
-    let totalForms = document.getElementById(`id_${formsetPrefix}-TOTAL_FORMS`);
-    let itemsTableBody = document.getElementById('items-tbody');
     let emptyFormTemplate = null;
-
-    // Obtener el template del formulario vacío
-    if (itemsTableBody.children.length > 0) {
-        emptyFormTemplate = itemsTableBody.children[itemsTableBody.children.length - 1].cloneNode(true);
-    }
-
-    // Formatear número a pesos colombianos
-    function formatearPesos(valor) {
-        if (!valor) return '';
-        const numero = parseFloat(valor);
-        if (isNaN(numero)) return valor;
-        return numero.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-    }
-
-    // Limpiar formato para obtener solo números
-    function limpiarFormato(valor) {
-        if (!valor) return '';
-        return valor.toString().replace(/\./g, '').replace(/,/g, '.');
-    }
 
     // Función para calcular el presupuesto total
     function calcularPresupuesto() {
@@ -300,12 +198,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.item-row:not(.to-delete)');
         
         rows.forEach(row => {
-            const cantidadInput = row.querySelector('.cantidad-item');
-            const valorInput = row.querySelector('.valor-unitario-item');
+            const cantidadInput = row.querySelector('input[name$="-cantidad"]');
+            const valorInput = row.querySelector('input[name$="-valor_unitario"]');
             
             if (cantidadInput && valorInput) {
-                const cantidad = parseFloat(limpiarFormato(cantidadInput.value)) || 0;
-                const valor = parseFloat(limpiarFormato(valorInput.value)) || 0;
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const valor = parseFloat(valorInput.value) || 0;
                 total += cantidad * valor;
             }
         });
@@ -313,51 +211,24 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('presupuesto-total').textContent = 
             '$' + total.toLocaleString('es-CO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
-        const presupuestoInput = document.getElementById('{{ form.presupuesto.id_for_label }}');
-        if (presupuestoInput) {
-            presupuestoInput.value = total.toFixed(2);
-        }
-    }
-
-    // Aplicar formato a un input
-    function aplicarFormato(input) {
-        input.addEventListener('blur', function() {
-            if (this.value) {
-                const valorLimpio = limpiarFormato(this.value);
-                const valorFormateado = formatearPesos(valorLimpio);
-                this.value = valorFormateado;
-            }
-        });
-
-        input.addEventListener('focus', function() {
-            if (this.value) {
-                const valorLimpio = limpiarFormato(this.value);
-                this.value = valorLimpio;
-            }
-        });
-    }
-
-    // Agregar event listeners para calcular presupuesto
-    function addCalculationListeners(row) {
-        const cantidadInput = row.querySelector('.cantidad-item');
-        const valorInput = row.querySelector('.valor-unitario-item');
-        
-        if (cantidadInput) {
-            aplicarFormato(cantidadInput);
-            cantidadInput.addEventListener('input', calcularPresupuesto);
-            cantidadInput.addEventListener('change', calcularPresupuesto);
-        }
-        
-        if (valorInput) {
-            aplicarFormato(valorInput);
-            valorInput.addEventListener('input', calcularPresupuesto);
-            valorInput.addEventListener('change', calcularPresupuesto);
+        // Actualizar valor_total
+        const valorTotalInput = document.querySelector('input[name="valor_total"]');
+        if (valorTotalInput) {
+            valorTotalInput.value = total.toFixed(2);
         }
     }
 
     // Agregar listeners a las filas existentes
     document.querySelectorAll('.item-row').forEach(row => {
-        addCalculationListeners(row);
+        const cantidadInput = row.querySelector('input[name$="-cantidad"]');
+        const valorInput = row.querySelector('input[name$="-valor_unitario"]');
+        
+        if (cantidadInput) {
+            cantidadInput.addEventListener('input', calcularPresupuesto);
+        }
+        if (valorInput) {
+            valorInput.addEventListener('input', calcularPresupuesto);
+        }
         
         const deleteBtn = row.querySelector('.remove-item');
         if (deleteBtn) {
@@ -377,31 +248,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Botón para agregar nuevo item
     document.getElementById('add-item').addEventListener('click', function() {
-        if (!emptyFormTemplate) {
-            emptyFormTemplate = document.createElement('tr');
-            emptyFormTemplate.className = 'item-row';
-            emptyFormTemplate.innerHTML = `
-                <td><input type="text" name="${formsetPrefix}-__prefix__-item" class="form-control" placeholder="Ej: Apartamento Tipo A"></td>
-                <td><input type="text" name="${formsetPrefix}-__prefix__-medida" class="form-control" placeholder="Ej: unidad"></td>
-                <td><input type="text" name="${formsetPrefix}-__prefix__-cantidad" class="form-control cantidad-item" placeholder="0"></td>
-                <td><input type="text" name="${formsetPrefix}-__prefix__-valor_unitario" class="form-control valor-unitario-item" placeholder="0"></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="fas fa-trash"></i></button></td>
-            `;
-        }
-
-        const newForm = emptyFormTemplate.cloneNode(true);
         const formIdx = parseInt(totalForms.value);
         
-        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIdx);
-        itemsTableBody.appendChild(newForm);
+        const newRow = document.createElement('tr');
+        newRow.className = 'item-row';
+        newRow.innerHTML = `
+            <td><input type="text" name="${formsetPrefix}-${formIdx}-item" class="form-control" placeholder="Ej: Closet Alcoba Principal"></td>
+            <td><input type="text" name="${formsetPrefix}-${formIdx}-unidad" class="form-control" placeholder="unidad"></td>
+            <td><input type="number" step="0.01" name="${formsetPrefix}-${formIdx}-cantidad" class="form-control" placeholder="0"></td>
+            <td><input type="number" step="0.01" name="${formsetPrefix}-${formIdx}-valor_unitario" class="form-control" placeholder="0"></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-item"><i class="fas fa-trash"></i></button></td>
+        `;
+        
+        itemsTableBody.appendChild(newRow);
         totalForms.value = formIdx + 1;
         
-        addCalculationListeners(newForm);
+        // Agregar listeners al nuevo row
+        const cantidadInput = newRow.querySelector('input[name$="-cantidad"]');
+        const valorInput = newRow.querySelector('input[name$="-valor_unitario"]');
         
-        const deleteBtn = newForm.querySelector('.remove-item');
+        if (cantidadInput) cantidadInput.addEventListener('input', calcularPresupuesto);
+        if (valorInput) valorInput.addEventListener('input', calcularPresupuesto);
+        
+        const deleteBtn = newRow.querySelector('.remove-item');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
-                newForm.remove();
+                newRow.remove();
                 calcularPresupuesto();
             });
         }
@@ -409,38 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calcularPresupuesto();
     });
 
-    // Ocultar el campo de presupuesto
-    const presupuestoField = document.getElementById('{{ form.presupuesto.id_for_label }}');
-    if (presupuestoField) {
-        presupuestoField.type = 'hidden';
-    }
-
-    // ⚠️ SOLUCIÓN AL PROBLEMA DE MULTIPLICACIÓN DE VALORES:
-    // NO formateamos los valores al cargar porque Django envía "43.00" (formato inglés)
-    // Si formateamos, limpiarFormato() convierte "43.00" -> "4300" -> "4.300" ❌
-    // El formateo solo debe ocurrir cuando el usuario edita (evento blur) ✅
-
-//     // Formatear valores existentes al cargar
-//     document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
-//         if (input.value) {
-//             const valorLimpio = limpiarFormato(input.value);
-//             input.value = formatearPesos(valorLimpio);
-//         }
-//     });
-
-    // CRÍTICO: Limpiar formato antes de enviar el formulario
-    document.getElementById('proyectoForm').addEventListener('submit', function(e) {
-        // Limpiar formato de todos los campos antes de enviar
-        document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
-            if (input.value) {
-                input.value = limpiarFormato(input.value);
-            }
-        });
-        
-        // Permitir que el formulario se envíe normalmente
-        return true;
-    });
-
+    // Calcular presupuesto inicial
     calcularPresupuesto();
 });
 </script>
