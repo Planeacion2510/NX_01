@@ -8,20 +8,21 @@ from . import views
 import os
 
 urlpatterns = [
-    # Administración de Django
+    # 🛠️ Administración de Django
     path("admin/", admin.site.urls),
 
-    # Autenticación
+    # 🔐 Autenticación
     path("login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 
-    # Página principal
+    # 🏠 Página principal (menú principal)
     path("", views.home, name="home"),
 
-    # Apps internas
+    # 🏢 Aplicaciones internas
     path("administrativa/", include("nexusone.administrativa.urls")),
+    path("produccion/", include("nexusone.produccion.urls")),   # 👈 AGREGA ESTA LÍNEA
 
-    # Servir archivos desde carpeta Ordenes (para descargas directas)
+    # 📂 Servir archivos desde carpeta Ordenes (para descargas directas)
     re_path(
         r'^Ordenes/(?P<path>.*)$',
         serve,
@@ -30,9 +31,9 @@ urlpatterns = [
     ),
 ]
 
-# Servir archivos media en todos los entornos
+# 🖼️ Archivos MEDIA
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Servir archivos estáticos solo en desarrollo
+# 🧱 Archivos estáticos (solo en desarrollo)
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
