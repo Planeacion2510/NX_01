@@ -415,13 +415,18 @@ document.addEventListener('DOMContentLoaded', function() {
         presupuestoField.type = 'hidden';
     }
 
-    // Formatear valores existentes al cargar
-    document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
-        if (input.value) {
-            const valorLimpio = limpiarFormato(input.value);
-            input.value = formatearPesos(valorLimpio);
-        }
-    });
+    // ⚠️ SOLUCIÓN AL PROBLEMA DE MULTIPLICACIÓN DE VALORES:
+    // NO formateamos los valores al cargar porque Django envía "43.00" (formato inglés)
+    // Si formateamos, limpiarFormato() convierte "43.00" -> "4300" -> "4.300" ❌
+    // El formateo solo debe ocurrir cuando el usuario edita (evento blur) ✅
+
+//     // Formatear valores existentes al cargar
+//     document.querySelectorAll('.cantidad-item, .valor-unitario-item').forEach(input => {
+//         if (input.value) {
+//             const valorLimpio = limpiarFormato(input.value);
+//             input.value = formatearPesos(valorLimpio);
+//         }
+//     });
 
     // CRÍTICO: Limpiar formato antes de enviar el formulario
     document.getElementById('proyectoForm').addEventListener('submit', function(e) {
