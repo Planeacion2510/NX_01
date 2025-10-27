@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from datetime import date
-from nexusone.administrativa.compras.models import Proveedor  # 🔗 importamos
-
 # ---------------------------
 # INSUMOS
 # ---------------------------
