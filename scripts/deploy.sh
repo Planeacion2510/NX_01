@@ -151,7 +151,7 @@ log_info "Detectando estado de la base de datos y aplicando migraciones..."
 echo ""
 
 # Ejecutar el script Python que hace la verificación inteligente
-python scripts/Check_db.py
+python scripts/check_db.py
 
 if [ $? -ne 0 ]; then
     log_error "Error al ejecutar migraciones"
