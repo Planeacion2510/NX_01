@@ -1,23 +1,24 @@
 from django.db import models
 from django.utils import timezone
 from datetime import date
+
 # ---------------------------
 # INSUMOS
 # ---------------------------
 class Insumo(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     nombre = models.CharField(max_length=100)
-    
-    # 🆕 PROVEEDOR (reemplaza descripción)
+
+    # 🆕 PROVEEDOR (lazy reference para evitar import circular)
     proveedor = models.ForeignKey(
-        Proveedor, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        'compras.Proveedor',  # 👈 CORREGIDO
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
         related_name='insumos',
         verbose_name='Proveedor'
     )
-    
+
     unidad = models.CharField(max_length=20, help_text="Ej: kg, litros, unidades")
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
@@ -121,32 +122,25 @@ class Maquinaria(models.Model):
     # 🆕 MÉTODO PARA CALCULAR TIEMPO DE USO
     @property
     def tiempo_uso(self):
-        """
-        Calcula el tiempo de uso desde la fecha de compra hasta hoy
-        Retorna un string en formato: "X años Y días" o "X días"
-        """
+        """Calcula el tiempo de uso desde la fecha de compra hasta hoy"""
         if not self.fecha_compra:
             return "Sin fecha de compra"
-        
+
         hoy = date.today()
         diferencia = hoy - self.fecha_compra
         dias_totales = diferencia.days
-        
-        # Si es menos de un año, solo mostrar días
+
         if dias_totales < 365:
             return f"{dias_totales} días"
-        
-        # Calcular años y días restantes
+
         años = dias_totales // 365
         dias_restantes = dias_totales % 365
-        
-        # Formato de salida
+
         if dias_restantes == 0:
             return f"{años} año{'s' if años != 1 else ''}"
         else:
             return f"{años} año{'s' if años != 1 else ''} {dias_restantes} día{'s' if dias_restantes != 1 else ''}"
-    
-    # 🔄 MÉTODO ANTERIOR (para compatibilidad)
+
     @property
     def anios_uso(self):
         """Método antiguo que retorna solo los años (para compatibilidad)"""
