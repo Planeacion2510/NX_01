@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     "nexusone.administrativa.proyectos",
     "nexusone.administrativa.inventario",
     "nexusone.administrativa.compras",
+    "nexusone.produccion",  # 👈 agrega la app de producción (faltaba)
 ]
+
 # =========================
 # MIDDLEWARE
 # =========================
@@ -134,7 +136,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # =========================
 # 📂 ARCHIVOS DE USUARIO (MEDIA)
 # =========================
-# Detección de entorno
+# Detección de entorno (Render o local)
 IS_RENDER = os.getenv("RENDER", False)
 
 if IS_RENDER:
@@ -146,7 +148,9 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
     MEDIA_URL = "/media/"
 
-# NO crear carpeta aquí - se creará cuando se necesite en las vistas
+# Tamaño máximo de archivo (25 MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 25 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 25 MB
 
 # =========================
 # DEFAULT AUTO FIELD
@@ -172,14 +176,3 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ])
-# ============================================
-# CONFIGURACIÓN DE ARCHIVOS MEDIA
-# ============================================
-import os
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Tamaño máximo de archivo (25 MB)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 25 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 25 MB
