@@ -9,6 +9,7 @@
 # - empty: BD nueva → migrate normal
 # - needs_sync: Tablas existen sin registro → migrate --fake-initial
 # - synced: BD con migraciones → migrate normal
+# - corrupted: BD corrupta → limpia y reconstruye
 # ============================================================================
 
 set -e  # Salir si hay error
@@ -85,13 +86,72 @@ fi
 log_success "Conexión a BD establecida"
 
 # ============================================================================
+# PASO 2.5: DETECTAR Y REPARAR BD CORRUPTA
+# ============================================================================
+log_info "Verificando integridad de la base de datos..."
+
+python << END
+import os
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nexusone.settings')
+django.setup()
+
+from django.db import connection
+
+try:
+    with connection.cursor() as cursor:
+        # Verificar si existe django_content_type
+        cursor.execute("""
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_name = 'django_content_type'
+        """)
+        
+        if cursor.fetchone()[0] > 0:
+            # La tabla existe, verificar su estructura
+            try:
+                cursor.execute("SELECT id, app_label, model FROM django_content_type LIMIT 1")
+                cursor.fetchone()
+                print("✅ Base de datos OK")
+            except Exception as e:
+                # BD corrupta detectada
+                if "does not exist" in str(e).lower() or "no existe" in str(e).lower():
+                    print("⚠️  BD CORRUPTA DETECTADA")
+                    print("🔧 Limpiando esquema corrupto...")
+                    
+                    # Cerrar cursor actual
+                    cursor.close()
+                    
+                    # Limpiar esquema con autocommit
+                    connection.set_autocommit(True)
+                    with connection.cursor() as clean_cursor:
+                        clean_cursor.execute("DROP SCHEMA public CASCADE")
+                        clean_cursor.execute("CREATE SCHEMA public")
+                        clean_cursor.execute("GRANT ALL ON SCHEMA public TO postgres")
+                        clean_cursor.execute("GRANT ALL ON SCHEMA public TO public")
+                    
+                    print("✅ Esquema limpiado y reconstruido")
+                    print("📋 Las migraciones crearán todo desde cero")
+                else:
+                    raise
+        else:
+            print("✅ Base de datos nueva (sin tablas)")
+            
+except Exception as e:
+    print(f"⚠️  Error verificando BD: {e}")
+    print("Continuando con migraciones...")
+END
+
+log_success "Verificación de integridad completada"
+
+# ============================================================================
 # PASO 3: DETECTAR ESTADO Y EJECUTAR MIGRACIONES
 # ============================================================================
 log_info "Detectando estado de la base de datos y aplicando migraciones..."
 echo ""
 
 # Ejecutar el script Python que hace la verificación inteligente
-python scripts/check_db.py
+python scripts/Check_db.py
 
 if [ $? -ne 0 ]; then
     log_error "Error al ejecutar migraciones"
