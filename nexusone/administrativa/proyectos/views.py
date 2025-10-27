@@ -34,7 +34,7 @@ def listar_proyectos(request):
         ) | proyectos.filter(
             codigo__icontains=buscar
         ) | proyectos.filter(
-            constructora__razon_social__icontains=buscar
+            constructora__nombre__icontains=buscar
         )
     
     context = {
@@ -57,7 +57,7 @@ def crear_constructora(request):
         form = ConstructoraForm(request.POST)
         if form.is_valid():
             constructora = form.save()
-            messages.success(request, f'✅ Constructora "{constructora.razon_social}" creada exitosamente.')
+            messages.success(request, f'✅ Constructora "{constructora.nombre}" creada exitosamente.')
             return redirect('administrativa:proyectos:listar_proyectos')
     else:
         form = ConstructoraForm()
@@ -82,7 +82,7 @@ def editar_constructora(request, pk):
         form = ConstructoraForm(request.POST, instance=constructora)
         if form.is_valid():
             form.save()
-            messages.success(request, f'✅ Constructora "{constructora.razon_social}" actualizada exitosamente.')
+            messages.success(request, f'✅ Constructora "{constructora.nombre}" actualizada exitosamente.')
             return redirect('administrativa:proyectos:listar_proyectos')
     else:
         form = ConstructoraForm(instance=constructora)
@@ -108,10 +108,10 @@ def eliminar_constructora(request, pk):
     if constructora.proyectos.exists():
         messages.error(
             request, 
-            f'❌ No se puede eliminar la constructora "{constructora.razon_social}" porque tiene {constructora.total_proyectos} proyecto(s) asociado(s).'
+            f'❌ No se puede eliminar la constructora "{constructora.nombre}" porque tiene {constructora.total_proyectos} proyecto(s) asociado(s).'
         )
     else:
-        razon_social = constructora.razon_social
+        razon_social = constructora.nombre
         constructora.delete()
         messages.success(request, f'✅ Constructora "{razon_social}" eliminada exitosamente.')
     

@@ -24,12 +24,12 @@
 
                         <div class="row mb-3">
                             <div class="col-md-8">
-                                <label for="{{ form.razon_social.id_for_label }}" class="form-label">
-                                    Razón Social: <span class="text-danger">*</span>
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                                    Nombre de la Constructora: <span class="text-danger">*</span>
                                 </label>
-                                {{ form.razon_social }}
-                                {% if form.razon_social.errors %}
-                                <div class="text-danger small">{{ form.razon_social.errors }}</div>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                <div class="text-danger small">{{ form.nombre.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
@@ -59,65 +59,40 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label for="{{ form.correo.id_for_label }}" class="form-label">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
                                     Correo Electrónico: <span class="text-danger">*</span>
                                 </label>
-                                {{ form.correo }}
-                                {% if form.correo.errors %}
-                                <div class="text-danger small">{{ form.correo.errors }}</div>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.ubicacion.id_for_label }}" class="form-label">
-                                Ubicación: <span class="text-danger">*</span>
+                            <label for="{{ form.direccion.id_for_label }}" class="form-label">
+                                Dirección:
                             </label>
-                            {{ form.ubicacion }}
-                            {% if form.ubicacion.errors %}
-                            <div class="text-danger small">{{ form.ubicacion.errors }}</div>
+                            {{ form.direccion }}
+                            {% if form.direccion.errors %}
+                            <div class="text-danger small">{{ form.direccion.errors }}</div>
                             {% endif %}
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.representante_legal.id_for_label }}" class="form-label">
-                                Representante Legal:
+                            <label for="{{ form.contacto.id_for_label }}" class="form-label">
+                                Persona de Contacto:
                             </label>
-                            {{ form.representante_legal }}
-                            {% if form.representante_legal.errors %}
-                            <div class="text-danger small">{{ form.representante_legal.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Información Adicional -->
-                        <h5 class="mb-3 mt-4">
-                            <i class="fas fa-sticky-note text-primary"></i> Información Adicional
-                        </h5>
-
-                        <div class="mb-3">
-                            <label for="{{ form.contacto_adicional.id_for_label }}" class="form-label">
-                                Contacto Adicional:
-                            </label>
-                            {{ form.contacto_adicional }}
-                            {% if form.contacto_adicional.errors %}
-                            <div class="text-danger small">{{ form.contacto_adicional.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="{{ form.observaciones.id_for_label }}" class="form-label">
-                                Observaciones:
-                            </label>
-                            {{ form.observaciones }}
-                            {% if form.observaciones.errors %}
-                            <div class="text-danger small">{{ form.observaciones.errors }}</div>
+                            {{ form.contacto }}
+                            {% if form.contacto.errors %}
+                            <div class="text-danger small">{{ form.contacto.errors }}</div>
                             {% endif %}
                         </div>
 
                         <!-- Estado -->
                         <div class="form-check mb-4">
-                            {{ form.activa }}
-                            <label class="form-check-label" for="{{ form.activa.id_for_label }}">
+                            {{ form.activo }}
+                            <label class="form-check-label" for="{{ form.activo.id_for_label }}">
                                 Constructora activa
                             </label>
                         </div>
