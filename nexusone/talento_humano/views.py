@@ -218,4 +218,4 @@ def nuevo_llamado(request):
         form.save()
         messages.success(request, "Llamado de atención registrado correctamente.")
         return redirect("talento_humano:lista_llamados")
-    return render(request, "talento_humano/gestion_empleados/form_ll
+    return render(request, "talento_humano/gestion_empleados/form_llamado_atencion.html", {"form": form})
