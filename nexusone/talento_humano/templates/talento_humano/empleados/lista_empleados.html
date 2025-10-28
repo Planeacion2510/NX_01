@@ -1,74 +1,31 @@
-{% extends "base.html" %}
-{% load static %}
-
+{% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="section-title text-center mb-4">
-        <i class="fas fa-users"></i> Empleados
-    </h2>
-
-    <div class="text-center mb-3">
-        <a href="{% url 'talento_humano:nuevo_empleado' %}" class="btn-module">
-            <i class="fas fa-plus"></i> Nuevo Empleado
-        </a>
-        <button id="refresh-btn" class="btn-module btn-refresh">
-            <i class="fas fa-sync-alt"></i> Actualizar
-        </button>
-    </div>
-
-    <div class="table-container">
-        <table class="table-modern">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Documento</th>
-                    <th>Nombre</th>
-                    <th>Cargo</th>
-                    <th>Área</th>
-                    <th>Fecha Ingreso</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for empleado in empleados %}
-                <tr>
-                    <td>{{ empleado.id }}</td>
-                    <td>{{ empleado.documento }}</td>
-                    <td>{{ empleado.user.get_full_name if empleado.user else "-" }}</td>
-                    <td>{{ empleado.cargo }}</td>
-                    <td>{{ empleado.area }}</td>
-                    <td>{{ empleado.fecha_ingreso }}</td>
-                    <td>
-                        <span class="badge {% if empleado.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
-                            {{ empleado.estado|capfirst }}
-                        </span>
-                    </td>
-                    <td class="acciones-cell">
-                        <div class="acciones-wrapper">
-                            <a href="{% url 'talento_humano:nuevo_empleado' %}" class="btn-icon edit" title="Editar">
-                                <i class="fas fa-pencil-alt"></i>
-                            </a>
-                            <a href="#" class="btn-icon delete" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center">No hay empleados registrados.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="container mt-4">
+  <h2><i class="fas fa-users"></i> Empleados</h2>
+  <a href="{% url 'talento_humano:nuevo_empleado' %}" class="btn btn-primary mb-3">
+    <i class="fas fa-plus"></i> Nuevo Empleado
+  </a>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th><th>Nombre</th><th>Cargo</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for empleado in empleados %}
+      <tr>
+        <td>{{ empleado.id }}</td>
+        <td>{{ empleado.nombre_completo }}</td>
+        <td>{{ empleado.cargo }}</td>
+        <td>
+          <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-warning">Editar</a>
+          <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="text-center">No hay empleados registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-
-<script>
-document.getElementById('refresh-btn').addEventListener('click', function(){
-    const icon = this.querySelector('i'); icon.classList.add('fa-spin');
-    setTimeout(() => { location.reload(); }, 500);
-});
-</script>
 {% endblock %}
