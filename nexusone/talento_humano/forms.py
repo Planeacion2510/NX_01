@@ -1,8 +1,9 @@
+from django import forms
 from .models import (
     Empleado, Contrato, Vacacion, Permiso,
     ExamenMedico, Capacitacion, Dotacion,
-    Reglamento, Memorando,
-    HoraExtra, Ausentismo, ExamenPeriodico, LlamadoAtencion
+    Reglamento, Memorando, HoraExtra,
+    Ausentismo, ExamenPeriodico, LlamadoAtencion
 )
 
 # --- EMPLEADOS, CONTRATOS, VACACIONES, PERMISOS (ya los tienes) ---
