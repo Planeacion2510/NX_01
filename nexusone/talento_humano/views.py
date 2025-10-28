@@ -22,7 +22,7 @@ def menu_talento_humano(request):
 
 # ---------------- EMPLEADOS ----------------
 @login_required
-def empleados_list(request):
+def lista_empleados(request):
     empleados = Empleado.objects.all()
 
     for e in empleados:
@@ -36,12 +36,12 @@ def empleados_list(request):
             e.antiguedad = "N/A"
 
         ultimo_contrato = e.contratos.order_by("-fecha_inicio").first()
-        e.contrato_pdf = ultimo_contrato.archivo.url if ultimo_contrato and hasattr(ultimo_contrato, "archivo") and ultimo_contrato.archivo else None
+        e.contrato_pdf = ultimo_contrato.archivo.url if ultimo_contrato and ultimo_contrato.archivo else None
 
-    return render(request, "empleados/empleados_list.html", {"empleados": empleados})
+    return render(request, "talento_humano/lista_empleados.html", {"empleados": empleados})
 
 @login_required
-def empleado_create(request):
+def nuevo_empleado(request):
     if request.method == "POST":
         form = EmpleadoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -57,13 +57,13 @@ def empleado_create(request):
                     archivo=contrato_pdf
                 )
             messages.success(request, "Empleado creado correctamente.")
-            return redirect("empleados_list")
+            return redirect("talento_humano:lista_empleados")
     else:
         form = EmpleadoForm()
-    return render(request, "empleados/empleado_form.html", {"form": form, "titulo": "Nuevo empleado"})
+    return render(request, "talento_humano/form_empleado.html", {"form": form, "titulo": "Nuevo empleado"})
 
 @login_required
-def empleado_update(request, pk):
+def editar_empleado(request, pk):
     empleado = get_object_or_404(Empleado, pk=pk)
     if request.method == "POST":
         form = EmpleadoForm(request.POST, request.FILES, instance=empleado)
@@ -80,14 +80,104 @@ def empleado_update(request, pk):
                     archivo=contrato_pdf
                 )
             messages.success(request, "Empleado actualizado correctamente.")
-            return redirect("empleados_list")
+            return redirect("talento_humano:lista_empleados")
     else:
         form = EmpleadoForm(instance=empleado)
-    return render(request, "empleados/empleado_form.html", {"form": form, "titulo": "Editar empleado"})
+    return render(request, "talento_humano/form_empleado.html", {"form": form, "titulo": "Editar empleado"})
 
 @login_required
-def empleado_delete(request, pk):
+def eliminar_empleado(request, pk):
     empleado = get_object_or_404(Empleado, pk=pk)
     empleado.delete()
     messages.success(request, "Empleado eliminado correctamente.")
-    return redirect("empleados_list")
+    return redirect("talento_humano:lista_empleados")
+
+# ---------------- CONTRATOS ----------------
+@login_required
+def lista_contratos(request):
+    contratos = Contrato.objects.all().select_related('empleado')
+    return render(request, "talento_humano/lista_contratos.html", {"contratos": contratos})
+
+@login_required
+def nuevo_contrato(request):
+    if request.method == "POST":
+        form = ContratoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Contrato creado correctamente.")
+            return redirect("talento_humano:lista_contratos")
+    else:
+        form = ContratoForm()
+    return render(request, "talento_humano/form_contrato.html", {"form": form, "titulo": "Nuevo contrato"})
+
+# ---------------- VACACIONES ----------------
+@login_required
+def lista_vacaciones(request):
+    vacaciones = Vacacion.objects.all().select_related('empleado')
+    return render(request, "talento_humano/lista_vacaciones.html", {"vacaciones": vacaciones})
+
+@login_required
+def nueva_vacacion(request):
+    if request.method == "POST":
+        form = VacacionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Vacación creada correctamente.")
+            return redirect("talento_humano:lista_vacaciones")
+    else:
+        form = VacacionForm()
+    return render(request, "talento_humano/form_vacacion.html", {"form": form, "titulo": "Nueva vacación"})
+
+# ---------------- PERMISOS ----------------
+@login_required
+def lista_permisos(request):
+    permisos = Permiso.objects.all().select_related('empleado')
+    return render(request, "talento_humano/lista_permisos.html", {"permisos": permisos})
+
+@login_required
+def nuevo_permiso(request):
+    if request.method == "POST":
+        form = PermisoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Permiso creado correctamente.")
+            return redirect("talento_humano:lista_permisos")
+    else:
+        form = PermisoForm()
+    return render(request, "talento_humano/form_permiso.html", {"form": form, "titulo": "Nuevo permiso"})
+
+# ---------------- REGLAMENTOS ----------------
+@login_required
+def lista_reglamentos(request):
+    reglamentos = Reglamento.objects.all()
+    return render(request, "talento_humano/lista_reglamentos.html", {"reglamentos": reglamentos})
+
+@login_required
+def nuevo_reglamento(request):
+    if request.method == "POST":
+        form = ReglamentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Reglamento creado correctamente.")
+            return redirect("talento_humano:lista_reglamentos")
+    else:
+        form = ReglamentoForm()
+    return render(request, "talento_humano/form_reglamento.html", {"form": form, "titulo": "Nuevo reglamento"})
+
+# ---------------- MEMORANDOS ----------------
+@login_required
+def lista_memorandos(request):
+    memorandos = Memorando.objects.all().select_related('empleado')
+    return render(request, "talento_humano/lista_memorandos.html", {"memorandos": memorandos})
+
+@login_required
+def nuevo_memorando(request):
+    if request.method == "POST":
+        form = MemorandoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Memorando creado correctamente.")
+            return redirect("talento_humano:lista_memorandos")
+    else:
+        form = MemorandoForm()
+    return render(request, "talento_humano/form_memorando.html", {"form": form, "titulo": "Nuevo memorando"})

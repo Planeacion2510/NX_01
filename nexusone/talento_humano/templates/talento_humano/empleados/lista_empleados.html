@@ -3,7 +3,7 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4">📋 Empleados registrados</h2>
     <div class="text-end mb-3">
-        <a href="{% url 'empleado_create' %}" class="btn btn-success">
+        <a href="{% url 'talento_humano:nuevo_empleado' %}" class="btn btn-success">
             <i class="fas fa-user-plus"></i> Nuevo Empleado
         </a>
     </div>
@@ -40,10 +40,10 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'empleado_update' e.id %}" class="btn btn-sm btn-primary">
+                    <a href="{% url 'talento_humano:editar_empleado' e.id %}" class="btn btn-sm btn-primary">
                         <i class="fas fa-edit"></i>
                     </a>
-                    <a href="{% url 'empleado_delete' e.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar empleado?')">
+                    <a href="{% url 'talento_humano:eliminar_empleado' e.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar empleado?')">
                         <i class="fas fa-trash"></i>
                     </a>
                 </td>

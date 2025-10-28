@@ -19,6 +19,7 @@ class Contrato(models.Model):
     fecha_fin = models.DateField(null=True, blank=True)
     salario = models.DecimalField(max_digits=12, decimal_places=2)
     activo = models.BooleanField(default=True)
+    archivo = models.FileField(upload_to='documentos/contratos/', null=True, blank=True)  # CAMPO AGREGADO
 
     def __str__(self):
         return f"Contrato {self.tipo} - {self.empleado}"
@@ -92,5 +93,3 @@ class LlamadoAtencion(models.Model):
     fecha = models.DateField()
     motivo = models.CharField(max_length=255)
     observaciones = models.TextField(blank=True)
-
-
