@@ -104,3 +104,35 @@ def nuevo_memorando(request):
         messages.success(request, "Memorando registrado correctamente.")
         return redirect("talento_humano:lista_memorandos")
     return render(request, "talento_humano/gestion_empleado/form_memorando.html", {"form": form})
+
+# HORAS EXTRAS
+@login_required
+def lista_horas_extras(request):
+    horas_extras = HoraExtra.objects.select_related("empleado")
+    return render(request, "talento_humano/gestion_empleado/horas_extras.html", {"horas_extras": horas_extras})
+
+@login_required
+def nueva_hora_extra(request):
+    form = HoraExtraForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Hora extra registrada correctamente.")
+        return redirect("talento_humano:lista_horas_extras")
+    return render(request, "talento_humano/gestion_empleado/form_hora_extra.html", {"form": form})
+
+@login_required
+def editar_hora_extra(request, pk):
+    hora_extra = get_object_or_404(HoraExtra, pk=pk)
+    form = HoraExtraForm(request.POST or None, instance=hora_extra)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Hora extra actualizada correctamente.")
+        return redirect("talento_humano:lista_horas_extras")
+    return render(request, "talento_humano/gestion_empleado/form_hora_extra.html", {"form": form})
+
+@login_required
+def eliminar_hora_extra(request, pk):
+    hora_extra = get_object_or_404(HoraExtra, pk=pk)
+    hora_extra.delete()
+    messages.success(request, "Hora extra eliminada correctamente.")
+    return redirect("talento_humano:lista_horas_extras")

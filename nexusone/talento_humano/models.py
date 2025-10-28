@@ -71,6 +71,9 @@ class HoraExtra(models.Model):
     motivo = models.CharField(max_length=255)
     aprobado = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.empleado} - {self.fecha} - {self.horas}h"
+
 class Ausentismo(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
     fecha_inicio = models.DateField()
