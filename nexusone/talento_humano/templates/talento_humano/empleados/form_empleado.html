@@ -1,11 +1,14 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-  <h2><i class="fas fa-user-plus"></i> Nuevo Empleado</h2>
-  <form method="POST">{% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Guardar</button>
-    <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-secondary">Cancelar</a>
-  </form>
+    <h3 class="mb-4">{{ titulo }}</h3>
+    <form method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{% url 'empleados_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
