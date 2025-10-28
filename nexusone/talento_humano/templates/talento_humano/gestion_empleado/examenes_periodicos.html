@@ -1,0 +1,48 @@
+{% extends "talento_humano/menu_talento.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="section-title text-center mb-4">🩺 Exámenes Periódicos</h2>
+    
+    <div class="text-end mb-3">
+        <a href="{% url 'talento_humano:nuevo_examen_periodico' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Examen
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Tipo</th>
+                    <th>Fecha</th>
+                    <th>Resultado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in examenes %}
+                <tr>
+                    <td>{{ e.empleado }}</td>
+                    <td>{{ e.tipo }}</td>
+                    <td>{{ e.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ e.resultado|truncatewords:10 }}</td>
+                    <td class="acciones-cell">
+                        <div class="acciones-wrapper">
+                            <a href="#" class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="#" class="btn-icon delete" title="Eliminar" onclick="return confirm('¿Eliminar este examen?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center">No hay exámenes registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

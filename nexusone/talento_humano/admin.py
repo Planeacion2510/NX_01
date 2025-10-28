@@ -1,28 +1,22 @@
-# nexusone/talento_humano/admin.py
 from django.contrib import admin
-from .models import Empleado, Contrato, DocumentoEmpresa, Vacacion, Permiso, LlamadoAtencion
+from .models import Empleado, Contrato, Vacacion, Permiso
 
 @admin.register(Empleado)
 class EmpleadoAdmin(admin.ModelAdmin):
-    list_display = ("user", "cargo", "area", "estado", "fecha_ingreso")
-    search_fields = ("user__username", "user__first_name", "user__last_name", "cargo")
+    list_display = ("id", "documento", "cargo", "area", "estado")
+    search_fields = ("documento", "cargo", "area")
+    list_filter = ("estado",)
 
 @admin.register(Contrato)
 class ContratoAdmin(admin.ModelAdmin):
-    list_display = ("empleado", "fecha_inicio", "fecha_fin", "salario")
-
-@admin.register(DocumentoEmpresa)
-class DocumentoEmpresaAdmin(admin.ModelAdmin):
-    list_display = ("titulo", "tipo", "fecha_publicacion")
+    list_display = ("id", "empleado", "tipo", "fecha_inicio", "activo")
+    search_fields = ("empleado__user__username", "tipo")
+    list_filter = ("activo",)
 
 @admin.register(Vacacion)
 class VacacionAdmin(admin.ModelAdmin):
-    list_display = ("empleado", "fecha_inicio", "fecha_fin", "aprobado")
+    list_display = ("id", "empleado", "fecha_inicio", "fecha_fin", "aprobada")
 
 @admin.register(Permiso)
 class PermisoAdmin(admin.ModelAdmin):
-    list_display = ("empleado", "motivo", "fecha", "aprobado")
-
-@admin.register(LlamadoAtencion)
-class LlamadoAtencionAdmin(admin.ModelAdmin):
-    list_display = ("empleado", "motivo", "fecha", "tipo")
+    list_display = ("id", "empleado", "fecha", "motivo", "aprobado")

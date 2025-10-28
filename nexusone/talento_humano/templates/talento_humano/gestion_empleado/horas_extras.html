@@ -1,0 +1,50 @@
+{% extends "talento_humano/menu_talento.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="section-title text-center mb-4">🕒 Horas Extras</h2>
+    
+    <div class="text-end mb-3">
+        <a href="{% url 'talento_humano:nueva_hora_extra' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Hora Extra
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Fecha</th>
+                    <th>Horas</th>
+                    <th>Motivo</th>
+                    <th>Aprobado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in horas %}
+                <tr>
+                    <td>{{ h.empleado }}</td>
+                    <td>{{ h.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ h.horas }}</td>
+                    <td>{{ h.motivo }}</td>
+                    <td>{% if h.aprobado %}✅{% else %}❌{% endif %}</td>
+                    <td class="acciones-cell">
+                        <div class="acciones-wrapper">
+                            <a href="#" class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="#" class="btn-icon delete" title="Eliminar" onclick="return confirm('¿Eliminar esta hora extra?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">No hay horas extras registradas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

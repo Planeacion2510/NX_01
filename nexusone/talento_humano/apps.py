@@ -1,4 +1,3 @@
-# nexusone/talento_humano/apps.py
 from django.apps import AppConfig
 
 class TalentoHumanoConfig(AppConfig):

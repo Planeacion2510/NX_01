@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-box-open"></i> Dotación
+    </h2>
+
+    <div class="text-center mb-3">
+        <a href="{% url 'talento_humano:nueva_dotacion' %}" class="btn-module">
+            <i class="fas fa-plus"></i> Nueva Dotación
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Item</th>
+                    <th>Fecha Entrega</th>
+                    <th>Cantidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dot in dotaciones %}
+                <tr>
+                    <td>{{ dot.empleado }}</td>
+                    <td>{{ dot.item }}</td>
+                    <td>{{ dot.fecha_entrega|date:"d/m/Y" }}</td>
+                    <td>{{ dot.cantidad }}</td>
+                    <td class="acciones-cell">
+                        <div class="acciones-wrapper">
+                            <a href="{% url 'talento_humano:editar_dotacion' dot.id %}" class="btn-icon edit" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{% url 'talento_humano:eliminar_dotacion' dot.id %}" class="btn-icon delete" title="Eliminar"
+                               onclick="return confirm('¿Deseas eliminar esta dotación?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No hay dotación registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
