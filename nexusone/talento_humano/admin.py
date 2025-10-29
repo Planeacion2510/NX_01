@@ -596,12 +596,12 @@ class EncuestaClimaAdmin(admin.ModelAdmin):
     list_display = [
         'titulo',
         'fecha_inicio',
-        'fecha_cierre',
+        'fecha_fin', 
         'activa',
         'anonima',
         'respuestas_count',
     ]
-    
+
     list_filter = ['activa', 'anonima', 'fecha_inicio']
     search_fields = ['titulo', 'descripcion']
     
