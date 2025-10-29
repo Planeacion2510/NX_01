@@ -5,11 +5,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.db.models import Q, Count, Avg, Sum
+from django.db.models import Q, Count, Avg, Sum, F
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import date, timedelta
 from decimal import Decimal
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
 
 from .models import (
     Empleado, Contrato, Certificacion, EPS, AFP, ARL, CajaCompensacion,
@@ -219,15 +221,13 @@ def inactivar_empleado(request, pk):
     
     if request.method == 'POST':
         empleado.estado = 'inactivo'
+        empleado.fecha_retiro = date.today()
         empleado.save()
         
-        # Desactivar contratos activos
-        Contrato.objects.filter(empleado=empleado, activo=True).update(activo=False)
-        
-        messages.success(request, f'Empleado {empleado.get_nombre_completo()} inactivado.')
+        messages.success(request, f'{empleado.get_nombre_completo()} ha sido inactivado.')
         return redirect('talento_humano:lista_empleados')
     
-    return render(request, 'talento_humano/empleados/confirmar_inactivar.html', {'empleado': empleado})
+    return render(request, 'talento_humano/empleados/confirmar_inactivacion.html', {'empleado': empleado})
 
 
 # ============================================================================
@@ -246,42 +246,21 @@ class ContratoListView(LoginRequiredMixin, ListView):
         
         # Filtrar por estado
         estado = self.request.GET.get('estado')
-        if estado == 'vigente':
+        if estado == 'activos':
             queryset = queryset.filter(activo=True)
-        elif estado == 'vencido':
-            queryset = queryset.filter(fecha_fin__lt=date.today(), activo=True)
-        elif estado == 'por_vencer':
+        elif estado == 'vencidos':
+            queryset = queryset.filter(activo=False)
+        
+        # Filtrar por próximos a vencer
+        if self.request.GET.get('por_vencer'):
             fecha_limite = date.today() + timedelta(days=30)
             queryset = queryset.filter(
-                fecha_fin__gte=date.today(),
+                activo=True,
                 fecha_fin__lte=fecha_limite,
-                activo=True
+                fecha_fin__gte=date.today()
             )
         
         return queryset.order_by('-fecha_inicio')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Alertas
-        fecha_limite = date.today() + timedelta(days=30)
-        context['contratos_vencidos'] = Contrato.objects.filter(
-            fecha_fin__lt=date.today(),
-            activo=True
-        ).count()
-        
-        context['contratos_por_vencer'] = Contrato.objects.filter(
-            fecha_fin__gte=date.today(),
-            fecha_fin__lte=fecha_limite,
-            activo=True
-        ).count()
-        
-        context['contratos_vigentes'] = Contrato.objects.filter(
-            activo=True,
-            fecha_fin__gte=date.today()
-        ).count()
-        
-        return context
 
 
 class ContratoCreateView(LoginRequiredMixin, CreateView):
@@ -292,7 +271,6 @@ class ContratoCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('talento_humano:lista_contratos')
     
     def form_valid(self, form):
-        form.instance.creado_por = self.request.user
         messages.success(self.request, 'Contrato creado exitosamente.')
         return super().form_valid(form)
 
@@ -300,67 +278,38 @@ class ContratoCreateView(LoginRequiredMixin, CreateView):
 @login_required
 def renovar_contrato(request, pk):
     """Renovar contrato existente"""
-    contrato = get_object_or_404(Contrato, pk=pk)
+    contrato_anterior = get_object_or_404(Contrato, pk=pk)
     
     if request.method == 'POST':
-        form = RenovarContratoForm(request.POST, request.FILES)
+        form = RenovarContratoForm(request.POST)
         if form.is_valid():
+            # Inactivar contrato anterior
+            contrato_anterior.activo = False
+            contrato_anterior.save()
+            
             # Crear nuevo contrato
-            tipo_renovacion = form.cleaned_data['tipo_renovacion']
-            fecha_inicio = form.cleaned_data['fecha_inicio']
-            nuevo_salario = form.cleaned_data['nuevo_salario']
-            
-            # Calcular fecha fin según tipo
-            if tipo_renovacion == 'fijo_1':
-                fecha_fin = fecha_inicio + timedelta(days=365)
-                tipo_contrato = 'fijo'
-            elif tipo_renovacion == 'fijo_6':
-                fecha_fin = fecha_inicio + timedelta(days=180)
-                tipo_contrato = 'fijo'
-            else:  # indefinido
-                fecha_fin = None
-                tipo_contrato = 'indefinido'
-            
-            # Crear renovación
             nuevo_contrato = Contrato.objects.create(
-                empleado=contrato.empleado,
-                tipo=tipo_contrato,
-                fecha_inicio=fecha_inicio,
-                fecha_fin=fecha_fin,
-                salario=nuevo_salario,
-                cargo=contrato.cargo,
-                descripcion_funciones=contrato.descripcion_funciones,
-                activo=True,
-                creado_por=request.user
+                empleado=contrato_anterior.empleado,
+                tipo_contrato=form.cleaned_data['tipo_contrato'],
+                fecha_inicio=form.cleaned_data['fecha_inicio'],
+                fecha_fin=form.cleaned_data['fecha_fin'],
+                salario_basico=form.cleaned_data['salario_basico'],
+                auxilio_transporte=form.cleaned_data['auxilio_transporte'],
+                activo=True
             )
             
-            # Adjuntar archivo si existe
-            if form.cleaned_data.get('archivo_nuevo_contrato'):
-                nuevo_contrato.archivo = form.cleaned_data['archivo_nuevo_contrato']
-                nuevo_contrato.save()
-            
-            # Desactivar contrato anterior
-            contrato.activo = False
-            contrato.save()
-            
-            # Actualizar salario del empleado
-            empleado = contrato.empleado
-            empleado.salario_basico = nuevo_salario
-            empleado.save()
-            
-            messages.success(request, f'Contrato renovado exitosamente. Nuevo contrato: {nuevo_contrato.numero_contrato}')
+            messages.success(request, f'Contrato renovado exitosamente para {contrato_anterior.empleado.get_nombre_completo()}.')
             return redirect('talento_humano:lista_contratos')
     else:
-        # Pre-llenar formulario con datos del contrato actual
-        initial = {
-            'fecha_inicio': contrato.fecha_fin + timedelta(days=1) if contrato.fecha_fin else date.today(),
-            'nuevo_salario': contrato.salario,
-        }
-        form = RenovarContratoForm(initial=initial)
+        form = RenovarContratoForm(initial={
+            'tipo_contrato': contrato_anterior.tipo_contrato,
+            'salario_basico': contrato_anterior.salario_basico,
+            'auxilio_transporte': contrato_anterior.auxilio_transporte,
+        })
     
     context = {
         'form': form,
-        'contrato': contrato,
+        'contrato_anterior': contrato_anterior,
     }
     
     return render(request, 'talento_humano/contratos/renovar_contrato.html', context)
@@ -381,18 +330,16 @@ def generar_certificacion(request, empleado_id=None):
         form = CertificacionForm(request.POST)
         if form.is_valid():
             certificacion = form.save(commit=False)
-            certificacion.generado_por = request.user
+            if not empleado:
+                empleado = certificacion.empleado
+            certificacion.empleado = empleado
+            certificacion.generada_por = request.user
             certificacion.save()
             
-            # Aquí iría la lógica para generar el PDF
-            # (Se puede usar ReportLab, WeasyPrint, etc.)
-            
-            messages.success(request, 'Certificación generada exitosamente.')
-            return redirect('talento_humano:detalle_empleado', pk=certificacion.empleado.pk)
+            messages.success(request, f'Certificación generada para {empleado.get_nombre_completo()}.')
+            return redirect('talento_humano:detalle_empleado', pk=empleado.pk)
     else:
-        initial = {}
-        if empleado:
-            initial['empleado'] = empleado
+        initial = {'empleado': empleado} if empleado else {}
         form = CertificacionForm(initial=initial)
     
     context = {
@@ -404,7 +351,72 @@ def generar_certificacion(request, empleado_id=None):
 
 
 # ============================================================================
-# 3. SELECCIÓN Y TALENTO
+# 3. SELECCIÓN Y TALENTO - PERFILES DE CARGO
+# ============================================================================
+
+class PerfilCargoListView(LoginRequiredMixin, ListView):
+    """Lista de perfiles de cargo"""
+    model = PerfilCargo
+    template_name = 'talento_humano/seleccion/lista_perfiles_cargo.html'
+    context_object_name = 'perfiles'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = PerfilCargo.objects.all()
+        
+        # Filtrar por área
+        area = self.request.GET.get('area')
+        if area:
+            queryset = queryset.filter(area=area)
+        
+        # Filtrar por activos
+        if self.request.GET.get('activos'):
+            queryset = queryset.filter(activo=True)
+        
+        return queryset.order_by('nombre_cargo')
+
+
+class PerfilCargoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo perfil de cargo"""
+    model = PerfilCargo
+    form_class = PerfilCargoForm
+    template_name = 'talento_humano/seleccion/form_perfil_cargo.html'
+    success_url = reverse_lazy('talento_humano:lista_perfiles_cargo')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Perfil de cargo creado exitosamente.')
+        return super().form_valid(form)
+
+
+class PerfilCargoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de perfil de cargo"""
+    model = PerfilCargo
+    template_name = 'talento_humano/seleccion/detalle_perfil_cargo.html'
+    context_object_name = 'perfil'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Vacantes asociadas a este perfil
+        context['vacantes'] = Vacante.objects.filter(perfil_cargo=self.object).order_by('-fecha_publicacion')
+        return context
+
+
+class PerfilCargoUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar perfil de cargo"""
+    model = PerfilCargo
+    form_class = PerfilCargoForm
+    template_name = 'talento_humano/seleccion/form_perfil_cargo.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('talento_humano:detalle_perfil_cargo', kwargs={'pk': self.object.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Perfil de cargo actualizado exitosamente.')
+        return super().form_valid(form)
+
+
+# ============================================================================
+# VACANTES
 # ============================================================================
 
 class VacanteListView(LoginRequiredMixin, ListView):
@@ -412,88 +424,134 @@ class VacanteListView(LoginRequiredMixin, ListView):
     model = Vacante
     template_name = 'talento_humano/seleccion/lista_vacantes.html'
     context_object_name = 'vacantes'
-    paginate_by = 10
+    paginate_by = 20
     
     def get_queryset(self):
-        queryset = Vacante.objects.all().select_related('perfil_cargo', 'responsable')
+        queryset = Vacante.objects.all().select_related('perfil_cargo')
         
+        # Filtrar por estado
         estado = self.request.GET.get('estado')
         if estado:
             queryset = queryset.filter(estado=estado)
         
-        return queryset.order_by('-fecha_apertura')
+        return queryset.order_by('-fecha_publicacion')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['vacantes_abiertas'] = Vacante.objects.filter(estado='abierta').count()
-        context['vacantes_proceso'] = Vacante.objects.filter(estado='en_proceso').count()
+        context['vacantes_cerradas'] = Vacante.objects.filter(estado='cerrada').count()
         return context
 
 
-class VacanteDetailView(LoginRequiredMixin, DetailView):
-    """Detalle de vacante con kanban de candidatos"""
+class VacanteCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva vacante"""
     model = Vacante
-    template_name = 'talento_humano/seleccion/kanban_seleccion.html'
+    form_class = VacanteForm
+    template_name = 'talento_humano/seleccion/form_vacante.html'
+    success_url = reverse_lazy('talento_humano:lista_vacantes')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Vacante creada exitosamente.')
+        return super().form_valid(form)
+
+
+class VacanteDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de vacante"""
+    model = Vacante
+    template_name = 'talento_humano/seleccion/detalle_vacante.html'
     context_object_name = 'vacante'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        vacante = self.object
-        
-        # Organizar candidatos por etapa
-        procesos = ProcesoSeleccion.objects.filter(vacante=vacante).select_related('candidato')
-        
-        context['recibidas'] = procesos.filter(etapa_actual='recibida')
-        context['preseleccionados'] = procesos.filter(etapa_actual='preseleccionado')
-        context['entrevistas'] = procesos.filter(etapa_actual='entrevista')
-        context['pruebas'] = procesos.filter(etapa_actual='pruebas')
-        context['referencias'] = procesos.filter(etapa_actual='referencias')
-        context['ofertas'] = procesos.filter(etapa_actual='oferta')
-        context['contratados'] = procesos.filter(etapa_actual='contratado')
-        context['rechazados'] = procesos.filter(etapa_actual='rechazado')
-        
+        # Candidatos aplicados a esta vacante
+        context['procesos'] = ProcesoSeleccion.objects.filter(
+            vacante=self.object
+        ).select_related('candidato').order_by('-fecha_aplicacion')
         return context
 
 
+class VacanteUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar vacante"""
+    model = Vacante
+    form_class = VacanteForm
+    template_name = 'talento_humano/seleccion/form_vacante.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('talento_humano:detalle_vacante', kwargs={'pk': self.object.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Vacante actualizada exitosamente.')
+        return super().form_valid(form)
+
+
+# ============================================================================
+# CANDIDATOS
+# ============================================================================
+
+class CandidatoListView(LoginRequiredMixin, ListView):
+    """Lista de candidatos"""
+    model = Candidato
+    template_name = 'talento_humano/seleccion/lista_candidatos.html'
+    context_object_name = 'candidatos'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Candidato.objects.all()
+        
+        # Búsqueda
+        busqueda = self.request.GET.get('busqueda')
+        if busqueda:
+            queryset = queryset.filter(
+                Q(nombre__icontains=busqueda) |
+                Q(apellido__icontains=busqueda) |
+                Q(email__icontains=busqueda) |
+                Q(telefono__icontains=busqueda)
+            )
+        
+        return queryset.order_by('-fecha_registro')
+
+
 class CandidatoCreateView(LoginRequiredMixin, CreateView):
-    """Registrar nuevo candidato"""
+    """Crear nuevo candidato"""
     model = Candidato
     form_class = CandidatoForm
     template_name = 'talento_humano/seleccion/form_candidato.html'
-    
-    def get_success_url(self):
-        vacante_id = self.request.GET.get('vacante')
-        if vacante_id:
-            return reverse_lazy('talento_humano:detalle_vacante', kwargs={'pk': vacante_id})
-        return reverse_lazy('talento_humano:lista_vacantes')
+    success_url = reverse_lazy('talento_humano:lista_candidatos')
     
     def form_valid(self, form):
-        candidato = form.save()
-        
-        # Si viene de una vacante, crear proceso automáticamente
-        vacante_id = self.request.GET.get('vacante')
-        if vacante_id:
-            vacante = get_object_or_404(Vacante, pk=vacante_id)
-            ProcesoSeleccion.objects.create(
-                vacante=vacante,
-                candidato=candidato,
-                etapa_actual='recibida'
-            )
-        
         messages.success(self.request, 'Candidato registrado exitosamente.')
         return super().form_valid(form)
 
 
+class CandidatoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de candidato"""
+    model = Candidato
+    template_name = 'talento_humano/seleccion/detalle_candidato.html'
+    context_object_name = 'candidato'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Procesos de selección del candidato
+        context['procesos'] = ProcesoSeleccion.objects.filter(
+            candidato=self.object
+        ).select_related('vacante').order_by('-fecha_aplicacion')
+        return context
+
+
+# ============================================================================
+# PROCESO DE SELECCIÓN
+# ============================================================================
+
 @login_required
 def actualizar_etapa_candidato(request, proceso_id):
-    """Actualizar etapa de candidato en el proceso de selección"""
+    """Actualizar etapa del proceso de selección"""
     proceso = get_object_or_404(ProcesoSeleccion, pk=proceso_id)
     
     if request.method == 'POST':
         form = ProcesoSeleccionForm(request.POST, instance=proceso)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Etapa actualizada exitosamente.')
+            messages.success(request, f'Etapa actualizada para {proceso.candidato.nombre} {proceso.candidato.apellido}.')
             return redirect('talento_humano:detalle_vacante', pk=proceso.vacante.pk)
     else:
         form = ProcesoSeleccionForm(instance=proceso)
@@ -515,43 +573,59 @@ class CapacitacionListView(LoginRequiredMixin, ListView):
     model = Capacitacion
     template_name = 'talento_humano/capacitacion/lista_capacitaciones.html'
     context_object_name = 'capacitaciones'
-    paginate_by = 15
+    paginate_by = 20
     
     def get_queryset(self):
         queryset = Capacitacion.objects.all()
         
-        # Filtrar por tipo
-        tipo = self.request.GET.get('tipo')
-        if tipo:
-            queryset = queryset.filter(tipo=tipo)
-        
         # Filtrar por estado
-        estado = self.request.GET.get('estado')
-        if estado == 'proximas':
-            queryset = queryset.filter(fecha_programada__gte=date.today(), completada=False)
-        elif estado == 'completadas':
+        if self.request.GET.get('completadas'):
             queryset = queryset.filter(completada=True)
+        elif self.request.GET.get('pendientes'):
+            queryset = queryset.filter(completada=False, fecha_programada__gte=date.today())
         
         return queryset.order_by('-fecha_programada')
 
 
+class CapacitacionCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva capacitación"""
+    model = Capacitacion
+    form_class = CapacitacionForm
+    template_name = 'talento_humano/capacitacion/form_capacitacion.html'
+    success_url = reverse_lazy('talento_humano:lista_capacitaciones')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Capacitación creada exitosamente.')
+        return super().form_valid(form)
+
+
 class CapacitacionDetailView(LoginRequiredMixin, DetailView):
-    """Detalle de capacitación con lista de inscritos"""
+    """Detalle de capacitación"""
     model = Capacitacion
     template_name = 'talento_humano/capacitacion/detalle_capacitacion.html'
     context_object_name = 'capacitacion'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        capacitacion = self.object
-        
+        # Empleados inscritos
         context['inscritos'] = InscripcionCapacitacion.objects.filter(
-            capacitacion=capacitacion
-        ).select_related('empleado')
-        
-        context['cupos_disponibles'] = capacitacion.cupo_maximo - capacitacion.get_inscritos()
-        
+            capacitacion=self.object
+        ).select_related('empleado').order_by('fecha_inscripcion')
         return context
+
+
+class CapacitacionUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar capacitación"""
+    model = Capacitacion
+    form_class = CapacitacionForm
+    template_name = 'talento_humano/capacitacion/form_capacitacion.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('talento_humano:detalle_capacitacion', kwargs={'pk': self.object.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Capacitación actualizada exitosamente.')
+        return super().form_valid(form)
 
 
 @login_required
@@ -560,102 +634,224 @@ def inscribir_capacitacion(request, capacitacion_id, empleado_id):
     capacitacion = get_object_or_404(Capacitacion, pk=capacitacion_id)
     empleado = get_object_or_404(Empleado, pk=empleado_id)
     
-    # Verificar cupos disponibles
-    if capacitacion.get_inscritos() >= capacitacion.cupo_maximo:
-        messages.error(request, 'No hay cupos disponibles para esta capacitación.')
-        return redirect('talento_humano:detalle_capacitacion', pk=capacitacion_id)
-    
     # Verificar si ya está inscrito
     if InscripcionCapacitacion.objects.filter(capacitacion=capacitacion, empleado=empleado).exists():
-        messages.warning(request, 'El empleado ya está inscrito en esta capacitación.')
-        return redirect('talento_humano:detalle_capacitacion', pk=capacitacion_id)
+        messages.warning(request, f'{empleado.get_nombre_completo()} ya está inscrito en esta capacitación.')
+    else:
+        InscripcionCapacitacion.objects.create(
+            capacitacion=capacitacion,
+            empleado=empleado,
+            fecha_inscripcion=date.today()
+        )
+        messages.success(request, f'{empleado.get_nombre_completo()} inscrito exitosamente.')
     
-    # Crear inscripción
-    InscripcionCapacitacion.objects.create(
-        capacitacion=capacitacion,
-        empleado=empleado
-    )
-    
-    messages.success(request, f'{empleado.get_nombre_completo()} inscrito exitosamente.')
     return redirect('talento_humano:detalle_capacitacion', pk=capacitacion_id)
 
 
 # ============================================================================
-# 5. SEGURIDAD Y SALUD EN EL TRABAJO
+# 5. SEGURIDAD Y SALUD EN EL TRABAJO (SST)
 # ============================================================================
 
 @login_required
 def dashboard_sst(request):
-    """Dashboard de SST"""
+    """Dashboard de Seguridad y Salud en el Trabajo"""
     
-    # Estadísticas
-    total_accidentes = AccidenteTrabajo.objects.filter(
+    # Estadísticas generales
+    total_empleados = Empleado.objects.filter(estado='activo').count()
+    
+    # Exámenes médicos
+    examenes_al_dia = ExamenMedico.objects.filter(
+        fecha__gte=date.today() - timedelta(days=365),
+        empleado__estado='activo'
+    ).values('empleado').distinct().count()
+    
+    examenes_vencidos = total_empleados - examenes_al_dia
+    
+    # Accidentes del año
+    accidentes_año = AccidenteTrabajo.objects.filter(
         fecha_accidente__year=date.today().year
     ).count()
     
-    examenes_vencidos = ExamenMedico.objects.filter(
-        fecha__lte=date.today() - timedelta(days=365),
-        empleado__estado='activo'
-    ).count()
-    
-    epp_bajo_stock = ElementoProteccion.objects.filter(
-        stock_actual__lte=models.F('stock_minimo'),
+    # Riesgos críticos
+    riesgos_criticos = MatrizRiesgo.objects.filter(
+        nivel_riesgo='critico',
         activo=True
     ).count()
     
-    # Matriz de riesgos por nivel
-    riesgos_alto = MatrizRiesgo.objects.filter(nivel_riesgo='alto').count()
-    riesgos_muy_alto = MatrizRiesgo.objects.filter(nivel_riesgo='muy_alto').count()
+    # EPP bajo stock
+    epp_bajo_stock = ElementoProteccion.objects.filter(
+        stock_actual__lte=F('stock_minimo'),
+        activo=True
+    ).count()
     
-    # Accidentes recientes
-    accidentes_recientes = AccidenteTrabajo.objects.all().select_related('empleado').order_by('-fecha_accidente')[:5]
-    
-    # EPP por entregar próximamente
-    fecha_limite = date.today() + timedelta(days=30)
-    epp_por_vencer = EntregaEPP.objects.filter(
-        fecha_vencimiento__lte=fecha_limite,
-        fecha_vencimiento__gte=date.today()
-    ).select_related('empleado', 'elemento')[:10]
+    # Próximas entregas de EPP
+    proximas_entregas = EntregaEPP.objects.filter(
+        fecha_entrega__gte=date.today(),
+        fecha_entrega__lte=date.today() + timedelta(days=7)
+    ).count()
     
     context = {
-        'total_accidentes': total_accidentes,
+        'total_empleados': total_empleados,
+        'examenes_al_dia': examenes_al_dia,
         'examenes_vencidos': examenes_vencidos,
+        'accidentes_año': accidentes_año,
+        'riesgos_criticos': riesgos_criticos,
         'epp_bajo_stock': epp_bajo_stock,
-        'riesgos_alto': riesgos_alto,
-        'riesgos_muy_alto': riesgos_muy_alto,
-        'accidentes_recientes': accidentes_recientes,
-        'epp_por_vencer': epp_por_vencer,
+        'proximas_entregas': proximas_entregas,
     }
     
     return render(request, 'talento_humano/sst/dashboard_sst.html', context)
 
 
+# ============================================================================
+# MATRIZ DE RIESGOS
+# ============================================================================
+
 class MatrizRiesgoListView(LoginRequiredMixin, ListView):
-    """Matriz de identificación de riesgos"""
+    """Lista de riesgos identificados"""
     model = MatrizRiesgo
     template_name = 'talento_humano/sst/matriz_riesgos.html'
     context_object_name = 'riesgos'
     
     def get_queryset(self):
-        queryset = MatrizRiesgo.objects.all()
+        queryset = MatrizRiesgo.objects.filter(activo=True)
         
+        # Filtrar por nivel de riesgo
         nivel = self.request.GET.get('nivel')
         if nivel:
             queryset = queryset.filter(nivel_riesgo=nivel)
         
-        return queryset.order_by('proceso', 'actividad')
+        return queryset.order_by('-nivel_riesgo', 'proceso')
 
+
+class MatrizRiesgoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo riesgo"""
+    model = MatrizRiesgo
+    form_class = MatrizRiesgoForm
+    template_name = 'talento_humano/sst/form_riesgo.html'
+    success_url = reverse_lazy('talento_humano:matriz_riesgos')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Riesgo registrado exitosamente.')
+        return super().form_valid(form)
+
+
+class MatrizRiesgoUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar riesgo"""
+    model = MatrizRiesgo
+    form_class = MatrizRiesgoForm
+    template_name = 'talento_humano/sst/form_riesgo.html'
+    success_url = reverse_lazy('talento_humano:matriz_riesgos')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Riesgo actualizado exitosamente.')
+        return super().form_valid(form)
+
+
+# ============================================================================
+# EXÁMENES MÉDICOS
+# ============================================================================
+
+class ExamenMedicoListView(LoginRequiredMixin, ListView):
+    """Lista de exámenes médicos"""
+    model = ExamenMedico
+    template_name = 'talento_humano/sst/lista_examenes_medicos.html'
+    context_object_name = 'examenes'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = ExamenMedico.objects.all().select_related('empleado')
+        
+        # Filtrar por tipo
+        tipo = self.request.GET.get('tipo')
+        if tipo:
+            queryset = queryset.filter(tipo_examen=tipo)
+        
+        # Filtrar por empleado
+        empleado_id = self.request.GET.get('empleado')
+        if empleado_id:
+            queryset = queryset.filter(empleado_id=empleado_id)
+        
+        return queryset.order_by('-fecha')
+
+
+class ExamenMedicoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo examen médico"""
+    model = ExamenMedico
+    form_class = ExamenMedicoForm
+    template_name = 'talento_humano/sst/form_examen_medico.html'
+    success_url = reverse_lazy('talento_humano:lista_examenes_medicos')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Examen médico registrado exitosamente.')
+        return super().form_valid(form)
+
+
+class ExamenMedicoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de examen médico"""
+    model = ExamenMedico
+    template_name = 'talento_humano/sst/detalle_examen_medico.html'
+    context_object_name = 'examen'
+
+
+# ============================================================================
+# ACCIDENTES DE TRABAJO
+# ============================================================================
 
 class AccidenteTrabajoListView(LoginRequiredMixin, ListView):
     """Lista de accidentes de trabajo"""
     model = AccidenteTrabajo
     template_name = 'talento_humano/sst/lista_accidentes.html'
     context_object_name = 'accidentes'
-    paginate_by = 15
+    paginate_by = 20
     
     def get_queryset(self):
-        return AccidenteTrabajo.objects.all().select_related('empleado', 'investigado_por').order_by('-fecha_accidente')
+        queryset = AccidenteTrabajo.objects.all().select_related('empleado')
+        
+        # Filtrar por gravedad
+        gravedad = self.request.GET.get('gravedad')
+        if gravedad:
+            queryset = queryset.filter(gravedad=gravedad)
+        
+        return queryset.order_by('-fecha_accidente')
 
+
+class AccidenteTrabajoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo accidente de trabajo"""
+    model = AccidenteTrabajo
+    form_class = AccidenteTrabajoForm
+    template_name = 'talento_humano/sst/form_accidente.html'
+    success_url = reverse_lazy('talento_humano:lista_accidentes')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Accidente registrado exitosamente.')
+        return super().form_valid(form)
+
+
+class AccidenteTrabajoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de accidente de trabajo"""
+    model = AccidenteTrabajo
+    template_name = 'talento_humano/sst/detalle_accidente.html'
+    context_object_name = 'accidente'
+
+
+class AccidenteTrabajoUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar accidente de trabajo"""
+    model = AccidenteTrabajo
+    form_class = AccidenteTrabajoForm
+    template_name = 'talento_humano/sst/form_accidente.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('talento_humano:detalle_accidente', kwargs={'pk': self.object.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Accidente actualizado exitosamente.')
+        return super().form_valid(form)
+
+
+# ============================================================================
+# ELEMENTOS DE PROTECCIÓN PERSONAL (EPP)
+# ============================================================================
 
 class ElementoProteccionListView(LoginRequiredMixin, ListView):
     """Lista de elementos de protección personal"""
@@ -666,10 +862,64 @@ class ElementoProteccionListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['elementos_bajo_stock'] = ElementoProteccion.objects.filter(
-            stock_actual__lte=models.F('stock_minimo'),
+            stock_actual__lte=F('stock_minimo'),
             activo=True
         )
         return context
+
+
+class ElementoProteccionCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo elemento de protección"""
+    model = ElementoProteccion
+    form_class = ElementoProteccionForm
+    template_name = 'talento_humano/sst/form_epp.html'
+    success_url = reverse_lazy('talento_humano:lista_epp')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Elemento de protección creado exitosamente.')
+        return super().form_valid(form)
+
+
+class ElementoProteccionUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar elemento de protección"""
+    model = ElementoProteccion
+    form_class = ElementoProteccionForm
+    template_name = 'talento_humano/sst/form_epp.html'
+    success_url = reverse_lazy('talento_humano:lista_epp')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Elemento de protección actualizado exitosamente.')
+        return super().form_valid(form)
+
+
+class EntregaEPPListView(LoginRequiredMixin, ListView):
+    """Lista de entregas de EPP"""
+    model = EntregaEPP
+    template_name = 'talento_humano/sst/lista_entregas_epp.html'
+    context_object_name = 'entregas'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return EntregaEPP.objects.all().select_related('empleado', 'elemento').order_by('-fecha_entrega')
+
+
+class EntregaEPPCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva entrega de EPP"""
+    model = EntregaEPP
+    form_class = EntregaEPPForm
+    template_name = 'talento_humano/sst/form_entrega_epp.html'
+    success_url = reverse_lazy('talento_humano:lista_entregas_epp')
+    
+    def form_valid(self, form):
+        entrega = form.save()
+        
+        # Actualizar stock del elemento
+        elemento = entrega.elemento
+        elemento.stock_actual -= entrega.cantidad
+        elemento.save()
+        
+        messages.success(self.request, f'Entrega registrada. Stock actualizado: {elemento.stock_actual}')
+        return super().form_valid(form)
 
 
 # ============================================================================
@@ -693,6 +943,31 @@ class ActividadBienestarListView(LoginRequiredMixin, ListView):
         return queryset.order_by('-fecha_evento')
 
 
+class ActividadBienestarCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva actividad de bienestar"""
+    model = ActividadBienestar
+    form_class = ActividadBienestarForm
+    template_name = 'talento_humano/bienestar/form_actividad.html'
+    success_url = reverse_lazy('talento_humano:lista_actividades_bienestar')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Actividad de bienestar creada exitosamente.')
+        return super().form_valid(form)
+
+
+class ActividadBienestarDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de actividad de bienestar"""
+    model = ActividadBienestar
+    template_name = 'talento_humano/bienestar/detalle_actividad.html'
+    context_object_name = 'actividad'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['empleados_inscritos'] = self.object.empleados_inscritos.all()
+        context['total_inscritos'] = self.object.get_inscritos()
+        return context
+
+
 @login_required
 def inscribir_actividad_bienestar(request, actividad_id, empleado_id):
     """Inscribir empleado a actividad de bienestar"""
@@ -708,7 +983,33 @@ def inscribir_actividad_bienestar(request, actividad_id, empleado_id):
     actividad.empleados_inscritos.add(empleado)
     messages.success(request, f'{empleado.get_nombre_completo()} inscrito en {actividad.nombre}.')
     
-    return redirect('talento_humano:lista_actividades_bienestar')
+    return redirect('talento_humano:detalle_actividad_bienestar', pk=actividad_id)
+
+
+# ============================================================================
+# ENCUESTAS DE CLIMA ORGANIZACIONAL
+# ============================================================================
+
+class EncuestaClimaListView(LoginRequiredMixin, ListView):
+    """Lista de encuestas de clima organizacional"""
+    model = EncuestaClimaOrganizacional
+    template_name = 'talento_humano/bienestar/lista_encuestas.html'
+    context_object_name = 'encuestas'
+    
+    def get_queryset(self):
+        return EncuestaClimaOrganizacional.objects.all().order_by('-fecha_inicio')
+
+
+class EncuestaClimaCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva encuesta de clima"""
+    model = EncuestaClimaOrganizacional
+    form_class = EncuestaClimaForm
+    template_name = 'talento_humano/bienestar/form_encuesta.html'
+    success_url = reverse_lazy('talento_humano:lista_encuestas_clima')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Encuesta de clima creada exitosamente.')
+        return super().form_valid(form)
 
 
 @login_required
@@ -751,8 +1052,72 @@ def responder_encuesta_clima(request, encuesta_id):
     return render(request, 'talento_humano/bienestar/responder_encuesta.html', context)
 
 
+@login_required
+def resultados_encuesta_clima(request, pk):
+    """Ver resultados de encuesta de clima"""
+    encuesta = get_object_or_404(EncuestaClimaOrganizacional, pk=pk)
+    
+    # Estadísticas
+    respuestas = RespuestaEncuesta.objects.filter(encuesta=encuesta)
+    total_respuestas = respuestas.count()
+    
+    # Promedios por dimensión
+    promedios = {
+        'ambiente_trabajo': respuestas.aggregate(Avg('puntuacion_ambiente_trabajo'))['puntuacion_ambiente_trabajo__avg'] or 0,
+        'liderazgo': respuestas.aggregate(Avg('puntuacion_liderazgo'))['puntuacion_liderazgo__avg'] or 0,
+        'comunicacion': respuestas.aggregate(Avg('puntuacion_comunicacion'))['puntuacion_comunicacion__avg'] or 0,
+        'reconocimiento': respuestas.aggregate(Avg('puntuacion_reconocimiento'))['puntuacion_reconocimiento__avg'] or 0,
+    }
+    
+    promedio_general = sum(promedios.values()) / len(promedios) if promedios else 0
+    
+    context = {
+        'encuesta': encuesta,
+        'total_respuestas': total_respuestas,
+        'promedios': promedios,
+        'promedio_general': round(promedio_general, 2),
+    }
+    
+    return render(request, 'talento_humano/bienestar/resultados_encuesta.html', context)
+
+
 # ============================================================================
-# 7. GESTIÓN Y RELACIONES LABORALES
+# 7. GESTIÓN Y RELACIONES LABORALES - EVALUACIONES
+# ============================================================================
+
+class EvaluacionDesempeñoListView(LoginRequiredMixin, ListView):
+    """Lista de evaluaciones de desempeño"""
+    model = EvaluacionDesempeño
+    template_name = 'talento_humano/gestion/lista_evaluaciones.html'
+    context_object_name = 'evaluaciones'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return EvaluacionDesempeño.objects.all().select_related('empleado', 'evaluador').order_by('-fecha_evaluacion')
+
+
+class EvaluacionDesempeñoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva evaluación de desempeño"""
+    model = EvaluacionDesempeño
+    form_class = EvaluacionDesempeñoForm
+    template_name = 'talento_humano/gestion/form_evaluacion.html'
+    success_url = reverse_lazy('talento_humano:lista_evaluaciones')
+    
+    def form_valid(self, form):
+        form.instance.evaluador = self.request.user
+        messages.success(self.request, 'Evaluación de desempeño creada exitosamente.')
+        return super().form_valid(form)
+
+
+class EvaluacionDesempeñoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de evaluación de desempeño"""
+    model = EvaluacionDesempeño
+    template_name = 'talento_humano/gestion/detalle_evaluacion.html'
+    context_object_name = 'evaluacion'
+
+
+# ============================================================================
+# PERMISOS
 # ============================================================================
 
 class PermisoListView(LoginRequiredMixin, ListView):
@@ -775,6 +1140,18 @@ class PermisoListView(LoginRequiredMixin, ListView):
         return queryset.order_by('-fecha_solicitud')
 
 
+class PermisoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo permiso"""
+    model = Permiso
+    form_class = PermisoForm
+    template_name = 'talento_humano/gestion/form_permiso.html'
+    success_url = reverse_lazy('talento_humano:lista_permisos')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Permiso solicitado exitosamente.')
+        return super().form_valid(form)
+
+
 @login_required
 def aprobar_permiso(request, pk):
     """Aprobar permiso"""
@@ -788,6 +1165,24 @@ def aprobar_permiso(request, pk):
     messages.success(request, f'Permiso aprobado para {permiso.empleado.get_nombre_completo()}.')
     return redirect('talento_humano:lista_permisos')
 
+
+@login_required
+def rechazar_permiso(request, pk):
+    """Rechazar permiso"""
+    permiso = get_object_or_404(Permiso, pk=pk)
+    
+    permiso.aprobado = False
+    permiso.aprobado_por = request.user
+    permiso.fecha_aprobacion = timezone.now()
+    permiso.save()
+    
+    messages.warning(request, f'Permiso rechazado para {permiso.empleado.get_nombre_completo()}.')
+    return redirect('talento_humano:lista_permisos')
+
+
+# ============================================================================
+# VACACIONES
+# ============================================================================
 
 class VacacionListView(LoginRequiredMixin, ListView):
     """Lista de vacaciones"""
@@ -808,6 +1203,36 @@ class VacacionListView(LoginRequiredMixin, ListView):
         return queryset.order_by('-fecha_solicitud')
 
 
+class VacacionCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva solicitud de vacaciones"""
+    model = Vacacion
+    form_class = VacacionForm
+    template_name = 'talento_humano/gestion/form_vacacion.html'
+    success_url = reverse_lazy('talento_humano:lista_vacaciones')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Solicitud de vacaciones creada exitosamente.')
+        return super().form_valid(form)
+
+
+@login_required
+def aprobar_vacacion(request, pk):
+    """Aprobar vacación"""
+    vacacion = get_object_or_404(Vacacion, pk=pk)
+    
+    vacacion.aprobada = True
+    vacacion.aprobada_por = request.user
+    vacacion.fecha_aprobacion = timezone.now()
+    vacacion.save()
+    
+    messages.success(request, f'Vacación aprobada para {vacacion.empleado.get_nombre_completo()}.')
+    return redirect('talento_humano:lista_vacaciones')
+
+
+# ============================================================================
+# INCAPACIDADES
+# ============================================================================
+
 class IncapacidadListView(LoginRequiredMixin, ListView):
     """Lista de incapacidades"""
     model = Incapacidad
@@ -818,6 +1243,29 @@ class IncapacidadListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Incapacidad.objects.all().select_related('empleado').order_by('-fecha_inicio')
 
+
+class IncapacidadCreateView(LoginRequiredMixin, CreateView):
+    """Crear nueva incapacidad"""
+    model = Incapacidad
+    form_class = IncapacidadForm
+    template_name = 'talento_humano/gestion/form_incapacidad.html'
+    success_url = reverse_lazy('talento_humano:lista_incapacidades')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Incapacidad registrada exitosamente.')
+        return super().form_valid(form)
+
+
+class IncapacidadDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de incapacidad"""
+    model = Incapacidad
+    template_name = 'talento_humano/gestion/detalle_incapacidad.html'
+    context_object_name = 'incapacidad'
+
+
+# ============================================================================
+# MEMORANDOS
+# ============================================================================
 
 class MemorandoListView(LoginRequiredMixin, ListView):
     """Lista de memorandos y llamados de atención"""
@@ -830,35 +1278,239 @@ class MemorandoListView(LoginRequiredMixin, ListView):
         return Memorando.objects.all().select_related('empleado', 'emitido_por').order_by('-fecha')
 
 
-class EvaluacionDesempeñoListView(LoginRequiredMixin, ListView):
-    """Lista de evaluaciones de desempeño"""
-    model = EvaluacionDesempeño
-    template_name = 'talento_humano/gestion/lista_evaluaciones.html'
-    context_object_name = 'evaluaciones'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return EvaluacionDesempeño.objects.all().select_related('empleado', 'evaluador').order_by('-fecha_evaluacion')
-
-
-# ============================================================================
-# VISTAS DE CREACIÓN GENÉRICAS (CBV)
-# ============================================================================
-
-class GenericCreateView(LoginRequiredMixin, CreateView):
-    """Vista genérica de creación con mensajes"""
+class MemorandoCreateView(LoginRequiredMixin, CreateView):
+    """Crear nuevo memorando"""
+    model = Memorando
+    form_class = MemorandoForm
+    template_name = 'talento_humano/gestion/form_memorando.html'
+    success_url = reverse_lazy('talento_humano:lista_memorandos')
     
     def form_valid(self, form):
-        messages.success(self.request, f'{self.model._meta.verbose_name} creado exitosamente.')
+        form.instance.emitido_por = self.request.user
+        messages.success(self.request, 'Memorando creado exitosamente.')
         return super().form_valid(form)
 
 
-# Usar para todas las vistas de creación
-class ContratoCreateView(GenericCreateView):
-    model = Contrato
-    form_class = ContratoForm
-    template_name = 'talento_humano/contratos/form_contrato.html'
-    success_url = reverse_lazy('talento_humano:lista_contratos')
+class MemorandoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de memorando"""
+    model = Memorando
+    template_name = 'talento_humano/gestion/detalle_memorando.html'
+    context_object_name = 'memorando'
 
 
-# Continuar con las demás vistas...
+# ============================================================================
+# REGLAMENTO INTERNO
+# ============================================================================
+
+class ReglamentoInternoListView(LoginRequiredMixin, ListView):
+    """Lista de reglamentos internos"""
+    model = ReglamentoInterno
+    template_name = 'talento_humano/gestion/lista_reglamentos.html'
+    context_object_name = 'reglamentos'
+    
+    def get_queryset(self):
+        return ReglamentoInterno.objects.filter(activo=True).order_by('-fecha_vigencia')
+
+
+class ReglamentoInternoDetailView(LoginRequiredMixin, DetailView):
+    """Detalle de reglamento interno"""
+    model = ReglamentoInterno
+    template_name = 'talento_humano/gestion/detalle_reglamento.html'
+    context_object_name = 'reglamento'
+
+
+# ============================================================================
+# REPORTES Y EXPORTACIONES
+# ============================================================================
+
+@login_required
+def exportar_empleados_excel(request):
+    """Exportar listado de empleados a Excel"""
+    # Crear workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Empleados"
+    
+    # Estilos
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    
+    # Encabezados
+    headers = [
+        'Documento', 'Nombres', 'Apellidos', 'Cargo', 'Área', 
+        'Fecha Ingreso', 'Estado', 'Teléfono', 'Email'
+    ]
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Datos
+    empleados = Empleado.objects.all().order_by('primer_apellido')
+    
+    for row_num, empleado in enumerate(empleados, 2):
+        ws.cell(row=row_num, column=1, value=empleado.numero_documento)
+        ws.cell(row=row_num, column=2, value=f"{empleado.primer_nombre} {empleado.segundo_nombre or ''}")
+        ws.cell(row=row_num, column=3, value=f"{empleado.primer_apellido} {empleado.segundo_apellido or ''}")
+        ws.cell(row=row_num, column=4, value=empleado.cargo)
+        ws.cell(row=row_num, column=5, value=empleado.area)
+        ws.cell(row=row_num, column=6, value=empleado.fecha_ingreso.strftime('%Y-%m-%d') if empleado.fecha_ingreso else '')
+        ws.cell(row=row_num, column=7, value=empleado.get_estado_display())
+        ws.cell(row=row_num, column=8, value=empleado.telefono)
+        ws.cell(row=row_num, column=9, value=empleado.email)
+    
+    # Ajustar anchos de columna
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+    
+    # Respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=empleados_{date.today()}.xlsx'
+    
+    wb.save(response)
+    return response
+
+
+@login_required
+def reporte_nomina(request):
+    """Reporte de nómina"""
+    empleados_activos = Empleado.objects.filter(estado='activo').select_related('eps', 'afp', 'arl')
+    
+    # Calcular totales
+    total_salarios = sum(emp.get_contrato_actual().salario_basico if emp.get_contrato_actual() else 0 
+                         for emp in empleados_activos)
+    
+    context = {
+        'empleados': empleados_activos,
+        'total_salarios': total_salarios,
+        'fecha_generacion': date.today(),
+    }
+    
+    return render(request, 'talento_humano/reportes/reporte_nomina.html', context)
+
+
+@login_required
+def reporte_sst(request):
+    """Reporte de Seguridad y Salud en el Trabajo"""
+    
+    # Estadísticas del año actual
+    año_actual = date.today().year
+    
+    # Accidentes
+    accidentes = AccidenteTrabajo.objects.filter(fecha_accidente__year=año_actual)
+    total_accidentes = accidentes.count()
+    accidentes_leves = accidentes.filter(gravedad='leve').count()
+    accidentes_graves = accidentes.filter(gravedad='grave').count()
+    accidentes_mortales = accidentes.filter(gravedad='mortal').count()
+    
+    # Exámenes médicos
+    examenes_año = ExamenMedico.objects.filter(fecha__year=año_actual)
+    
+    # Riesgos
+    riesgos_activos = MatrizRiesgo.objects.filter(activo=True)
+    riesgos_criticos = riesgos_activos.filter(nivel_riesgo='critico').count()
+    riesgos_altos = riesgos_activos.filter(nivel_riesgo='alto').count()
+    
+    # EPP
+    entregas_epp = EntregaEPP.objects.filter(fecha_entrega__year=año_actual)
+    
+    context = {
+        'año': año_actual,
+        'total_accidentes': total_accidentes,
+        'accidentes_leves': accidentes_leves,
+        'accidentes_graves': accidentes_graves,
+        'accidentes_mortales': accidentes_mortales,
+        'total_examenes': examenes_año.count(),
+        'riesgos_criticos': riesgos_criticos,
+        'riesgos_altos': riesgos_altos,
+        'total_entregas_epp': entregas_epp.count(),
+        'fecha_generacion': date.today(),
+    }
+    
+    return render(request, 'talento_humano/reportes/reporte_sst.html', context)
+
+
+# ============================================================================
+# API / AJAX
+# ============================================================================
+
+@login_required
+def empleado_info_json(request, pk):
+    """Obtener información de empleado en JSON"""
+    empleado = get_object_or_404(Empleado, pk=pk)
+    
+    data = {
+        'id': empleado.id,
+        'nombre_completo': empleado.get_nombre_completo(),
+        'documento': empleado.numero_documento,
+        'cargo': empleado.cargo,
+        'area': empleado.area,
+        'email': empleado.email,
+        'telefono': empleado.telefono,
+        'estado': empleado.estado,
+    }
+    
+    # Agregar info de contrato actual si existe
+    contrato = empleado.get_contrato_actual()
+    if contrato:
+        data['contrato'] = {
+            'tipo': contrato.tipo_contrato,
+            'salario': str(contrato.salario_basico),
+            'fecha_inicio': contrato.fecha_inicio.strftime('%Y-%m-%d'),
+            'fecha_fin': contrato.fecha_fin.strftime('%Y-%m-%d') if contrato.fecha_fin else None,
+        }
+    
+    return JsonResponse(data)
+
+
+@login_required
+def calcular_liquidacion_ajax(request):
+    """Calcular liquidación de empleado (AJAX)"""
+    if request.method == 'POST':
+        empleado_id = request.POST.get('empleado_id')
+        fecha_retiro = request.POST.get('fecha_retiro')
+        
+        empleado = get_object_or_404(Empleado, pk=empleado_id)
+        
+        # Aquí iría la lógica de cálculo de liquidación
+        # Por ahora retornamos un ejemplo básico
+        
+        contrato = empleado.get_contrato_actual()
+        if not contrato:
+            return JsonResponse({'error': 'No hay contrato activo'}, status=400)
+        
+        # Cálculos básicos (simplificado)
+        salario = contrato.salario_basico
+        dias_trabajados = 30  # Ejemplo
+        
+        cesantias = salario * dias_trabajados / 360
+        intereses_cesantias = cesantias * 0.12
+        prima = salario * dias_trabajados / 360
+        vacaciones = salario * dias_trabajados / 720
+        
+        total = cesantias + intereses_cesantias + prima + vacaciones
+        
+        data = {
+            'cesantias': str(cesantias),
+            'intereses_cesantias': str(intereses_cesantias),
+            'prima': str(prima),
+            'vacaciones': str(vacaciones),
+            'total': str(total),
+        }
+        
+        return JsonResponse(data)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
