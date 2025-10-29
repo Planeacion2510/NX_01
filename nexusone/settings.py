@@ -37,6 +37,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
 # APLICACIONES INSTALADAS
 # =========================
 INSTALLED_APPS = [
+    # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -44,15 +45,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Apps del proyecto
-    "nexusone",
+    # Apps del proyecto (sin incluir 'nexusone' solo)
     "nexusone.administrativa",
     "nexusone.administrativa.ordenes",
     "nexusone.administrativa.proyectos",
     "nexusone.administrativa.inventario",
     "nexusone.administrativa.compras",
     "nexusone.produccion",
-    "nexusone.talento_humano",
+    "nexusone.talento_humano",  # ✅ Esta línea está correcta
 ]
 
 # =========================
@@ -177,3 +177,34 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ])
+
+# =========================
+# LOGGING (para debugging en producción)
+# =========================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO' if not DEBUG else 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
