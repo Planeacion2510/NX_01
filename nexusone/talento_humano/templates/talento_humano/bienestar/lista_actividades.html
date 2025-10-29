@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Actividades de Bienestar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bienestar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .actividad-card {
+        border-radius: 8px;
+        transition: all 0.3s;
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .actividad-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    .actividad-image {
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+    }
+    
+    .categoria-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-box .label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .participantes-info {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-top: 10px;
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="bienestar-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">🎉 Bienestar Laboral y Clima Organizacional</h1>
+                <p class="mb-0 opacity-75">
+                    Gestión de actividades y programas para el bienestar del equipo
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_actividad_bienestar' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Nueva Actividad
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number">{{ total_actividades }}</div>
+                <div class="label">Actividades Este Año</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-success">{{ actividades_realizadas }}</div>
+                <div class="label">Realizadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-warning">{{ actividades_proximas }}</div>
+                <div class="label">Próximas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-info">{{ total_participantes }}</div>
+                <div class="label">Participantes Total</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.categoria %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_actividades_bienestar' %}">
+                Todas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.categoria == 'deportiva' %}active{% endif %}" 
+               href="?categoria=deportiva">
+                Deportivas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.categoria == 'cultural' %}active{% endif %}" 
+               href="?categoria=cultural">
+                Culturales
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.categoria == 'recreativa' %}active{% endif %}" 
+               href="?categoria=recreativa">
+                Recreativas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.categoria == 'integracion' %}active{% endif %}" 
+               href="?categoria=integracion">
+                Integración
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de actividades -->
+    {% if actividades %}
+    <div class="row">
+        {% for actividad in actividades %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="actividad-card">
+                
+                <!-- Imagen/Icono -->
+                <div class="actividad-image">
+                    {% if actividad.categoria == 'deportiva' %}
+                    <i class="bi bi-trophy"></i>
+                    {% elif actividad.categoria == 'cultural' %}
+                    <i class="bi bi-palette"></i>
+                    {% elif actividad.categoria == 'recreativa' %}
+                    <i class="bi bi-balloon"></i>
+                    {% elif actividad.categoria == 'integracion' %}
+                    <i class="bi bi-people"></i>
+                    {% else %}
+                    <i class="bi bi-star"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <!-- Título y categoría -->
+                    <h5 class="card-title mb-2">{{ actividad.nombre }}</h5>
+                    
+                    <div class="mb-3">
+                        <span class="categoria-badge
+                            {% if actividad.categoria == 'deportiva' %}bg-success text-white
+                            {% elif actividad.categoria == 'cultural' %}bg-purple text-white
+                            {% elif actividad.categoria == 'recreativa' %}bg-warning text-dark
+                            {% elif actividad.categoria == 'integracion' %}bg-info text-white
+                            {% else %}bg-primary text-white
+                            {% endif %}">
+                            {{ actividad.get_categoria_display }}
+                        </span>
+                        
+                        <span class="categoria-badge
+                            {% if actividad.fecha >= today %}bg-primary text-white
+                            {% else %}bg-secondary text-white
+                            {% endif %}">
+                            {% if actividad.fecha >= today %}Próxima{% else %}Realizada{% endif %}
+                        </span>
+                    </div>
+                    
+                    <!-- Descripción -->
+                    <p class="card-text small">{{ actividad.descripcion|truncatewords:20 }}</p>
+                    
+                    <!-- Información -->
+                    <div class="border-top pt-3 mb-3">
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <i class="bi bi-calendar text-muted"></i>
+                                <strong>Fecha:</strong>
+                                <br>{{ actividad.fecha|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-clock text-muted"></i>
+                                <strong>Hora:</strong>
+                                <br>{{ actividad.hora_inicio|time:"H:i" }}
+                            </div>
+                            {% if actividad.lugar %}
+                            <div class="col-12">
+                                <i class="bi bi-geo-alt text-muted"></i>
+                                <strong>Lugar:</strong> {{ actividad.lugar }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Participantes -->
+                    <div class="participantes-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small>
+                                <i class="bi bi-people-fill"></i>
+                                <strong>Participantes:</strong>
+                            </small>
+                            <strong>{{ actividad.participantes.count }}</strong>
+                        </div>
+                        
+                        {% if actividad.cupo_maximo %}
+                        <div class="progress mt-2" style="height: 6px;">
+                            {% widthratio actividad.participantes.count actividad.cupo_maximo 100 as porcentaje %}
+                            <div class="progress-bar bg-success" style="width: {{ porcentaje }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            Cupo máximo: {{ actividad.cupo_maximo }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Presupuesto -->
+                    {% if actividad.presupuesto %}
+                    <div class="mt-2 small">
+                        <i class="bi bi-cash text-muted"></i>
+                        <strong>Presupuesto:</strong> ${{ actividad.presupuesto|floatformat:0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Botones de acción -->
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'talento_humano:detalle_actividad_bienestar' actividad.pk %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </a>
+                            
+                            {% if actividad.fecha >= today %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'talento_humano:inscribir_participantes' actividad.pk %}" 
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-person-plus"></i> Inscribir
+                                </a>
+                                <a href="{% url 'talento_humano:editar_actividad_bienestar' actividad.pk %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <a href="{% url 'talento_humano:evaluacion_actividad' actividad.pk %}" 
+                               class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-star"></i> Ver Evaluación
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if actividades.has_other_pages %}
+    <nav aria-label="Paginación">
+        <ul class="pagination justify-content-center">
+            {% if actividades.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ actividades.previous_page_number }}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ actividades.number }} / {{ actividades.paginator.num_pages }}</span>
+            </li>
+            
+            {% if actividades.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ actividades.next_page_number }}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-emoji-smile" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No hay actividades programadas</h4>
+        <p class="text-muted">Crea actividades de bienestar para fortalecer el clima laboral</p>
+        <a href="{% url 'talento_humano:crear_actividad_bienestar' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Crear Primera Actividad
+        </a>
+    </div>
+    
+    {% endif %}
+    
+</div>
+{% endblock %}

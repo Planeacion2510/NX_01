@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ vacante.titulo }} - Kanban de Selección{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+    
+    .kanban-column {
+        min-width: 300px;
+        max-width: 300px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .kanban-column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: white;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .kanban-column-title {
+        font-weight: bold;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    
+    .kanban-column-count {
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .candidato-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        cursor: pointer;
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+    }
+    
+    .candidato-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .candidato-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+    
+    .vacante-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .info-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-right: 10px;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+    
+    /* Colores por etapa */
+    .kanban-column.recibida .kanban-column-header { background: #e3f2fd; }
+    .kanban-column.preseleccionado .kanban-column-header { background: #fff3e0; }
+    .kanban-column.entrevista .kanban-column-header { background: #f3e5f5; }
+    .kanban-column.pruebas .kanban-column-header { background: #e8f5e9; }
+    .kanban-column.referencias .kanban-column-header { background: #fff9c4; }
+    .kanban-column.oferta .kanban-column-header { background: #e0f2f1; }
+    .kanban-column.contratado .kanban-column-header { background: #c8e6c9; }
+    .kanban-column.rechazado .kanban-column-header { background: #ffcdd2; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header de la vacante -->
+    <div class="vacante-header">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h1 class="h3 mb-2">{{ vacante.titulo }}</h1>
+                <p class="mb-3 opacity-75">{{ vacante.perfil_cargo.nombre_cargo }} - {{ vacante.perfil_cargo.area }}</p>
+                <div>
+                    <span class="info-badge">
+                        <i class="bi bi-people"></i> {{ vacante.numero_vacantes }} vacante{{ vacante.numero_vacantes|pluralize }}
+                    </span>
+                    <span class="info-badge">
+                        <i class="bi bi-person-check"></i> {{ recibidas|length|add:preseleccionados|length|add:entrevistas|length|add:pruebas|length|add:referencias|length|add:ofertas|length|add:contratados|length|add:rechazados|length }} candidato{{ recibidas|length|add:preseleccionados|length|add:entrevistas|length|add:pruebas|length|add:referencias|length|add:ofertas|length|add:contratados|length|add:rechazados|length|pluralize }}
+                    </span>
+                    <span class="info-badge">
+                        <i class="bi bi-calendar-check"></i> Cierra: {{ vacante.fecha_cierre|date:"d/m/Y" }}
+                    </span>
+                    <span class="info-badge 
+                        {% if vacante.estado == 'abierta' %}bg-success
+                        {% elif vacante.estado == 'en_proceso' %}bg-warning text-dark
+                        {% else %}bg-secondary
+                        {% endif %}">
+                        {{ vacante.get_estado_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'talento_humano:lista_vacantes' %}" class="btn btn-light mb-2">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <br>
+                <a href="{% url 'talento_humano:editar_vacante' vacante.pk %}" class="btn btn-light mb-2">
+                    <i class="bi bi-pencil"></i> Editar Vacante
+                </a>
+                <br>
+                <a href="{% url 'talento_humano:crear_candidato' %}?vacante={{ vacante.pk }}" class="btn btn-success">
+                    <i class="bi bi-person-plus"></i> Agregar Candidato
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Descripción de la vacante -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Descripción de la vacante</h5>
+            <p class="mb-0">{{ vacante.descripcion }}</p>
+        </div>
+    </div>
+    
+    <!-- Tablero Kanban -->
+    <div class="kanban-board">
+        
+        <!-- Columna: Recibida -->
+        <div class="kanban-column recibida">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">📨 Recibidas</span>
+                <span class="kanban-column-count">{{ recibidas|length }}</span>
+            </div>
+            
+            {% for proceso in recibidas %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                <div class="small">
+                    <i class="bi bi-briefcase text-muted"></i> {{ proceso.candidato.años_experiencia }} año{{ proceso.candidato.años_experiencia|pluralize }} exp.
+                </div>
+                <div class="small">
+                    <i class="bi bi-telephone text-muted"></i> {{ proceso.candidato.celular }}
+                </div>
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Preseleccionado -->
+        <div class="kanban-column preseleccionado">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">✅ Preseleccionados</span>
+                <span class="kanban-column-count">{{ preseleccionados|length }}</span>
+            </div>
+            
+            {% for proceso in preseleccionados %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                <div class="small">
+                    <i class="bi bi-briefcase text-muted"></i> {{ proceso.candidato.años_experiencia }} año{{ proceso.candidato.años_experiencia|pluralize }} exp.
+                </div>
+                {% if proceso.candidato.calificacion %}
+                <div class="small rating-stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= proceso.candidato.calificacion %}
+                        ★
+                        {% else %}
+                        ☆
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Entrevista -->
+        <div class="kanban-column entrevista">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">💬 Entrevista</span>
+                <span class="kanban-column-count">{{ entrevistas|length }}</span>
+            </div>
+            
+            {% for proceso in entrevistas %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                {% if proceso.calificacion_entrevista %}
+                <div class="small">
+                    <i class="bi bi-star-fill text-warning"></i> 
+                    Entrevista: {{ proceso.calificacion_entrevista }}/5
+                </div>
+                {% endif %}
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Pruebas -->
+        <div class="kanban-column pruebas">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">📝 Pruebas</span>
+                <span class="kanban-column-count">{{ pruebas|length }}</span>
+            </div>
+            
+            {% for proceso in pruebas %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                {% if proceso.calificacion_pruebas %}
+                <div class="small">
+                    <i class="bi bi-clipboard-check-fill text-success"></i> 
+                    Pruebas: {{ proceso.calificacion_pruebas }}/5
+                </div>
+                {% endif %}
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Referencias -->
+        <div class="kanban-column referencias">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">📞 Referencias</span>
+                <span class="kanban-column-count">{{ referencias|length }}</span>
+            </div>
+            
+            {% for proceso in referencias %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Oferta -->
+        <div class="kanban-column oferta">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">📄 Oferta</span>
+                <span class="kanban-column-count">{{ ofertas|length }}</span>
+            </div>
+            
+            {% for proceso in ofertas %}
+            <div class="candidato-card" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-muted">{{ proceso.candidato.nivel_educacion }}</small>
+                    </div>
+                </div>
+                <div class="text-end mt-2">
+                    <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation();">
+                        Mover <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Contratado -->
+        <div class="kanban-column contratado">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">🎉 Contratados</span>
+                <span class="kanban-column-count">{{ contratados|length }}</span>
+            </div>
+            
+            {% for proceso in contratados %}
+            <div class="candidato-card border-success" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar bg-success">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-success">✓ Contratado</small>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Columna: Rechazado -->
+        <div class="kanban-column rechazado">
+            <div class="kanban-column-header">
+                <span class="kanban-column-title">❌ Rechazados</span>
+                <span class="kanban-column-count">{{ rechazados|length }}</span>
+            </div>
+            
+            {% for proceso in rechazados %}
+            <div class="candidato-card border-danger" onclick="window.location='{% url 'talento_humano:detalle_candidato' proceso.candidato.pk %}'">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="candidato-avatar bg-danger">
+                        {{ proceso.candidato.nombres.0 }}{{ proceso.candidato.apellidos.0 }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong class="d-block">{{ proceso.candidato.nombres }} {{ proceso.candidato.apellidos }}</strong>
+                        <small class="text-danger">No seleccionado</small>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="small mb-0">Sin candidatos</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock %}

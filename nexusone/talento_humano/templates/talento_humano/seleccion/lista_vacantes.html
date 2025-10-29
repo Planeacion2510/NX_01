@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vacantes - Selección de Personal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vacante-card {
+        border-radius: 8px;
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+        height: 100%;
+    }
+    
+    .vacante-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    .vacante-card.abierta {
+        border-left-color: #28a745;
+    }
+    
+    .vacante-card.en_proceso {
+        border-left-color: #ffc107;
+    }
+    
+    .vacante-card.cerrada {
+        border-left-color: #6c757d;
+    }
+    
+    .vacante-card.cancelada {
+        border-left-color: #dc3545;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-box .label {
+        font-size: 0.9rem;
+        color: #666;
+        text-transform: uppercase;
+    }
+    
+    .badge-vacantes {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .candidatos-count {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        margin-top: 10px;
+    }
+    
+    .candidatos-count .number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 10px;
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">📢 Vacantes y Selección de Personal</h1>
+            <p class="text-muted">Gestión de convocatorias y procesos de selección</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'talento_humano:crear_vacante' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nueva Vacante
+            </a>
+            <a href="{% url 'talento_humano:lista_perfiles_cargo' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-briefcase"></i> Perfiles
+            </a>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-success">{{ vacantes_abiertas }}</div>
+                <div class="label">Vacantes Abiertas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-warning">{{ vacantes_proceso }}</div>
+                <div class="label">En Proceso</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-info">
+                    {% if vacantes %}
+                    {{ vacantes|length }}
+                    {% else %}
+                    0
+                    {% endif %}
+                </div>
+                <div class="label">Total Convocatorias</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-primary">
+                    {% for vacante in vacantes %}
+                    {{ vacante.procesos.count }}
+                    {% empty %}
+                    0
+                    {% endfor %}
+                </div>
+                <div class="label">Candidatos Total</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros por pestañas -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.estado %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_vacantes' %}">
+                Todas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'abierta' %}active{% endif %}" 
+               href="?estado=abierta">
+                Abiertas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'en_proceso' %}active{% endif %}" 
+               href="?estado=en_proceso">
+                En Proceso
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'cerrada' %}active{% endif %}" 
+               href="?estado=cerrada">
+                Cerradas
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de vacantes -->
+    {% if vacantes %}
+    <div class="row">
+        {% for vacante in vacantes %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card vacante-card {{ vacante.estado }}">
+                <div class="card-body">
+                    <!-- Header de la vacante -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">{{ vacante.titulo }}</h5>
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-briefcase"></i> {{ vacante.perfil_cargo.nombre_cargo }}
+                            </p>
+                        </div>
+                        <span class="badge badge-vacantes
+                            {% if vacante.estado == 'abierta' %}bg-success
+                            {% elif vacante.estado == 'en_proceso' %}bg-warning text-dark
+                            {% elif vacante.estado == 'cerrada' %}bg-secondary
+                            {% else %}bg-danger
+                            {% endif %}">
+                            {{ vacante.get_estado_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Información principal -->
+                    <div class="mb-3">
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <i class="bi bi-people text-muted"></i>
+                                <strong>Vacantes:</strong> {{ vacante.numero_vacantes }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-diagram-3 text-muted"></i>
+                                {{ vacante.perfil_cargo.area }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-calendar-check text-muted"></i>
+                                <strong>Apertura:</strong>
+                                <br>{{ vacante.fecha_apertura|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-calendar-x text-muted"></i>
+                                <strong>Cierre:</strong>
+                                <br>{{ vacante.fecha_cierre|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Descripción -->
+                    <div class="border-top pt-3 mb-3">
+                        <p class="small mb-0">
+                            {{ vacante.descripcion|truncatewords:20 }}
+                        </p>
+                    </div>
+                    
+                    <!-- Candidatos aplicados -->
+                    <div class="candidatos-count">
+                        <div class="number">{{ vacante.procesos.count }}</div>
+                        <small class="text-muted">Candidato{{ vacante.procesos.count|pluralize }} aplicado{{ vacante.procesos.count|pluralize }}</small>
+                        
+                        <!-- Barra de progreso -->
+                        {% if vacante.numero_vacantes > 0 %}
+                        <div class="progress progress-bar-custom mt-2">
+                            {% with porcentaje=vacante.procesos.count|floatformat:0 %}
+                            {% widthratio vacante.procesos.count vacante.numero_vacantes 100 as fill_percent %}
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {% if fill_percent > 100 %}100{% else %}{{ fill_percent }}{% endif %}%">
+                            </div>
+                            {% endwith %}
+                        </div>
+                        <small class="text-muted">
+                            Meta: {{ vacante.numero_vacantes }} candidato{{ vacante.numero_vacantes|pluralize }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Responsable -->
+                    {% if vacante.responsable %}
+                    <div class="border-top pt-3 mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-person-badge"></i>
+                            Responsable: {{ vacante.responsable.get_full_name }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Botones de acción -->
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'talento_humano:detalle_vacante' vacante.pk %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-kanban"></i> Ver Kanban de Candidatos
+                            </a>
+                            
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'talento_humano:editar_vacante' vacante.pk %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <a href="{% url 'talento_humano:crear_candidato' %}?vacante={{ vacante.pk }}" 
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-person-plus"></i> Agregar Candidato
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer con fecha de creación -->
+                <div class="card-footer bg-light text-muted small">
+                    <i class="bi bi-clock-history"></i>
+                    Publicada {{ vacante.fecha_creacion|timesince }} atrás
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if vacantes.has_other_pages %}
+    <nav aria-label="Paginación de vacantes">
+        <ul class="pagination justify-content-center">
+            {% if vacantes.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ vacantes.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    Página {{ vacantes.number }} de {{ vacantes.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if vacantes.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ vacantes.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ vacantes.paginator.num_pages }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-megaphone" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No hay vacantes publicadas</h4>
+        <p class="text-muted">Crea tu primera convocatoria para comenzar el proceso de selección</p>
+        <a href="{% url 'talento_humano:crear_vacante' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Crear Primera Vacante
+        </a>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}

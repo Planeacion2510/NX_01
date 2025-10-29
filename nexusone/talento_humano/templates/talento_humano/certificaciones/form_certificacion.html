@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generar Certificación Laboral{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-section h5 {
+        color: #667eea;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .checkbox-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+    }
+    
+    .checkbox-card:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .checkbox-card input:checked + label {
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .preview-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        min-height: 400px;
+    }
+    
+    .preview-header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .preview-body {
+        line-height: 1.8;
+    }
+    
+    .tipo-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        height: 100%;
+    }
+    
+    .tipo-card:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .tipo-card.selected {
+        border-color: #667eea;
+        background: #e7f0ff;
+    }
+    
+    .tipo-card i {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'talento_humano:dashboard' %}">Talento Humano</a></li>
+                    <li class="breadcrumb-item active">Generar Certificación</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                <i class="bi bi-file-earmark-pdf-fill"></i> 
+                Generar Certificación Laboral
+            </h1>
+            <p class="text-muted">Complete los datos para generar la certificación en PDF</p>
+        </div>
+    </div>
+    
+    <form method="post" id="certificacionForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-7">
+                
+                <!-- Sección 1: Selección de Empleado -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person-fill"></i> Empleado</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Seleccione el empleado *</label>
+                            {{ form.empleado }}
+                            {% if form.empleado.errors %}
+                            <div class="text-danger small">{{ form.empleado.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Info del empleado (se llena con JS/AJAX) -->
+                    <div id="empleadoInfo" class="alert alert-info mt-3" style="display: none;">
+                        <div id="empleadoDetalles"></div>
+                    </div>
+                </div>
+                
+                <!-- Sección 2: Tipo de Certificación -->
+                <div class="form-section">
+                    <h5><i class="bi bi-file-earmark-text"></i> Tipo de Certificación</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="tipo-card" data-tipo="basica">
+                                <input type="radio" name="tipo" value="basica" id="tipo_basica" class="d-none"
+                                       {% if form.tipo.value == 'basica' %}checked{% endif %}>
+                                <label for="tipo_basica" class="mb-0 w-100">
+                                    <i class="bi bi-file-text d-block"></i>
+                                    <strong>Básica</strong>
+                                    <p class="small text-muted mb-0">
+                                        Certificado estándar con información básica
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="tipo-card" data-tipo="detallada">
+                                <input type="radio" name="tipo" value="detallada" id="tipo_detallada" class="d-none"
+                                       {% if form.tipo.value == 'detallada' %}checked{% endif %}>
+                                <label for="tipo_detallada" class="mb-0 w-100">
+                                    <i class="bi bi-file-text-fill d-block"></i>
+                                    <strong>Detallada</strong>
+                                    <p class="small text-muted mb-0">
+                                        Incluye información salarial completa
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="tipo-card" data-tipo="bancaria">
+                                <input type="radio" name="tipo" value="bancaria" id="tipo_bancaria" class="d-none"
+                                       {% if form.tipo.value == 'bancaria' %}checked{% endif %}>
+                                <label for="tipo_bancaria" class="mb-0 w-100">
+                                    <i class="bi bi-bank d-block"></i>
+                                    <strong>Bancaria</strong>
+                                    <p class="small text-muted mb-0">
+                                        Para trámites bancarios y créditos
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="tipo-card" data-tipo="paz_salvo">
+                                <input type="radio" name="tipo" value="paz_salvo" id="tipo_paz_salvo" class="d-none"
+                                       {% if form.tipo.value == 'paz_salvo' %}checked{% endif %}>
+                                <label for="tipo_paz_salvo" class="mb-0 w-100">
+                                    <i class="bi bi-check-circle d-block"></i>
+                                    <strong>Paz y Salvo</strong>
+                                    <p class="small text-muted mb-0">
+                                        Certificado de paz y salvo laboral
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.tipo.errors %}
+                    <div class="text-danger small mt-2">{{ form.tipo.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Sección 3: Destinatario -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person-badge"></i> Destinatario</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Para</label>
+                            {{ form.destinatario }}
+                            {% if form.destinatario.errors %}
+                            <div class="text-danger small">{{ form.destinatario.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Ejemplo: "A quien corresponda", "Banco de Bogotá", "Entidad X"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección 4: Información a Incluir -->
+                <div class="form-section">
+                    <h5><i class="bi bi-list-check"></i> Información a Incluir</h5>
+                    
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            Seleccione la información que desea incluir en la certificación
+                        </small>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_cargo }}
+                            <label class="form-check-label" for="{{ form.incluir_cargo.id_for_label }}">
+                                <strong>Cargo</strong>
+                                <p class="small text-muted mb-0">Incluir el cargo que desempeña</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_fecha_ingreso }}
+                            <label class="form-check-label" for="{{ form.incluir_fecha_ingreso.id_for_label }}">
+                                <strong>Fecha de Ingreso</strong>
+                                <p class="small text-muted mb-0">Fecha en que inició labores</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_tipo_contrato }}
+                            <label class="form-check-label" for="{{ form.incluir_tipo_contrato.id_for_label }}">
+                                <strong>Tipo de Contrato</strong>
+                                <p class="small text-muted mb-0">Tipo de vinculación laboral</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_salario }}
+                            <label class="form-check-label" for="{{ form.incluir_salario.id_for_label }}">
+                                <strong>Salario</strong>
+                                <p class="small text-muted mb-0">Salario básico mensual</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_funciones }}
+                            <label class="form-check-label" for="{{ form.incluir_funciones.id_for_label }}">
+                                <strong>Funciones</strong>
+                                <p class="small text-muted mb-0">Descripción de funciones del cargo</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-card">
+                        <div class="form-check">
+                            {{ form.incluir_prestaciones }}
+                            <label class="form-check-label" for="{{ form.incluir_prestaciones.id_for_label }}">
+                                <strong>Prestaciones Sociales</strong>
+                                <p class="small text-muted mb-0">Detalle de prestaciones</p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección 5: Contenido Adicional -->
+                <div class="form-section">
+                    <h5><i class="bi bi-chat-text"></i> Contenido Adicional (Opcional)</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Texto adicional</label>
+                            {{ form.contenido_adicional }}
+                            {% if form.contenido_adicional.errors %}
+                            <div class="text-danger small">{{ form.contenido_adicional.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Agregue cualquier información adicional que desee incluir en la certificación
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Columna derecha: Vista Previa -->
+            <div class="col-md-5">
+                
+                <div class="form-section sticky-top" style="top: 20px;">
+                    <h5><i class="bi bi-eye"></i> Vista Previa</h5>
+                    
+                    <div class="preview-section">
+                        <div class="preview-header">
+                            <h6 class="mb-0">DINNOVA S.A.S.</h6>
+                            <small>NIT: 900.XXX.XXX-X</small>
+                        </div>
+                        
+                        <div class="preview-body">
+                            <p class="text-center mb-4">
+                                <strong>CERTIFICACIÓN LABORAL</strong>
+                            </p>
+                            
+                            <p>
+                                <span id="preview-destinatario">A quien corresponda</span>
+                            </p>
+                            
+                            <p>
+                                La suscrita Gerente de Talento Humano de <strong>DINNOVA S.A.S.</strong>,
+                                hace constar que:
+                            </p>
+                            
+                            <div id="preview-contenido">
+                                <p class="text-muted text-center py-5">
+                                    <i class="bi bi-file-earmark-text" style="font-size: 3rem;"></i>
+                                    <br>
+                                    Seleccione un empleado y las opciones para ver la vista previa
+                                </p>
+                            </div>
+                            
+                            <p class="mt-4">
+                                Se expide la presente certificación a solicitud del interesado.
+                            </p>
+                            
+                            <div class="text-center mt-5">
+                                <p class="mb-0">_______________________________</p>
+                                <p class="mb-0"><strong>GERENTE DE TALENTO HUMANO</strong></p>
+                                <p class="mb-0 small">DINNOVA S.A.S.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <small>
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Esta es una vista previa aproximada. El documento final será generado en PDF.
+                        </small>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="form-section">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'talento_humano:dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-file-earmark-pdf"></i> 
+                            Generar Certificación PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </form>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Resaltar tipo de certificación seleccionado
+    document.querySelectorAll('.tipo-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            actualizarPresets(radio.value);
+        });
+    });
+    
+    // Marcar como seleccionado el que ya viene checked
+    document.querySelectorAll('input[name="tipo"]:checked').forEach(radio => {
+        radio.closest('.tipo-card').classList.add('selected');
+    });
+    
+    // Actualizar presets según tipo
+    function actualizarPresets(tipo) {
+        const presets = {
+            'basica': {
+                cargo: true,
+                fecha_ingreso: true,
+                tipo_contrato: true,
+                salario: false,
+                funciones: false,
+                prestaciones: false
+            },
+            'detallada': {
+                cargo: true,
+                fecha_ingreso: true,
+                tipo_contrato: true,
+                salario: true,
+                funciones: true,
+                prestaciones: true
+            },
+            'bancaria': {
+                cargo: true,
+                fecha_ingreso: true,
+                tipo_contrato: true,
+                salario: true,
+                funciones: false,
+                prestaciones: false
+            },
+            'paz_salvo': {
+                cargo: true,
+                fecha_ingreso: true,
+                tipo_contrato: true,
+                salario: false,
+                funciones: false,
+                prestaciones: false
+            }
+        };
+        
+        const preset = presets[tipo] || presets['basica'];
+        
+        document.getElementById('id_incluir_cargo').checked = preset.cargo;
+        document.getElementById('id_incluir_fecha_ingreso').checked = preset.fecha_ingreso;
+        document.getElementById('id_incluir_tipo_contrato').checked = preset.tipo_contrato;
+        document.getElementById('id_incluir_salario').checked = preset.salario;
+        document.getElementById('id_incluir_funciones').checked = preset.funciones;
+        document.getElementById('id_incluir_prestaciones').checked = preset.prestaciones;
+    }
+    
+    // Actualizar preview del destinatario
+    document.querySelector('input[name="destinatario"]').addEventListener('input', function() {
+        document.getElementById('preview-destinatario').textContent = this.value || 'A quien corresponda';
+    });
+    
+    // Validación del formulario
+    document.getElementById('certificacionForm').addEventListener('submit', function(e) {
+        const empleado = document.querySelector('select[name="empleado"]').value;
+        const tipo = document.querySelector('input[name="tipo"]:checked');
+        
+        if (!empleado) {
+            e.preventDefault();
+            alert('Por favor seleccione un empleado');
+            return false;
+        }
+        
+        if (!tipo) {
+            e.preventDefault();
+            alert('Por favor seleccione un tipo de certificación');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

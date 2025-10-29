@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Permisos y Ausencias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permisos-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .permiso-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+        transition: all 0.3s;
+    }
+    
+    .permiso-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .permiso-card.aprobado {
+        border-left-color: #28a745;
+        background: #f8fff8;
+    }
+    
+    .permiso-card.rechazado {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .permiso-card.pendiente {
+        border-left-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .estado-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .estado-aprobado {
+        background: #28a745;
+        color: white;
+    }
+    
+    .estado-rechazado {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .estado-pendiente {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .stat-box.pendientes .number { color: #ffc107; }
+    .stat-box.aprobados .number { color: #28a745; }
+    .stat-box.rechazados .number { color: #dc3545; }
+    
+    .tipo-permiso-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    
+    .tipo-medico { background: #e3f2fd; color: #2196f3; }
+    .tipo-personal { background: #f3e5f5; color: #9c27b0; }
+    .tipo-estudio { background: #fff3e0; color: #ff9800; }
+    .tipo-calamidad { background: #ffebee; color: #f44336; }
+    .tipo-otro { background: #e8f5e9; color: #4caf50; }
+    
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-dots {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #e0e0e0;
+    }
+    
+    .timeline-dot.active {
+        background: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="permisos-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">📋 Permisos y Ausencias</h1>
+                <p class="mb-0 opacity-75">
+                    Gestión de solicitudes de permisos y control de ausentismo
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_permiso' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Solicitar Permiso
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number">{{ total_permisos }}</div>
+                <div class="text-muted">Total Permisos</div>
+                <small class="text-muted">Este año</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box pendientes">
+                <div class="number">{{ permisos_pendientes }}</div>
+                <div class="text-muted">Pendientes</div>
+                <small class="text-muted">Por revisar</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box aprobados">
+                <div class="number">{{ permisos_aprobados }}</div>
+                <div class="text-muted">Aprobados</div>
+                <small class="text-muted">Este mes</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-info">{{ dias_ausencia_total }}</div>
+                <div class="text-muted">Días de Ausencia</div>
+                <small class="text-muted">Acumulados</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <select name="estado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if request.GET.estado == 'pendiente' %}selected{% endif %}>Pendientes</option>
+                        <option value="aprobado" {% if request.GET.estado == 'aprobado' %}selected{% endif %}>Aprobados</option>
+                        <option value="rechazado" {% if request.GET.estado == 'rechazado' %}selected{% endif %}>Rechazados</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Tipo</label>
+                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="medico" {% if request.GET.tipo == 'medico' %}selected{% endif %}>Médico</option>
+                        <option value="personal" {% if request.GET.tipo == 'personal' %}selected{% endif %}>Personal</option>
+                        <option value="estudio" {% if request.GET.tipo == 'estudio' %}selected{% endif %}>Estudio</option>
+                        <option value="calamidad" {% if request.GET.tipo == 'calamidad' %}selected{% endif %}>Calamidad</option>
+                        <option value="otro" {% if request.GET.tipo == 'otro' %}selected{% endif %}>Otro</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Empleado</label>
+                    <select name="empleado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        {% for empleado in empleados_lista %}
+                        <option value="{{ empleado.id }}" {% if request.GET.empleado == empleado.id|stringformat:"s" %}selected{% endif %}>
+                            {{ empleado.get_nombre_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <a href="{% url 'talento_humano:lista_permisos' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Tabs de navegación rápida -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.estado %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_permisos' %}">
+                Todos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'pendiente' %}active{% endif %}" 
+               href="?estado=pendiente">
+                Pendientes ({{ permisos_pendientes }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'aprobado' %}active{% endif %}" 
+               href="?estado=aprobado">
+                Aprobados
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'rechazado' %}active{% endif %}" 
+               href="?estado=rechazado">
+                Rechazados
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de permisos -->
+    {% if permisos %}
+    
+    {% for permiso in permisos %}
+    <div class="permiso-card {{ permiso.estado }}">
+        <div class="row align-items-center">
+            
+            <!-- Columna izquierda: Información del empleado y permiso -->
+            <div class="col-md-7">
+                
+                <!-- Empleado -->
+                <div class="d-flex align-items-center mb-3">
+                    <!-- Icono del tipo de permiso -->
+                    <div class="tipo-permiso-icon tipo-{{ permiso.tipo }}">
+                        {% if permiso.tipo == 'medico' %}
+                        <i class="bi bi-heart-pulse"></i>
+                        {% elif permiso.tipo == 'personal' %}
+                        <i class="bi bi-person"></i>
+                        {% elif permiso.tipo == 'estudio' %}
+                        <i class="bi bi-book"></i>
+                        {% elif permiso.tipo == 'calamidad' %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                        {% else %}
+                        <i class="bi bi-calendar-event"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ permiso.empleado.get_nombre_completo }}</h5>
+                        <div class="small text-muted">
+                            <i class="bi bi-briefcase"></i> {{ permiso.empleado.cargo }}
+                            <span class="mx-2">|</span>
+                            <i class="bi bi-diagram-3"></i> {{ permiso.empleado.area }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tipo de permiso -->
+                <div class="mb-2">
+                    <span class="badge bg-primary">
+                        {{ permiso.get_tipo_display }}
+                    </span>
+                    {% if permiso.remunerado %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-cash"></i> Remunerado
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-cash-stack"></i> No Remunerado
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Fechas -->
+                <div class="row g-2 small mb-3">
+                    <div class="col-md-4">
+                        <i class="bi bi-calendar-check text-success"></i>
+                        <strong>Inicio:</strong>
+                        <br>{{ permiso.fecha_inicio|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-calendar-x text-danger"></i>
+                        <strong>Fin:</strong>
+                        <br>{{ permiso.fecha_fin|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-clock text-primary"></i>
+                        <strong>Duración:</strong>
+                        <br>{{ permiso.dias_solicitados }} día{{ permiso.dias_solicitados|pluralize }}
+                    </div>
+                </div>
+                
+                <!-- Motivo -->
+                <div class="border-top pt-3">
+                    <strong class="d-block mb-1 small text-muted">Motivo:</strong>
+                    <p class="mb-0">{{ permiso.motivo }}</p>
+                </div>
+                
+                <!-- Soporte adjunto -->
+                {% if permiso.archivo_soporte %}
+                <div class="mt-2">
+                    <a href="{{ permiso.archivo_soporte.url }}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-paperclip"></i> Ver Soporte
+                    </a>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Columna central: Estado y timeline -->
+            <div class="col-md-3">
+                
+                <!-- Estado -->
+                <div class="text-center mb-3">
+                    <span class="estado-badge estado-{{ permiso.estado }}">
+                        {% if permiso.estado == 'aprobado' %}
+                        <i class="bi bi-check-circle"></i> Aprobado
+                        {% elif permiso.estado == 'rechazado' %}
+                        <i class="bi bi-x-circle"></i> Rechazado
+                        {% else %}
+                        <i class="bi bi-clock"></i> Pendiente
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <!-- Timeline de aprobación -->
+                <div class="timeline-dots justify-content-center">
+                    <div class="timeline-dot active" title="Solicitado"></div>
+                    <div class="timeline-dot {% if permiso.estado != 'pendiente' %}active{% endif %}" 
+                         title="Revisado"></div>
+                    <div class="timeline-dot {% if permiso.estado == 'aprobado' %}active{% endif %}" 
+                         title="{% if permiso.estado == 'aprobado' %}Aprobado{% else %}Finalizado{% endif %}"></div>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="mt-3 small text-center">
+                    <div class="text-muted mb-1">Solicitado:</div>
+                    <strong>{{ permiso.fecha_solicitud|date:"d/m/Y" }}</strong>
+                    
+                    {% if permiso.aprobador %}
+                    <div class="text-muted mt-2 mb-1">
+                        {% if permiso.estado == 'aprobado' %}Aprobado{% else %}Revisado{% endif %} por:
+                    </div>
+                    <strong>{{ permiso.aprobador.get_full_name }}</strong>
+                    {% endif %}
+                    
+                    {% if permiso.fecha_respuesta %}
+                    <div class="text-muted mt-1">
+                        {{ permiso.fecha_respuesta|date:"d/m/Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Observaciones del aprobador -->
+                {% if permiso.observaciones_aprobacion %}
+                <div class="mt-3">
+                    <div class="alert alert-info mb-0 py-2 small">
+                        <strong>Observaciones:</strong>
+                        <br>{{ permiso.observaciones_aprobacion }}
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Columna derecha: Acciones -->
+            <div class="col-md-2 text-end">
+                <div class="d-grid gap-2">
+                    
+                    {% if permiso.estado == 'pendiente' %}
+                    <button type="button" 
+                            class="btn btn-success btn-sm"
+                            onclick="aprobarPermiso({{ permiso.pk }})">
+                        <i class="bi bi-check-circle"></i> Aprobar
+                    </button>
+                    
+                    <button type="button" 
+                            class="btn btn-danger btn-sm"
+                            onclick="rechazarPermiso({{ permiso.pk }})">
+                        <i class="bi bi-x-circle"></i> Rechazar
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'talento_humano:detalle_permiso' permiso.pk %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> Ver Detalles
+                    </a>
+                    
+                    {% if permiso.estado == 'pendiente' %}
+                    <a href="{% url 'talento_humano:editar_permiso' permiso.pk %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    {% endif %}
+                    
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Paginación -->
+    {% if permisos.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if permisos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ permisos.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ permisos.number }} / {{ permisos.paginator.num_pages }}</span>
+            </li>
+            
+            {% if permisos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ permisos.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-check" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No hay permisos registrados</h4>
+        <p class="text-muted">
+            {% if request.GET.estado or request.GET.tipo or request.GET.empleado %}
+            No se encontraron permisos con los filtros aplicados
+            {% else %}
+            Comienza registrando las solicitudes de permisos
+            {% endif %}
+        </p>
+        {% if not request.GET.estado and not request.GET.tipo %}
+        <a href="{% url 'talento_humano:crear_permiso' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Solicitar Primer Permiso
+        </a>
+        {% endif %}
+    </div>
+    
+    {% endif %}
+    
+</div>
+
+<!-- Modal para aprobar permiso -->
+<div class="modal fade" id="aprobarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle"></i> Aprobar Permiso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="aprobarForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Está seguro de aprobar este permiso?</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones (opcional)</label>
+                        <textarea name="observaciones" class="form-control" rows="3" 
+                                  placeholder="Comentarios adicionales..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Aprobar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para rechazar permiso -->
+<div class="modal fade" id="rechazarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-x-circle"></i> Rechazar Permiso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="rechazarForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Está seguro de rechazar este permiso?</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motivo del rechazo *</label>
+                        <textarea name="observaciones" class="form-control" rows="3" 
+                                  placeholder="Explique el motivo del rechazo..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Rechazar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function aprobarPermiso(id) {
+        const modal = new bootstrap.Modal(document.getElementById('aprobarModal'));
+        const form = document.getElementById('aprobarForm');
+        form.action = `/talento-humano/permisos/${id}/aprobar/`;
+        modal.show();
+    }
+    
+    function rechazarPermiso(id) {
+        const modal = new bootstrap.Modal(document.getElementById('rechazarModal'));
+        const form = document.getElementById('rechazarForm');
+        form.action = `/talento-humano/permisos/${id}/rechazar/`;
+        modal.show();
+    }
+</script>
+{% endblock %}

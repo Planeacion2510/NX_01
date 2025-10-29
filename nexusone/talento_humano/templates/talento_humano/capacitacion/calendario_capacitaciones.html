@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendario de Capacitaciones{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .calendar-controls {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .calendar-day-header {
+        background: #667eea;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .calendar-day {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        min-height: 120px;
+        padding: 10px;
+        position: relative;
+        transition: all 0.3s;
+    }
+    
+    .calendar-day:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .calendar-day.other-month {
+        background: #f8f9fa;
+        opacity: 0.5;
+    }
+    
+    .calendar-day.today {
+        border-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .calendar-day.has-event {
+        border-color: #667eea;
+        background: #f0f4ff;
+    }
+    
+    .day-number {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .calendar-day.today .day-number {
+        color: #ffc107;
+    }
+    
+    .event-item {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-bottom: 5px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .event-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    .event-item.tecnica { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
+    .event-item.seguridad { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); }
+    .event-item.administrativa { background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%); }
+    .event-item.liderazgo { background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%); color: #333; }
+    .event-item.servicio { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+    
+    .legend {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    
+    .upcoming-list {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .upcoming-item {
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+    
+    .upcoming-item:hover {
+        background: #e7f0ff;
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="calendar-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-2">📅 Calendario de Capacitaciones</h1>
+                <p class="mb-0 opacity-75">Planificación y seguimiento del plan de formación</p>
+            </div>
+            <div>
+                <a href="{% url 'talento_humano:lista_capacitaciones' %}" class="btn btn-light me-2">
+                    <i class="bi bi-list"></i> Vista Lista
+                </a>
+                <a href="{% url 'talento_humano:crear_capacitacion' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Nueva Capacitación
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Controles del calendario -->
+    <div class="calendar-controls">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="btn-group" role="group">
+                    <a href="?mes={{ mes_anterior }}&año={{ año_anterior }}" class="btn btn-outline-primary">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                    <button type="button" class="btn btn-primary" disabled>
+                        {{ mes_nombre }} {{ año }}
+                    </button>
+                    <a href="?mes={{ mes_siguiente }}&año={{ año_siguiente }}" class="btn btn-outline-primary">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <a href="{% url 'talento_humano:calendario_capacitaciones' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-calendar-today"></i> Hoy
+                </a>
+            </div>
+            
+            <div class="col-md-4 text-end">
+                <span class="badge bg-primary p-2">
+                    <i class="bi bi-book"></i> {{ total_capacitaciones }} capacitación{{ total_capacitaciones|pluralize:"es" }} este mes
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Columna principal: Calendario -->
+        <div class="col-lg-9">
+            
+            <!-- Calendario -->
+            <div class="calendar-grid">
+                <!-- Headers de días -->
+                <div class="calendar-day-header">Lunes</div>
+                <div class="calendar-day-header">Martes</div>
+                <div class="calendar-day-header">Miércoles</div>
+                <div class="calendar-day-header">Jueves</div>
+                <div class="calendar-day-header">Viernes</div>
+                <div class="calendar-day-header">Sábado</div>
+                <div class="calendar-day-header">Domingo</div>
+                
+                <!-- Días del calendario -->
+                {% for dia in dias_calendario %}
+                <div class="calendar-day 
+                    {% if dia.es_hoy %}today{% endif %}
+                    {% if dia.es_otro_mes %}other-month{% endif %}
+                    {% if dia.capacitaciones %}has-event{% endif %}">
+                    
+                    <div class="day-number">{{ dia.numero }}</div>
+                    
+                    {% for capacitacion in dia.capacitaciones %}
+                    <div class="event-item {{ capacitacion.tipo }}" 
+                         onclick="verCapacitacion({{ capacitacion.id }})"
+                         title="{{ capacitacion.nombre }}">
+                        <i class="bi bi-clock"></i>
+                        {{ capacitacion.nombre|truncatewords:3 }}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if dia.capacitaciones|length > 2 %}
+                    <div class="small text-muted text-center mt-1">
+                        +{{ dia.capacitaciones|length|add:"-2" }} más
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Leyenda -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);"></div>
+                    <span>Técnica Operativa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);"></div>
+                    <span>Seguridad y Salud</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);"></div>
+                    <span>Administrativa</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%);"></div>
+                    <span>Liderazgo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);"></div>
+                    <span>Servicio al Cliente</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="border: 2px solid #ffc107;"></div>
+                    <span>Día de hoy</span>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Columna lateral: Próximas capacitaciones -->
+        <div class="col-lg-3">
+            <div class="upcoming-list">
+                <h5 class="mb-4">
+                    <i class="bi bi-calendar-check"></i> Próximas Capacitaciones
+                </h5>
+                
+                {% if proximas_capacitaciones %}
+                {% for capacitacion in proximas_capacitaciones %}
+                <div class="upcoming-item">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong class="text-primary">{{ capacitacion.nombre }}</strong>
+                        <span class="badge 
+                            {% if capacitacion.tipo == 'tecnica' %}bg-primary
+                            {% elif capacitacion.tipo == 'seguridad' %}bg-danger
+                            {% elif capacitacion.tipo == 'administrativa' %}bg-info
+                            {% elif capacitacion.tipo == 'liderazgo' %}bg-warning text-dark
+                            {% elif capacitacion.tipo == 'servicio' %}bg-success
+                            {% else %}bg-secondary
+                            {% endif %}">
+                            {{ capacitacion.get_tipo_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="small text-muted">
+                        <i class="bi bi-calendar"></i> {{ capacitacion.fecha_programada|date:"d/m/Y" }}
+                        <br>
+                        <i class="bi bi-clock"></i> {{ capacitacion.duracion_horas }}h
+                        <br>
+                        <i class="bi bi-person"></i> {{ capacitacion.facilitador }}
+                    </div>
+                    
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-people"></i>
+                            {{ capacitacion.get_inscritos }}/{{ capacitacion.cupo_maximo }} inscritos
+                        </small>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <a href="{% url 'talento_humano:detalle_capacitacion' capacitacion.pk %}" 
+                           class="btn btn-sm btn-outline-primary w-100">
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                    <p class="mt-2 mb-0">No hay capacitaciones próximas</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Estadísticas del mes -->
+            <div class="upcoming-list mt-3">
+                <h5 class="mb-3">
+                    <i class="bi bi-graph-up"></i> Estadísticas
+                </h5>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Capacitaciones:</span>
+                    <strong>{{ total_capacitaciones }}</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Horas totales:</span>
+                    <strong>{{ horas_totales }}h</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Inscritos:</span>
+                    <strong>{{ total_inscritos }}</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Inversión:</span>
+                    <strong>${{ inversion_total|floatformat:0 }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Modal para ver detalles de capacitación -->
+<div class="modal fade" id="capacitacionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="capacitacionModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="capacitacionModalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" id="verDetalleBtn" class="btn btn-primary">Ver Detalles Completos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function verCapacitacion(id) {
+        // Abrir modal con información de la capacitación
+        const modal = new bootstrap.Modal(document.getElementById('capacitacionModal'));
+        
+        // Cargar datos (aquí se haría una petición AJAX)
+        fetch(`/talento-humano/capacitaciones/${id}/detalle-ajax/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('capacitacionModalLabel').textContent = data.nombre;
+                document.getElementById('capacitacionModalBody').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tipo:</strong> ${data.tipo}</p>
+                            <p><strong>Modalidad:</strong> ${data.modalidad}</p>
+                            <p><strong>Fecha:</strong> ${data.fecha}</p>
+                            <p><strong>Duración:</strong> ${data.duracion} horas</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Facilitador:</strong> ${data.facilitador}</p>
+                            <p><strong>Lugar:</strong> ${data.lugar}</p>
+                            <p><strong>Inscritos:</strong> ${data.inscritos}/${data.cupo}</p>
+                            <p><strong>Costo:</strong> $${data.costo}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Descripción:</h6>
+                        <p>${data.descripcion}</p>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Objetivo:</h6>
+                        <p>${data.objetivo}</p>
+                    </div>
+                `;
+                document.getElementById('verDetalleBtn').href = `/talento-humano/capacitaciones/${id}/`;
+            })
+            .catch(error => {
+                // Si no hay endpoint AJAX, redirigir directamente
+                window.location.href = `/talento-humano/capacitaciones/${id}/`;
+            });
+        
+        modal.show();
+    }
+    
+    // Marcar el día de hoy
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().getDate();
+        document.querySelectorAll('.calendar-day').forEach(day => {
+            const dayNumber = parseInt(day.querySelector('.day-number').textContent);
+            if (dayNumber === today && !day.classList.contains('other-month')) {
+                day.classList.add('today');
+            }
+        });
+    });
+</script>
+{% endblock %}

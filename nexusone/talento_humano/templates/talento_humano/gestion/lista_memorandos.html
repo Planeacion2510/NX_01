@@ -1,0 +1,636 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Memorandos y Llamados de Atención{% endblock %}
+
+{% block extra_css %}
+<style>
+    .memorandos-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .memorando-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 6px solid #dc3545;
+        transition: all 0.3s;
+    }
+    
+    .memorando-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .memorando-card.verbal {
+        border-left-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .memorando-card.escrito {
+        border-left-color: #fd7e14;
+        background: #fff8f0;
+    }
+    
+    .memorando-card.suspension {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .memorando-card.despido {
+        border-left-color: #000;
+        background: #f5f5f5;
+    }
+    
+    .gravedad-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .gravedad-leve {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .gravedad-grave {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .gravedad-muy-grave {
+        background: #000;
+        color: white;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .stat-box.leves .number { color: #ffc107; }
+    .stat-box.graves .number { color: #dc3545; }
+    .stat-box.muy-graves .number { color: #000; }
+    
+    .historico-badge {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+        margin-right: 5px;
+    }
+    
+    .historico-badge.active {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    
+    .tipo-verbal { background: #fff3cd; color: #856404; }
+    .tipo-escrito { background: #f8d7da; color: #721c24; }
+    .tipo-suspension { background: #f5c6cb; color: #491217; }
+    .tipo-despido { background: #333; color: white; }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #dc3545;
+        border-bottom-color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .reincidencia-alert {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="memorandos-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">⚠️ Memorandos y Llamados de Atención</h1>
+                <p class="mb-0 opacity-75">
+                    Registro de acciones disciplinarias según el Reglamento Interno de Trabajo
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_memorando' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Nuevo Memorando
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number">{{ total_memorandos }}</div>
+                <div class="text-muted">Total Memorandos</div>
+                <small class="text-muted">Este año</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box leves">
+                <div class="number">{{ faltas_leves }}</div>
+                <div class="text-muted">Faltas Leves</div>
+                <small class="text-muted">Amonestaciones</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box graves">
+                <div class="number">{{ faltas_graves }}</div>
+                <div class="text-muted">Faltas Graves</div>
+                <small class="text-muted">Requieren seguimiento</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box muy-graves">
+                <div class="number">{{ faltas_muy_graves }}</div>
+                <div class="text-muted">Faltas Muy Graves</div>
+                <small class="text-muted">Situación crítica</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Tipo de Sanción</label>
+                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="verbal" {% if request.GET.tipo == 'verbal' %}selected{% endif %}>Llamado Verbal</option>
+                        <option value="escrito" {% if request.GET.tipo == 'escrito' %}selected{% endif %}>Llamado Escrito</option>
+                        <option value="suspension" {% if request.GET.tipo == 'suspension' %}selected{% endif %}>Suspensión</option>
+                        <option value="despido" {% if request.GET.tipo == 'despido' %}selected{% endif %}>Despido</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Gravedad</label>
+                    <select name="gravedad" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        <option value="leve" {% if request.GET.gravedad == 'leve' %}selected{% endif %}>Leve</option>
+                        <option value="grave" {% if request.GET.gravedad == 'grave' %}selected{% endif %}>Grave</option>
+                        <option value="muy_grave" {% if request.GET.gravedad == 'muy_grave' %}selected{% endif %}>Muy Grave</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Empleado</label>
+                    <select name="empleado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        {% for empleado in empleados_lista %}
+                        <option value="{{ empleado.id }}" {% if request.GET.empleado == empleado.id|stringformat:"s" %}selected{% endif %}>
+                            {{ empleado.get_nombre_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <a href="{% url 'talento_humano:lista_memorandos' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Tabs de navegación rápida -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.tipo %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_memorandos' %}">
+                Todos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.tipo == 'verbal' %}active{% endif %}" 
+               href="?tipo=verbal">
+                Verbales
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.tipo == 'escrito' %}active{% endif %}" 
+               href="?tipo=escrito">
+                Escritos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.tipo == 'suspension' %}active{% endif %}" 
+               href="?tipo=suspension">
+                Suspensiones
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.gravedad == 'muy_grave' %}active{% endif %}" 
+               href="?gravedad=muy_grave">
+                Muy Graves
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de memorandos -->
+    {% if memorandos %}
+    
+    {% for memorando in memorandos %}
+    <div class="memorando-card {{ memorando.tipo }}">
+        <div class="row align-items-center">
+            
+            <!-- Columna izquierda: Empleado e información -->
+            <div class="col-md-7">
+                
+                <!-- Empleado -->
+                <div class="d-flex align-items-center mb-3">
+                    <!-- Icono del tipo -->
+                    <div class="tipo-icon tipo-{{ memorando.tipo }}">
+                        {% if memorando.tipo == 'verbal' %}
+                        <i class="bi bi-megaphone"></i>
+                        {% elif memorando.tipo == 'escrito' %}
+                        <i class="bi bi-file-text"></i>
+                        {% elif memorando.tipo == 'suspension' %}
+                        <i class="bi bi-x-octagon"></i>
+                        {% else %}
+                        <i class="bi bi-ban"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ memorando.empleado.get_nombre_completo }}</h5>
+                        <div class="small text-muted">
+                            <i class="bi bi-briefcase"></i> {{ memorando.empleado.cargo }}
+                            <span class="mx-2">|</span>
+                            <i class="bi bi-diagram-3"></i> {{ memorando.empleado.area }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información del memorando -->
+                <div class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-auto">
+                            <span class="badge bg-danger">
+                                {{ memorando.get_tipo_display }}
+                            </span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="gravedad-badge gravedad-{{ memorando.gravedad }}">
+                                {{ memorando.get_gravedad_display }}
+                            </span>
+                        </div>
+                        {% if memorando.reincidente %}
+                        <div class="col-auto">
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-exclamation-triangle"></i> Reincidente
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Fechas -->
+                <div class="row g-2 small mb-3">
+                    <div class="col-md-4">
+                        <i class="bi bi-calendar-event text-danger"></i>
+                        <strong>Fecha del Hecho:</strong>
+                        <br>{{ memorando.fecha_hecho|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-calendar-check text-primary"></i>
+                        <strong>Fecha Emisión:</strong>
+                        <br>{{ memorando.fecha_emision|date:"d/m/Y" }}
+                    </div>
+                    {% if memorando.dias_suspension > 0 %}
+                    <div class="col-md-4">
+                        <i class="bi bi-clock-history text-warning"></i>
+                        <strong>Suspensión:</strong>
+                        <br>{{ memorando.dias_suspension }} día{{ memorando.dias_suspension|pluralize }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Falta cometida -->
+                <div class="border-top pt-3 mb-3">
+                    <strong class="d-block mb-2">Falta Cometida:</strong>
+                    <p class="mb-0">{{ memorando.falta_cometida }}</p>
+                </div>
+                
+                <!-- Descripción de los hechos -->
+                <div class="border-top pt-3">
+                    <strong class="d-block mb-2 small text-muted">Descripción de los Hechos:</strong>
+                    <p class="mb-0 small">{{ memorando.descripcion_hechos|truncatewords:30 }}</p>
+                </div>
+                
+                <!-- Artículo del reglamento -->
+                {% if memorando.articulo_reglamento %}
+                <div class="mt-2 small">
+                    <i class="bi bi-book text-muted"></i>
+                    <strong>Artículo:</strong> {{ memorando.articulo_reglamento }}
+                </div>
+                {% endif %}
+                
+                <!-- Historial de memorandos del empleado -->
+                {% if memorando.historial_count > 1 %}
+                <div class="reincidencia-alert mt-3">
+                    <strong>
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Historial: {{ memorando.historial_count }} memorando{{ memorando.historial_count|pluralize }} previo{{ memorando.historial_count|pluralize }}
+                    </strong>
+                    <div class="mt-2">
+                        {% for i in memorando.historial_visual %}
+                        <span class="historico-badge {% if forloop.counter <= memorando.historial_count %}active{% endif %}">
+                            {{ forloop.counter }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Columna central: Estado y firma -->
+            <div class="col-md-3">
+                
+                <!-- Firmado por empleado -->
+                <div class="text-center mb-3">
+                    {% if memorando.firmado_empleado %}
+                    <div class="alert alert-success mb-0 py-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <strong>Firmado</strong>
+                        <br>
+                        <small>{{ memorando.fecha_firma|date:"d/m/Y" }}</small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mb-0 py-2">
+                        <i class="bi bi-clock"></i>
+                        <strong>Pendiente de Firma</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Quien emite -->
+                <div class="small text-center">
+                    <div class="text-muted mb-1">Emitido por:</div>
+                    <strong>{{ memorando.emitido_por.get_full_name }}</strong>
+                    <br>
+                    <span class="text-muted">{{ memorando.emitido_por.cargo }}</span>
+                </div>
+                
+                <!-- Testigos -->
+                {% if memorando.testigos %}
+                <div class="mt-3 small">
+                    <div class="text-muted mb-1">Testigos:</div>
+                    <p class="mb-0">{{ memorando.testigos|truncatewords:10 }}</p>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Columna derecha: Acciones -->
+            <div class="col-md-2 text-end">
+                <div class="d-grid gap-2">
+                    
+                    <a href="{% url 'talento_humano:detalle_memorando' memorando.pk %}" 
+                       class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> Ver Detalles
+                    </a>
+                    
+                    {% if not memorando.firmado_empleado %}
+                    <button type="button" 
+                            class="btn btn-success btn-sm"
+                            onclick="registrarFirma({{ memorando.pk }})">
+                        <i class="bi bi-pen"></i> Registrar Firma
+                    </button>
+                    {% endif %}
+                    
+                    {% if memorando.archivo %}
+                    <a href="{{ memorando.archivo.url }}" 
+                       target="_blank" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-file-pdf"></i> Ver PDF
+                    </a>
+                    {% else %}
+                    <a href="{% url 'talento_humano:generar_pdf_memorando' memorando.pk %}" 
+                       target="_blank"
+                       class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-file-pdf"></i> Generar PDF
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'talento_humano:editar_memorando' memorando.pk %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Paginación -->
+    {% if memorandos.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if memorandos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ memorandos.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.gravedad %}&gravedad={{ request.GET.gravedad }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ memorandos.number }} / {{ memorandos.paginator.num_pages }}</span>
+            </li>
+            
+            {% if memorandos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ memorandos.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.gravedad %}&gravedad={{ request.GET.gravedad }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-shield-check" style="font-size: 5rem; color: #28a745;"></i>
+        <h4 class="mt-3">¡Excelente! No hay memorandos registrados</h4>
+        <p class="text-muted">
+            {% if request.GET.tipo or request.GET.gravedad or request.GET.empleado %}
+            No se encontraron memorandos con los filtros aplicados
+            {% else %}
+            Mantén un buen clima laboral y evita situaciones disciplinarias
+            {% endif %}
+        </p>
+    </div>
+    
+    {% endif %}
+    
+    <!-- Información legal -->
+    <div class="card mt-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Marco Legal y Proceso Disciplinario
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Tipos de Faltas</h6>
+                    <ul class="small">
+                        <li><strong>Leves:</strong> Primera vez, sin intención, sin consecuencias graves</li>
+                        <li><strong>Graves:</strong> Reincidencia, afectan operación, requieren corrección</li>
+                        <li><strong>Muy Graves:</strong> Justa causa de despido según Código Sustantivo del Trabajo</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Proceso Disciplinario</h6>
+                    <ul class="small">
+                        <li>1. Llamado de atención verbal (registro interno)</li>
+                        <li>2. Llamado de atención escrito (memorando)</li>
+                        <li>3. Suspensión (hasta 8 días según gravedad)</li>
+                        <li>4. Despido con justa causa (faltas muy graves)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Debido Proceso</h6>
+                    <p class="small mb-0">
+                        <strong>Importante:</strong> Todo trabajador tiene derecho a:
+                        (1) Conocer los cargos en su contra,
+                        (2) Presentar descargos por escrito,
+                        (3) Estar acompañado por un representante,
+                        (4) Recibir copia del memorando,
+                        (5) Apelar la decisión ante instancia superior.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Modal para registrar firma -->
+<div class="modal fade" id="firmaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-pen"></i> Registrar Firma del Empleado
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="firmaForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Confirme que el empleado ha leído y firmado el memorando.</p>
+                    
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            La firma digital se registrará con fecha y hora actual.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones del Empleado (opcional)</label>
+                        <textarea name="observaciones_empleado" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Comentarios o descargos del empleado..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Registrar Firma
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function registrarFirma(id) {
+        const modal = new bootstrap.Modal(document.getElementById('firmaModal'));
+        const form = document.getElementById('firmaForm');
+        form.action = `/talento-humano/memorandos/${id}/firmar/`;
+        modal.show();
+    }
+</script>
+{% endblock %}

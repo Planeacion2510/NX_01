@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Evaluaciones de Desempeño{% endblock %}
+
+{% block extra_css %}
+<style>
+    .evaluaciones-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .evaluacion-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+        transition: all 0.3s;
+    }
+    
+    .evaluacion-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .evaluacion-card.pendiente {
+        border-left-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .evaluacion-card.completada {
+        border-left-color: #28a745;
+    }
+    
+    .evaluacion-card.vencida {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .score-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .score-excelente { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .score-bueno { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+    .score-regular { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .score-deficiente { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .competencia-item {
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+    
+    .competencia-bar {
+        height: 8px;
+        border-radius: 10px;
+        background: #e0e0e0;
+        overflow: hidden;
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="evaluaciones-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">⭐ Evaluaciones de Desempeño</h1>
+                <p class="mb-0 opacity-75">
+                    Gestión y seguimiento del desempeño del equipo
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_evaluacion' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Nueva Evaluación
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number">{{ total_evaluaciones }}</div>
+                <div class="text-muted">Total Evaluaciones</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-warning">{{ evaluaciones_pendientes }}</div>
+                <div class="text-muted">Pendientes</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-success">{{ evaluaciones_completadas }}</div>
+                <div class="text-muted">Completadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-primary">{{ promedio_general|floatformat:1 }}</div>
+                <div class="text-muted">Promedio General</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.estado %}active{% endif %}" 
+               href="{% url 'talento_humano:evaluaciones_desempeno' %}">
+                Todas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'pendiente' %}active{% endif %}" 
+               href="?estado=pendiente">
+                Pendientes
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'completada' %}active{% endif %}" 
+               href="?estado=completada">
+                Completadas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'vencida' %}active{% endif %}" 
+               href="?estado=vencida">
+                Vencidas
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de evaluaciones -->
+    {% if evaluaciones %}
+    
+    {% for evaluacion in evaluaciones %}
+    <div class="evaluacion-card 
+        {% if evaluacion.completada %}completada
+        {% elif evaluacion.fecha_limite < today %}vencida
+        {% else %}pendiente
+        {% endif %}">
+        
+        <div class="row align-items-center">
+            
+            <div class="col-md-7">
+                <!-- Empleado -->
+                <div class="d-flex align-items-center mb-3">
+                    {% if evaluacion.empleado.foto %}
+                    <img src="{{ evaluacion.empleado.foto.url }}" 
+                         class="rounded-circle me-3" 
+                         width="60" height="60"
+                         alt="{{ evaluacion.empleado.get_nombre_completo }}">
+                    {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
+                         style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">
+                        {{ evaluacion.empleado.primer_nombre.0 }}{{ evaluacion.empleado.primer_apellido.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ evaluacion.empleado.get_nombre_completo }}</h5>
+                        <div class="small text-muted">
+                            <i class="bi bi-briefcase"></i> {{ evaluacion.empleado.cargo }}
+                            <span class="mx-2">|</span>
+                            <i class="bi bi-diagram-3"></i> {{ evaluacion.empleado.area }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información de la evaluación -->
+                <div class="row g-2 small">
+                    <div class="col-md-6">
+                        <i class="bi bi-calendar text-muted"></i>
+                        <strong>Período:</strong> {{ evaluacion.periodo }}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="bi bi-clock text-muted"></i>
+                        <strong>Límite:</strong> {{ evaluacion.fecha_limite|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="bi bi-person-badge text-muted"></i>
+                        <strong>Evaluador:</strong> {{ evaluacion.evaluador.get_full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="bi bi-file-text text-muted"></i>
+                        <strong>Tipo:</strong> {{ evaluacion.get_tipo_display }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 text-center">
+                <!-- Calificación -->
+                {% if evaluacion.completada %}
+                <div class="score-badge 
+                    {% if evaluacion.calificacion_final >= 4.5 %}score-excelente
+                    {% elif evaluacion.calificacion_final >= 3.5 %}score-bueno
+                    {% elif evaluacion.calificacion_final >= 2.5 %}score-regular
+                    {% else %}score-deficiente
+                    {% endif %}">
+                    {{ evaluacion.calificacion_final|floatformat:1 }}
+                </div>
+                <div class="mt-2">
+                    <span class="badge bg-success">Completada</span>
+                </div>
+                {% else %}
+                <div class="alert 
+                    {% if evaluacion.fecha_limite < today %}alert-danger
+                    {% else %}alert-warning
+                    {% endif %} mb-0 py-2">
+                    <i class="bi bi-clock"></i>
+                    {% if evaluacion.fecha_limite < today %}
+                    <strong>Vencida</strong>
+                    {% else %}
+                    <strong>Pendiente</strong>
+                    <br>
+                    <small>{{ evaluacion.dias_para_limite }} día{{ evaluacion.dias_para_limite|pluralize }} restantes</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-2 text-end">
+                <div class="d-grid gap-2">
+                    {% if evaluacion.completada %}
+                    <a href="{% url 'talento_humano:detalle_evaluacion' evaluacion.pk %}" 
+                       class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> Ver Resultados
+                    </a>
+                    {% else %}
+                    <a href="{% url 'talento_humano:realizar_evaluacion' evaluacion.pk %}" 
+                       class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i> Evaluar
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'talento_humano:editar_evaluacion' evaluacion.pk %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-gear"></i>
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    {% endfor %}
+    
+    <!-- Paginación -->
+    {% if evaluaciones.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if evaluaciones.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ evaluaciones.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ evaluaciones.number }} / {{ evaluaciones.paginator.num_pages }}</span>
+            </li>
+            
+            {% if evaluaciones.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ evaluaciones.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-star" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No hay evaluaciones registradas</h4>
+        <p class="text-muted">Comienza creando evaluaciones de desempeño para tu equipo</p>
+        <a href="{% url 'talento_humano:crear_evaluacion' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Crear Primera Evaluación
+        </a>
+    </div>
+    
+    {% endif %}
+    
+</div>
+{% endblock %}

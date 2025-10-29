@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capacitaciones - Talento Humano{% endblock %}
+
+{% block extra_css %}
+<style>
+    .capacitacion-card {
+        border-radius: 8px;
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+        height: 100%;
+    }
+    
+    .capacitacion-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    .capacitacion-card.completada {
+        border-left-color: #28a745;
+        background: #f8fff8;
+    }
+    
+    .capacitacion-card.proxima {
+        border-left-color: #ffc107;
+    }
+    
+    .capacitacion-card.pasada {
+        border-left-color: #6c757d;
+        opacity: 0.8;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-box .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-box .label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 15px;
+    }
+    
+    .progress-inscritos {
+        height: 8px;
+        border-radius: 10px;
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        font-weight: bold;
+    }
+    
+    .tipo-badge {
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">🎓 Capacitaciones y Desarrollo</h1>
+            <p class="text-muted">Gestión del plan de capacitación y formación</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'talento_humano:crear_capacitacion' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nueva Capacitación
+            </a>
+            <a href="{% url 'talento_humano:calendario_capacitaciones' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-calendar"></i> Calendario
+            </a>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-primary">
+                    {% if capacitaciones %}{{ capacitaciones|length }}{% else %}0{% endif %}
+                </div>
+                <div class="label">Capacitaciones Totales</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-warning">
+                    {% if capacitaciones %}
+                    {{ capacitaciones|length }}
+                    {% else %}0{% endif %}
+                </div>
+                <div class="label">Próximas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-success">0</div>
+                <div class="label">Completadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="number text-info">0</div>
+                <div class="label">Inscritos Total</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.estado %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_capacitaciones' %}">
+                Todas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'proximas' %}active{% endif %}" 
+               href="?estado=proximas">
+                Próximas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'completadas' %}active{% endif %}" 
+               href="?estado=completadas">
+                Completadas
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de capacitaciones -->
+    {% if capacitaciones %}
+    <div class="row">
+        {% for capacitacion in capacitaciones %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card capacitacion-card {% if capacitacion.completada %}completada{% elif capacitacion.fecha_programada >= today %}proxima{% else %}pasada{% endif %}">
+                <div class="card-body">
+                    <!-- Ícono del tipo -->
+                    <div class="icon-circle">
+                        {% if capacitacion.tipo == 'tecnica' %}
+                        <i class="bi bi-tools"></i>
+                        {% elif capacitacion.tipo == 'seguridad' %}
+                        <i class="bi bi-shield-check"></i>
+                        {% elif capacitacion.tipo == 'administrativa' %}
+                        <i class="bi bi-briefcase"></i>
+                        {% elif capacitacion.tipo == 'liderazgo' %}
+                        <i class="bi bi-people"></i>
+                        {% elif capacitacion.tipo == 'servicio' %}
+                        <i class="bi bi-person-hearts"></i>
+                        {% else %}
+                        <i class="bi bi-book"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Título y tipo -->
+                    <h5 class="card-title text-center mb-3">{{ capacitacion.nombre }}</h5>
+                    
+                    <div class="text-center mb-3">
+                        <span class="tipo-badge
+                            {% if capacitacion.tipo == 'tecnica' %}bg-primary text-white
+                            {% elif capacitacion.tipo == 'seguridad' %}bg-danger text-white
+                            {% elif capacitacion.tipo == 'administrativa' %}bg-info text-white
+                            {% elif capacitacion.tipo == 'liderazgo' %}bg-warning text-dark
+                            {% elif capacitacion.tipo == 'servicio' %}bg-success text-white
+                            {% else %}bg-secondary text-white
+                            {% endif %}">
+                            {{ capacitacion.get_tipo_display }}
+                        </span>
+                        
+                        <span class="tipo-badge
+                            {% if capacitacion.modalidad == 'presencial' %}bg-purple text-white
+                            {% elif capacitacion.modalidad == 'virtual' %}bg-cyan text-white
+                            {% else %}bg-teal text-white
+                            {% endif %}">
+                            {{ capacitacion.get_modalidad_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Información principal -->
+                    <div class="border-top pt-3 mb-3">
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <i class="bi bi-calendar-event text-muted"></i>
+                                <strong>Fecha:</strong>
+                                <br>{{ capacitacion.fecha_programada|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-clock text-muted"></i>
+                                <strong>Duración:</strong>
+                                <br>{{ capacitacion.duracion_horas }}h
+                            </div>
+                            <div class="col-12 mt-2">
+                                <i class="bi bi-person text-muted"></i>
+                                <strong>Facilitador:</strong>
+                                <br>{{ capacitacion.facilitador }}
+                            </div>
+                            {% if capacitacion.lugar %}
+                            <div class="col-12 mt-2">
+                                <i class="bi bi-geo-alt text-muted"></i>
+                                <strong>Lugar:</strong>
+                                <br>{{ capacitacion.lugar }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Inscritos -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">Inscritos</small>
+                            <small><strong>{{ capacitacion.get_inscritos }}</strong> / {{ capacitacion.cupo_maximo }}</small>
+                        </div>
+                        
+                        <div class="progress progress-inscritos">
+                            {% widthratio capacitacion.get_inscritos capacitacion.cupo_maximo 100 as porcentaje %}
+                            <div class="progress-bar 
+                                {% if porcentaje >= 90 %}bg-danger
+                                {% elif porcentaje >= 70 %}bg-warning
+                                {% else %}bg-success
+                                {% endif %}" 
+                                 style="width: {{ porcentaje }}%">
+                            </div>
+                        </div>
+                        
+                        {% if capacitacion.get_inscritos >= capacitacion.cupo_maximo %}
+                        <small class="text-danger">
+                            <i class="bi bi-exclamation-circle"></i> Cupo completo
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Estado -->
+                    <div class="border-top pt-3 mt-3">
+                        {% if capacitacion.completada %}
+                        <span class="badge bg-success w-100 p-2">
+                            <i class="bi bi-check-circle"></i> Completada
+                        </span>
+                        {% elif capacitacion.fecha_programada < today %}
+                        <span class="badge bg-secondary w-100 p-2">
+                            <i class="bi bi-clock-history"></i> Pasada
+                        </span>
+                        {% else %}
+                        <span class="badge bg-primary w-100 p-2">
+                            <i class="bi bi-calendar-check"></i> Programada
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'talento_humano:detalle_capacitacion' capacitacion.pk %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </a>
+                            
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'talento_humano:editar_capacitacion' capacitacion.pk %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not capacitacion.completada %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="marcarCompletada({{ capacitacion.pk }})">
+                                    <i class="bi bi-check2"></i> Completar
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if capacitaciones.has_other_pages %}
+    <nav aria-label="Paginación">
+        <ul class="pagination justify-content-center">
+            {% if capacitaciones.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ capacitaciones.previous_page_number }}">Anterior</a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ capacitaciones.number }} / {{ capacitaciones.paginator.num_pages }}</span>
+            </li>
+            
+            {% if capacitaciones.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ capacitaciones.next_page_number }}">Siguiente</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-book" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No hay capacitaciones programadas</h4>
+        <p class="text-muted">Crea el plan de capacitación para tu equipo</p>
+        <a href="{% url 'talento_humano:crear_capacitacion' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Crear Primera Capacitación
+        </a>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function marcarCompletada(id) {
+        if (confirm('¿Desea marcar esta capacitación como completada?')) {
+            // Aquí iría la petición AJAX para marcar como completada
+            window.location.href = `/talento-humano/capacitaciones/${id}/completar/`;
+        }
+    }
+</script>
+{% endblock %}

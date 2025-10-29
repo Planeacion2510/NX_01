@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Matriz de Riesgos - SST{% endblock %}
+
+{% block extra_css %}
+<style>
+    .matriz-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .riesgo-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 6px solid #666;
+        transition: all 0.3s;
+    }
+    
+    .riesgo-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .riesgo-card.muy-alto {
+        border-left-color: #8B0000;
+        background: #fff5f5;
+    }
+    
+    .riesgo-card.alto {
+        border-left-color: #dc3545;
+        background: #fff8f8;
+    }
+    
+    .riesgo-card.medio {
+        border-left-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .riesgo-card.bajo {
+        border-left-color: #28a745;
+        background: #f8fff8;
+    }
+    
+    .nivel-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .nivel-muy-alto {
+        background: #8B0000;
+        color: white;
+    }
+    
+    .nivel-alto {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .nivel-medio {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .nivel-bajo {
+        background: #28a745;
+        color: white;
+    }
+    
+    .matriz-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .matriz-table table {
+        margin-bottom: 0;
+    }
+    
+    .matriz-table th {
+        background: #667eea;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #5568d3;
+    }
+    
+    .matriz-table td {
+        vertical-align: middle;
+        border: 1px solid #dee2e6;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-mini {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .stat-mini.muy-alto { background: #8B0000; color: white; }
+    .stat-mini.alto { background: #dc3545; color: white; }
+    .stat-mini.medio { background: #ffc107; color: #333; }
+    .stat-mini.bajo { background: #28a745; color: white; }
+    
+    .stat-mini .number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stat-mini .label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+    
+    .control-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #e7f0ff;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        color: #667eea;
+    }
+    
+    .valoracion-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .valoracion-item {
+        text-align: center;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .valoracion-item .label {
+        font-size: 0.75rem;
+        color: #666;
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .valoracion-item .value {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="matriz-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">📋 Matriz de Identificación de Peligros y Riesgos</h1>
+                <p class="mb-0 opacity-75">
+                    Evaluación y Valoración de Riesgos según GTC 45
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_riesgo' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Nuevo Riesgo
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resumen por nivel de riesgo -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-mini muy-alto">
+                <div class="number">{{ riesgos_muy_alto }}</div>
+                <div class="label">Muy Alto</div>
+                <small>Críticos - Acción inmediata</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-mini alto">
+                <div class="number">{{ riesgos_alto }}</div>
+                <div class="label">Alto</div>
+                <small>Requieren atención urgente</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-mini medio">
+                <div class="number">{{ riesgos_medio }}</div>
+                <div class="label">Medio</div>
+                <small>Seguimiento programado</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-mini bajo">
+                <div class="number">{{ riesgos_bajo }}</div>
+                <div class="label">Bajo</div>
+                <small>Mantener controles</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Nivel de Riesgo</label>
+                    <select name="nivel" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los niveles</option>
+                        <option value="muy_alto" {% if request.GET.nivel == 'muy_alto' %}selected{% endif %}>Muy Alto</option>
+                        <option value="alto" {% if request.GET.nivel == 'alto' %}selected{% endif %}>Alto</option>
+                        <option value="medio" {% if request.GET.nivel == 'medio' %}selected{% endif %}>Medio</option>
+                        <option value="bajo" {% if request.GET.nivel == 'bajo' %}selected{% endif %}>Bajo</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Tipo de Peligro</label>
+                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los tipos</option>
+                        <option value="fisico" {% if request.GET.tipo == 'fisico' %}selected{% endif %}>Físico</option>
+                        <option value="quimico" {% if request.GET.tipo == 'quimico' %}selected{% endif %}>Químico</option>
+                        <option value="biologico" {% if request.GET.tipo == 'biologico' %}selected{% endif %}>Biológico</option>
+                        <option value="biomecanico" {% if request.GET.tipo == 'biomecanico' %}selected{% endif %}>Biomecánico</option>
+                        <option value="psicosocial" {% if request.GET.tipo == 'psicosocial' %}selected{% endif %}>Psicosocial</option>
+                        <option value="seguridad" {% if request.GET.tipo == 'seguridad' %}selected{% endif %}>Seguridad</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Proceso</label>
+                    <select name="proceso" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los procesos</option>
+                        {% for proceso in procesos_lista %}
+                        <option value="{{ proceso }}" {% if request.GET.proceso == proceso %}selected{% endif %}>
+                            {{ proceso }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Vista</label>
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'talento_humano:matriz_riesgos' %}?vista=tarjetas{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}" 
+                           class="btn btn-outline-primary {% if not request.GET.vista or request.GET.vista == 'tarjetas' %}active{% endif %}">
+                            <i class="bi bi-grid"></i> Tarjetas
+                        </a>
+                        <a href="{% url 'talento_humano:matriz_riesgos' %}?vista=tabla{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}" 
+                           class="btn btn-outline-primary {% if request.GET.vista == 'tabla' %}active{% endif %}">
+                            <i class="bi bi-table"></i> Tabla
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Vista de tarjetas -->
+    {% if not request.GET.vista or request.GET.vista == 'tarjetas' %}
+    
+    {% if riesgos %}
+    <div class="row">
+        {% for riesgo in riesgos %}
+        <div class="col-md-6 mb-3">
+            <div class="riesgo-card {{ riesgo.nivel_riesgo }}">
+                
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ riesgo.peligro_identificado }}</h5>
+                        <small class="text-muted">
+                            <i class="bi bi-building"></i> {{ riesgo.proceso }} - {{ riesgo.actividad }}
+                        </small>
+                    </div>
+                    <span class="nivel-badge nivel-{{ riesgo.nivel_riesgo }}">
+                        {{ riesgo.get_nivel_riesgo_display }}
+                    </span>
+                </div>
+                
+                <!-- Tipo de peligro -->
+                <div class="mb-3">
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-tag"></i> {{ riesgo.get_tipo_peligro_display }}
+                    </span>
+                </div>
+                
+                <!-- Efectos posibles -->
+                <div class="mb-3">
+                    <strong class="d-block mb-1">Efectos Posibles:</strong>
+                    <p class="mb-0 small">{{ riesgo.efectos_posibles }}</p>
+                </div>
+                
+                <!-- Valoración del riesgo -->
+                <div class="valoracion-grid">
+                    <div class="valoracion-item">
+                        <span class="label">Probabilidad</span>
+                        <span class="value text-primary">{{ riesgo.probabilidad }}</span>
+                    </div>
+                    <div class="valoracion-item">
+                        <span class="label">Severidad</span>
+                        <span class="value text-danger">{{ riesgo.severidad }}</span>
+                    </div>
+                    <div class="valoracion-item">
+                        <span class="label">Valoración</span>
+                        <span class="value text-warning">{{ riesgo.valoracion }}</span>
+                    </div>
+                </div>
+                
+                <!-- Controles existentes -->
+                {% if riesgo.controles_existentes %}
+                <div class="mt-3">
+                    <strong class="d-block mb-2 small">Controles Existentes:</strong>
+                    <p class="mb-0 small">{{ riesgo.controles_existentes }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Medidas de intervención -->
+                {% if riesgo.medidas_intervencion %}
+                <div class="mt-3">
+                    <strong class="d-block mb-2 small">Medidas de Intervención:</strong>
+                    <p class="mb-0 small">{{ riesgo.medidas_intervencion }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Botones de acción -->
+                <div class="border-top pt-3 mt-3">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'talento_humano:editar_riesgo' riesgo.pk %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        <a href="{% url 'talento_humano:detalle_riesgo' riesgo.pk %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </a>
+                        {% if riesgo.nivel_riesgo == 'muy_alto' or riesgo.nivel_riesgo == 'alto' %}
+                        <button type="button" class="btn btn-sm btn-danger ms-auto">
+                            <i class="bi bi-exclamation-triangle"></i> Acción Requerida
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-shield-check" style="font-size: 5rem; color: #28a745;"></i>
+        <h4 class="mt-3">No se encontraron riesgos</h4>
+        <p class="text-muted">Comienza identificando los peligros y evaluando los riesgos</p>
+        <a href="{% url 'talento_humano:crear_riesgo' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Identificar Primer Riesgo
+        </a>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Vista de tabla -->
+    <div class="matriz-table">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Proceso</th>
+                        <th>Actividad</th>
+                        <th>Peligro</th>
+                        <th>Tipo</th>
+                        <th>Efectos</th>
+                        <th class="text-center">P</th>
+                        <th class="text-center">S</th>
+                        <th class="text-center">V</th>
+                        <th>Nivel</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for riesgo in riesgos %}
+                    <tr>
+                        <td>{{ riesgo.proceso }}</td>
+                        <td>{{ riesgo.actividad }}</td>
+                        <td><strong>{{ riesgo.peligro_identificado }}</strong></td>
+                        <td>
+                            <small class="badge bg-secondary">
+                                {{ riesgo.get_tipo_peligro_display }}
+                            </small>
+                        </td>
+                        <td>
+                            <small>{{ riesgo.efectos_posibles|truncatewords:8 }}</small>
+                        </td>
+                        <td class="text-center"><strong>{{ riesgo.probabilidad }}</strong></td>
+                        <td class="text-center"><strong>{{ riesgo.severidad }}</strong></td>
+                        <td class="text-center"><strong>{{ riesgo.valoracion }}</strong></td>
+                        <td>
+                            <span class="nivel-badge nivel-{{ riesgo.nivel_riesgo }}">
+                                {{ riesgo.get_nivel_riesgo_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'talento_humano:detalle_riesgo' riesgo.pk %}" 
+                                   class="btn btn-outline-secondary" title="Ver">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'talento_humano:editar_riesgo' riesgo.pk %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            No se encontraron riesgos con los filtros aplicados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% endif %}
+    
+    <!-- Paginación -->
+    {% if riesgos.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if riesgos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ riesgos.previous_page_number }}{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ riesgos.number }} / {{ riesgos.paginator.num_pages }}</span>
+            </li>
+            
+            {% if riesgos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ riesgos.next_page_number }}{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ riesgos.paginator.num_pages }}{% if request.GET.nivel %}&nivel={{ request.GET.nivel }}{% endif %}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    <!-- Información GTC 45 -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Criterios de Valoración GTC 45
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Nivel de Probabilidad (P)</h6>
+                    <ul class="small">
+                        <li><strong>Bajo (1):</strong> El daño ocurrirá raras veces</li>
+                        <li><strong>Medio (2):</strong> El daño ocurrirá ocasionalmente</li>
+                        <li><strong>Alto (3):</strong> El daño ocurrirá siempre o casi siempre</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Nivel de Severidad (S)</h6>
+                    <ul class="small">
+                        <li><strong>Bajo (1):</strong> Lesiones leves (primeros auxilios)</li>
+                        <li><strong>Medio (2):</strong> Lesiones con incapacidad temporal</li>
+                        <li><strong>Alto (3):</strong> Lesiones graves irreparables o muerte</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Valoración del Riesgo (V = P x S)</h6>
+                    <ul class="small">
+                        <li><strong class="text-success">Bajo (1-2):</strong> Mantener controles actuales</li>
+                        <li><strong class="text-warning">Medio (3-4):</strong> Implementar controles adicionales</li>
+                        <li><strong class="text-danger">Alto (6):</strong> Acción correctiva inmediata</li>
+                        <li><strong style="color: #8B0000;">Muy Alto (9):</strong> Suspender actividad hasta controlar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit de filtros
+    document.querySelectorAll('select[name]').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

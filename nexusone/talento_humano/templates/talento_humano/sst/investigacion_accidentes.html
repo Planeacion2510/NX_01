@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Investigación de Accidentes - SST{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accidentes-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .accidente-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 6px solid #dc3545;
+        transition: all 0.3s;
+    }
+    
+    .accidente-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .accidente-card.leve {
+        border-left-color: #ffc107;
+        background: #fffef5;
+    }
+    
+    .accidente-card.grave {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .accidente-card.mortal {
+        border-left-color: #000;
+        background: #f5f5f5;
+    }
+    
+    .severidad-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .severidad-leve {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .severidad-grave {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .severidad-mortal {
+        background: #000;
+        color: white;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+    
+    .stat-card .label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    
+    .timeline-investigacion {
+        border-left: 3px solid #667eea;
+        padding-left: 25px;
+        margin-left: 10px;
+        position: relative;
+    }
+    
+    .timeline-item {
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        width: 15px;
+        height: 15px;
+        background: #667eea;
+        border-radius: 50%;
+        position: absolute;
+        left: -31px;
+        top: 5px;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .causa-tag {
+        display: inline-block;
+        padding: 5px 12px;
+        background: #e7f0ff;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        color: #667eea;
+    }
+    
+    .incapacidad-info {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="accidentes-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">🚨 Investigación de Accidentes de Trabajo</h1>
+                <p class="mb-0 opacity-75">
+                    Registro, investigación y análisis de accidentes según Resolución 1401 de 2007
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'talento_humano:crear_accidente' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Reportar Accidente
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number">{{ total_accidentes }}</div>
+                <div class="label">Total Accidentes</div>
+                <small class="text-muted">Este año</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number text-warning">{{ accidentes_leves }}</div>
+                <div class="label">Leves</div>
+                <small class="text-muted">Sin incapacidad</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number text-danger">{{ accidentes_graves }}</div>
+                <div class="label">Graves</div>
+                <small class="text-muted">Con incapacidad</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="number text-dark">{{ dias_perdidos }}</div>
+                <div class="label">Días Perdidos</div>
+                <small class="text-muted">Por incapacidad</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Severidad</label>
+                    <select name="severidad" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        <option value="leve" {% if request.GET.severidad == 'leve' %}selected{% endif %}>Leve</option>
+                        <option value="grave" {% if request.GET.severidad == 'grave' %}selected{% endif %}>Grave</option>
+                        <option value="mortal" {% if request.GET.severidad == 'mortal' %}selected{% endif %}>Mortal</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Estado Investigación</label>
+                    <select name="estado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if request.GET.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="en_proceso" {% if request.GET.estado == 'en_proceso' %}selected{% endif %}>En Proceso</option>
+                        <option value="completada" {% if request.GET.estado == 'completada' %}selected{% endif %}>Completada</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Año</label>
+                    <select name="año" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        {% for año in años_disponibles %}
+                        <option value="{{ año }}" {% if request.GET.año == año|stringformat:"s" %}selected{% endif %}>
+                            {{ año }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <a href="{% url 'talento_humano:investigacion_accidentes' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lista de accidentes -->
+    {% if accidentes %}
+    
+    {% for accidente in accidentes %}
+    <div class="accidente-card {{ accidente.severidad }}">
+        
+        <div class="row">
+            
+            <!-- Columna izquierda: Información del accidente -->
+            <div class="col-md-8">
+                
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Accidente #{{ accidente.numero_reporte }}
+                        </h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <span>
+                                <i class="bi bi-person"></i>
+                                <strong>{{ accidente.empleado.get_nombre_completo }}</strong>
+                            </span>
+                            <span class="text-muted">
+                                <i class="bi bi-calendar"></i>
+                                {{ accidente.fecha_accidente|date:"d/m/Y H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="severidad-badge severidad-{{ accidente.severidad }}">
+                        {{ accidente.get_severidad_display }}
+                    </span>
+                </div>
+                
+                <!-- Información del empleado -->
+                <div class="mb-3">
+                    <div class="row g-2 small">
+                        <div class="col-md-4">
+                            <i class="bi bi-briefcase text-muted"></i>
+                            <strong>Cargo:</strong> {{ accidente.empleado.cargo }}
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-diagram-3 text-muted"></i>
+                            <strong>Área:</strong> {{ accidente.empleado.area }}
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-clock text-muted"></i>
+                            <strong>Antigüedad:</strong> 
+                            {{ accidente.empleado.fecha_ingreso|timesince }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalles del accidente -->
+                <div class="border-top pt-3 mb-3">
+                    <div class="row g-2 small">
+                        <div class="col-md-6">
+                            <i class="bi bi-geo-alt text-danger"></i>
+                            <strong>Lugar:</strong> {{ accidente.lugar }}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="bi bi-bandaid text-danger"></i>
+                            <strong>Parte Afectada:</strong> {{ accidente.parte_cuerpo_afectada }}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="bi bi-activity text-danger"></i>
+                            <strong>Actividad:</strong> {{ accidente.actividad_realizada }}
+                        </div>
+                        <div class="col-md-6">
+                            <i class="bi bi-gear text-danger"></i>
+                            <strong>Mecanismo:</strong> {{ accidente.mecanismo }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Descripción -->
+                <div class="border-top pt-3 mb-3">
+                    <strong class="d-block mb-2">Descripción del Accidente:</strong>
+                    <p class="mb-0">{{ accidente.descripcion }}</p>
+                </div>
+                
+                <!-- Incapacidad -->
+                {% if accidente.dias_incapacidad > 0 %}
+                <div class="incapacidad-info">
+                    <strong>
+                        <i class="bi bi-calendar-x"></i>
+                        Incapacidad: {{ accidente.dias_incapacidad }} día{{ accidente.dias_incapacidad|pluralize }}
+                    </strong>
+                    {% if accidente.fecha_reintegro %}
+                    <br>
+                    <small>Reintegro programado: {{ accidente.fecha_reintegro|date:"d/m/Y" }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Causas identificadas -->
+                {% if accidente.causa_inmediata or accidente.causa_basica %}
+                <div class="border-top pt-3 mt-3">
+                    {% if accidente.causa_inmediata %}
+                    <div class="mb-2">
+                        <strong class="d-block small text-muted mb-1">Causa Inmediata:</strong>
+                        <span class="causa-tag">{{ accidente.causa_inmediata }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if accidente.causa_basica %}
+                    <div class="mb-2">
+                        <strong class="d-block small text-muted mb-1">Causa Básica:</strong>
+                        <span class="causa-tag">{{ accidente.causa_basica }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Acciones correctivas -->
+                {% if accidente.acciones_correctivas %}
+                <div class="border-top pt-3 mt-3">
+                    <strong class="d-block mb-2">Acciones Correctivas:</strong>
+                    <p class="mb-0 small">{{ accidente.acciones_correctivas }}</p>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Columna derecha: Estado y acciones -->
+            <div class="col-md-4">
+                
+                <!-- Estado de investigación -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <strong>Estado de Investigación</strong>
+                    </div>
+                    <div class="card-body">
+                        <span class="badge 
+                            {% if accidente.investigacion_completada %}bg-success
+                            {% else %}bg-warning text-dark
+                            {% endif %} w-100 p-2 mb-3">
+                            {% if accidente.investigacion_completada %}
+                                <i class="bi bi-check-circle"></i> Completada
+                            {% else %}
+                                <i class="bi bi-clock"></i> Pendiente
+                            {% endif %}
+                        </span>
+                        
+                        {% if accidente.investigador %}
+                        <div class="small mb-2">
+                            <strong>Investigador:</strong>
+                            <br>{{ accidente.investigador.get_full_name }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if accidente.fecha_investigacion %}
+                        <div class="small">
+                            <strong>Fecha:</strong>
+                            <br>{{ accidente.fecha_investigacion|date:"d/m/Y" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Testigos -->
+                {% if accidente.testigos %}
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <strong>Testigos</strong>
+                    </div>
+                    <div class="card-body">
+                        <p class="small mb-0">{{ accidente.testigos }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Acciones -->
+                <div class="d-grid gap-2">
+                    <a href="{% url 'talento_humano:detalle_accidente' accidente.pk %}" 
+                       class="btn btn-primary">
+                        <i class="bi bi-eye"></i> Ver Investigación Completa
+                    </a>
+                    
+                    {% if not accidente.investigacion_completada %}
+                    <a href="{% url 'talento_humano:completar_investigacion' accidente.pk %}" 
+                       class="btn btn-warning">
+                        <i class="bi bi-clipboard-check"></i> Completar Investigación
+                    </a>
+                    {% endif %}
+                    
+                    {% if accidente.archivo_investigacion %}
+                    <a href="{{ accidente.archivo_investigacion.url }}" 
+                       target="_blank" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-file-pdf"></i> Ver Informe PDF
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'talento_humano:editar_accidente' accidente.pk %}" 
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                </div>
+                
+            </div>
+            
+        </div>
+        
+    </div>
+    {% endfor %}
+    
+    <!-- Paginación -->
+    {% if accidentes.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if accidentes.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ accidentes.previous_page_number }}{% if request.GET.severidad %}&severidad={{ request.GET.severidad }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ accidentes.number }} / {{ accidentes.paginator.num_pages }}</span>
+            </li>
+            
+            {% if accidentes.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ accidentes.next_page_number }}{% if request.GET.severidad %}&severidad={{ request.GET.severidad }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-shield-check" style="font-size: 5rem; color: #28a745;"></i>
+        <h4 class="mt-3">¡Excelente! No hay accidentes registrados</h4>
+        <p class="text-muted">
+            {% if request.GET.severidad or request.GET.estado or request.GET.año %}
+            No se encontraron accidentes con los filtros aplicados
+            {% else %}
+            Mantén un ambiente de trabajo seguro
+            {% endif %}
+        </p>
+    </div>
+    
+    {% endif %}
+    
+    <!-- Información metodológica -->
+    <div class="card mt-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Metodología de Investigación
+            </h5>
+        </div>
+        <div class="card-body">
+            <h6>Clasificación por Severidad</h6>
+            <ul class="small">
+                <li><strong>Leve:</strong> Lesión superficial que requiere primeros auxilios. Sin incapacidad.</li>
+                <li><strong>Grave:</strong> Lesión que genera incapacidad temporal o permanente.</li>
+                <li><strong>Mortal:</strong> Accidente que causa la muerte del trabajador.</li>
+            </ul>
+            
+            <h6 class="mt-3">Análisis de Causas (Árbol de Causas)</h6>
+            <ul class="small">
+                <li><strong>Causa Inmediata:</strong> Condición o acto inseguro que produce directamente el accidente</li>
+                <li><strong>Causa Básica:</strong> Factores personales, del trabajo o de la organización que permitieron la causa inmediata</li>
+            </ul>
+            
+            <h6 class="mt-3">Normativa</h6>
+            <p class="small mb-0">
+                <strong>Resolución 1401 de 2007:</strong> Reglamenta la investigación de incidentes y accidentes de trabajo.
+                Toda empresa debe investigar todos los accidentes e incidentes de trabajo dentro de los 15 días siguientes.
+            </p>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit de filtros
+    document.querySelectorAll('select[name]').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

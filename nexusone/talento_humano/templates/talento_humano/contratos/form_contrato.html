@@ -1,19 +1,516 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
-<div class="container mt-5">
-    <h2 class="section-title text-center mb-4">
-        <i class="fas fa-file-contract"></i> Registrar Contrato
-    </h2>
+{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} Contrato{% endblock %}
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="d-flex justify-content-center gap-3 mt-3">
-            <button type="submit" class="btn btn-success">Guardar</button>
-            <a href="{% url 'talento_humano:lista_contratos' %}" class="btn btn-secondary">Cancelar</a>
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-section h5 {
+        color: #667eea;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .tipo-contrato-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 10px;
+    }
+    
+    .tipo-contrato-card:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .tipo-contrato-card.selected {
+        border-color: #667eea;
+        background: #e7f0ff;
+    }
+    
+    .tipo-contrato-card input[type="radio"] {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'talento_humano:dashboard' %}">Talento Humano</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'talento_humano:lista_contratos' %}">Contratos</a></li>
+                    <li class="breadcrumb-item active">{% if object %}Editar{% else %}Nuevo{% endif %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                <i class="bi bi-file-text-fill"></i> 
+                {% if object %}Editar Contrato{% else %}Nuevo Contrato Laboral{% endif %}
+            </h1>
         </div>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data" id="contratoForm">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+        
+        <div class="row">
+            <div class="col-md-8">
+                
+                <!-- Sección 1: Información del Empleado -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person-fill"></i> Información del Empleado</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Empleado *</label>
+                            {{ form.empleado }}
+                            {% if form.empleado.errors %}
+                            <div class="text-danger small">{{ form.empleado.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Seleccione el empleado para este contrato
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Info del empleado seleccionado (se llena con JS) -->
+                    <div id="empleadoInfo" class="info-box mt-3" style="display: none;">
+                        <strong>Información del Empleado:</strong>
+                        <div id="empleadoDetalles" class="mt-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Sección 2: Tipo de Contrato -->
+                <div class="form-section">
+                    <h5><i class="bi bi-file-earmark-text"></i> Tipo de Contrato</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Seleccione el tipo de contrato *</label>
+                            
+                            <div class="tipo-contrato-card" data-tipo="indefinido">
+                                <input type="radio" name="tipo" value="indefinido" id="tipo_indefinido" 
+                                       {% if form.tipo.value == 'indefinido' %}checked{% endif %}>
+                                <label for="tipo_indefinido" class="mb-0 cursor-pointer">
+                                    <strong>Término Indefinido</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Contrato sin fecha de finalización. Mayor estabilidad laboral.
+                                    </p>
+                                </label>
+                            </div>
+                            
+                            <div class="tipo-contrato-card" data-tipo="fijo">
+                                <input type="radio" name="tipo" value="fijo" id="tipo_fijo"
+                                       {% if form.tipo.value == 'fijo' %}checked{% endif %}>
+                                <label for="tipo_fijo" class="mb-0 cursor-pointer">
+                                    <strong>Término Fijo</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Contrato con fecha de inicio y finalización. Duración entre 1 y 3 años.
+                                    </p>
+                                </label>
+                            </div>
+                            
+                            <div class="tipo-contrato-card" data-tipo="obra_labor">
+                                <input type="radio" name="tipo" value="obra_labor" id="tipo_obra"
+                                       {% if form.tipo.value == 'obra_labor' %}checked{% endif %}>
+                                <label for="tipo_obra" class="mb-0 cursor-pointer">
+                                    <strong>Obra o Labor</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Contrato que finaliza cuando se termina la obra o labor específica.
+                                    </p>
+                                </label>
+                            </div>
+                            
+                            <div class="tipo-contrato-card" data-tipo="aprendizaje">
+                                <input type="radio" name="tipo" value="aprendizaje" id="tipo_aprendizaje"
+                                       {% if form.tipo.value == 'aprendizaje' %}checked{% endif %}>
+                                <label for="tipo_aprendizaje" class="mb-0 cursor-pointer">
+                                    <strong>Contrato de Aprendizaje</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Para estudiantes en práctica. No genera prestaciones sociales completas.
+                                    </p>
+                                </label>
+                            </div>
+                            
+                            <div class="tipo-contrato-card" data-tipo="prestacion_servicios">
+                                <input type="radio" name="tipo" value="prestacion_servicios" id="tipo_servicios"
+                                       {% if form.tipo.value == 'prestacion_servicios' %}checked{% endif %}>
+                                <label for="tipo_servicios" class="mb-0 cursor-pointer">
+                                    <strong>Prestación de Servicios</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Contrato civil. No genera relación laboral ni prestaciones sociales.
+                                    </p>
+                                </label>
+                            </div>
+                            
+                            {% if form.tipo.errors %}
+                            <div class="text-danger small mt-2">{{ form.tipo.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección 3: Fechas del Contrato -->
+                <div class="form-section">
+                    <h5><i class="bi bi-calendar-range"></i> Vigencia del Contrato</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha de Inicio *</label>
+                            {{ form.fecha_inicio }}
+                            {% if form.fecha_inicio.errors %}
+                            <div class="text-danger small">{{ form.fecha_inicio.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha de Finalización</label>
+                            {{ form.fecha_fin }}
+                            {% if form.fecha_fin.errors %}
+                            <div class="text-danger small">{{ form.fecha_fin.errors }}</div>
+                            {% endif %}
+                            <div class="form-text" id="fechaFinHelp">
+                                Dejar vacío para contratos a término indefinido
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3" id="duracionInfo" style="display: none;">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Duración del contrato:</strong> <span id="duracionTexto"></span>
+                    </div>
+                </div>
+                
+                <!-- Sección 4: Información del Cargo -->
+                <div class="form-section">
+                    <h5><i class="bi bi-briefcase"></i> Información del Cargo y Salario</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cargo *</label>
+                            {{ form.cargo }}
+                            {% if form.cargo.errors %}
+                            <div class="text-danger small">{{ form.cargo.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Salario *</label>
+                            {{ form.salario }}
+                            {% if form.salario.errors %}
+                            <div class="text-danger small">{{ form.salario.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                SMLV 2025: $1,423,500
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción de Funciones</label>
+                            {{ form.descripcion_funciones }}
+                            {% if form.descripcion_funciones.errors %}
+                            <div class="text-danger small">{{ form.descripcion_funciones.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Detalle las funciones y responsabilidades del cargo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección 5: Documentos y Observaciones -->
+                <div class="form-section">
+                    <h5><i class="bi bi-paperclip"></i> Documentos y Observaciones</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Archivo del Contrato (PDF)</label>
+                            {{ form.archivo }}
+                            {% if form.archivo.errors %}
+                            <div class="text-danger small">{{ form.archivo.errors }}</div>
+                            {% endif %}
+                            {% if object and object.archivo %}
+                            <div class="mt-2">
+                                <a href="{{ object.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-pdf"></i> Ver archivo actual
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observaciones</label>
+                            {{ form.observaciones }}
+                            {% if form.observaciones.errors %}
+                            <div class="text-danger small">{{ form.observaciones.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Columna derecha: Información adicional -->
+            <div class="col-md-4">
+                
+                <!-- Estado del contrato -->
+                <div class="form-section">
+                    <h5><i class="bi bi-toggle-on"></i> Estado</h5>
+                    
+                    <div class="form-check form-switch">
+                        {{ form.activo }}
+                        <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                            <strong>Contrato Activo</strong>
+                        </label>
+                    </div>
+                    {% if form.activo.errors %}
+                    <div class="text-danger small">{{ form.activo.errors }}</div>
+                    {% endif %}
+                    
+                    <div class="alert alert-warning mt-3">
+                        <small>
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Importante:</strong> Solo puede haber un contrato activo por empleado.
+                            Al activar este contrato, los demás se desactivarán automáticamente.
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Información legal -->
+                <div class="form-section">
+                    <h5><i class="bi bi-shield-check"></i> Información Legal</h5>
+                    
+                    <div class="small">
+                        <p class="mb-2">
+                            <strong>Código Sustantivo del Trabajo:</strong>
+                        </p>
+                        <ul class="mb-3">
+                            <li>Art. 45: Contrato a término indefinido</li>
+                            <li>Art. 46: Contrato a término fijo</li>
+                            <li>Art. 47: Contrato de obra o labor</li>
+                        </ul>
+                        
+                        <p class="mb-2">
+                            <strong>Prestaciones Sociales:</strong>
+                        </p>
+                        <ul class="mb-3">
+                            <li>Prima de servicios</li>
+                            <li>Cesantías e intereses</li>
+                            <li>Vacaciones (15 días hábiles/año)</li>
+                            <li>Dotación (3 veces/año)</li>
+                        </ul>
+                        
+                        <p class="mb-2">
+                            <strong>Seguridad Social (obligatoria):</strong>
+                        </p>
+                        <ul>
+                            <li>EPS (Salud)</li>
+                            <li>AFP (Pensión)</li>
+                            <li>ARL (Riesgos Laborales)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Calculadora de duración -->
+                <div class="form-section">
+                    <h5><i class="bi bi-calculator"></i> Calculadora Rápida</h5>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="setDuracion(365)">
+                            Contrato 1 año
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="setDuracion(180)">
+                            Contrato 6 meses
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="setDuracion(90)">
+                            Contrato 3 meses
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="clearFechaFin()">
+                            Término Indefinido
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="form-section">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'talento_humano:lista_contratos' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> 
+                            {% if object %}Actualizar{% else %}Crear{% endif %} Contrato
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </form>
+    
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Resaltar tipo de contrato seleccionado
+    document.querySelectorAll('.tipo-contrato-card').forEach(card => {
+        card.addEventListener('click', function() {
+            // Remover selección previa
+            document.querySelectorAll('.tipo-contrato-card').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar actual
+            this.classList.add('selected');
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Actualizar ayuda de fecha fin
+            actualizarAyudaFechaFin(radio.value);
+        });
+    });
+    
+    // Marcar como seleccionado el que ya viene checked
+    document.querySelectorAll('input[name="tipo"]:checked').forEach(radio => {
+        radio.closest('.tipo-contrato-card').classList.add('selected');
+    });
+    
+    // Actualizar ayuda según tipo de contrato
+    function actualizarAyudaFechaFin(tipo) {
+        const helpText = document.getElementById('fechaFinHelp');
+        const fechaFinInput = document.querySelector('input[name="fecha_fin"]');
+        
+        if (tipo === 'indefinido' || tipo === 'prestacion_servicios') {
+            helpText.textContent = 'No requiere fecha de finalización para este tipo de contrato';
+            fechaFinInput.removeAttribute('required');
+        } else {
+            helpText.textContent = 'Requerido para contratos a término fijo, obra o labor, y aprendizaje';
+            fechaFinInput.setAttribute('required', 'required');
+        }
+    }
+    
+    // Calcular duración del contrato
+    function calcularDuracion() {
+        const fechaInicio = document.querySelector('input[name="fecha_inicio"]').value;
+        const fechaFin = document.querySelector('input[name="fecha_fin"]').value;
+        
+        if (fechaInicio && fechaFin) {
+            const inicio = new Date(fechaInicio);
+            const fin = new Date(fechaFin);
+            const diff = fin - inicio;
+            const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (dias > 0) {
+                const meses = Math.floor(dias / 30);
+                const diasRestantes = dias % 30;
+                
+                let texto = '';
+                if (meses > 0) {
+                    texto += `${meses} mes${meses > 1 ? 'es' : ''}`;
+                }
+                if (diasRestantes > 0) {
+                    if (texto) texto += ' y ';
+                    texto += `${diasRestantes} día${diasRestantes > 1 ? 's' : ''}`;
+                }
+                
+                document.getElementById('duracionTexto').textContent = `${dias} días (${texto})`;
+                document.getElementById('duracionInfo').style.display = 'block';
+            } else {
+                document.getElementById('duracionInfo').style.display = 'none';
+            }
+        }
+    }
+    
+    // Event listeners para calcular duración
+    document.querySelector('input[name="fecha_inicio"]').addEventListener('change', calcularDuracion);
+    document.querySelector('input[name="fecha_fin"]').addEventListener('change', calcularDuracion);
+    
+    // Calcular al cargar si hay fechas
+    window.addEventListener('load', calcularDuracion);
+    
+    // Funciones de calculadora rápida
+    function setDuracion(dias) {
+        const fechaInicio = document.querySelector('input[name="fecha_inicio"]');
+        const fechaFin = document.querySelector('input[name="fecha_fin"]');
+        
+        if (!fechaInicio.value) {
+            alert('Por favor seleccione primero la fecha de inicio');
+            return;
+        }
+        
+        const inicio = new Date(fechaInicio.value);
+        const fin = new Date(inicio.getTime() + (dias * 24 * 60 * 60 * 1000));
+        
+        const año = fin.getFullYear();
+        const mes = String(fin.getMonth() + 1).padStart(2, '0');
+        const dia = String(fin.getDate()).padStart(2, '0');
+        
+        fechaFin.value = `${año}-${mes}-${dia}`;
+        calcularDuracion();
+    }
+    
+    function clearFechaFin() {
+        document.querySelector('input[name="fecha_fin"]').value = '';
+        document.getElementById('duracionInfo').style.display = 'none';
+    }
+    
+    // Validación del formulario
+    document.getElementById('contratoForm').addEventListener('submit', function(e) {
+        const tipo = document.querySelector('input[name="tipo"]:checked');
+        
+        if (!tipo) {
+            e.preventDefault();
+            alert('Por favor seleccione un tipo de contrato');
+            return false;
+        }
+        
+        const fechaInicio = document.querySelector('input[name="fecha_inicio"]').value;
+        const fechaFin = document.querySelector('input[name="fecha_fin"]').value;
+        
+        if (['fijo', 'obra_labor', 'aprendizaje'].includes(tipo.value) && !fechaFin) {
+            e.preventDefault();
+            alert('Este tipo de contrato requiere fecha de finalización');
+            return false;
+        }
+        
+        if (fechaInicio && fechaFin && new Date(fechaFin) <= new Date(fechaInicio)) {
+            e.preventDefault();
+            alert('La fecha de finalización debe ser posterior a la fecha de inicio');
+            return false;
+        }
+    });
+</script>
 {% endblock %}

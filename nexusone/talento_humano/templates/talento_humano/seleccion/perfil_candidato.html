@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ candidato.nombres }} {{ candidato.apellidos }} - Perfil de Candidato{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: white;
+        color: #667eea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .info-section {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .info-section h5 {
+        color: #667eea;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #333;
+        text-align: right;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.5rem;
+    }
+    
+    .timeline-item {
+        border-left: 3px solid #667eea;
+        padding-left: 20px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        width: 15px;
+        height: 15px;
+        background: #667eea;
+        border-radius: 50%;
+        position: absolute;
+        left: -9px;
+        top: 0;
+    }
+    
+    .proceso-badge {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 8px;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+    
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .hv-viewer {
+        width: 100%;
+        height: 600px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .score-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .score-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .score-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header del perfil -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <div class="profile-avatar">
+                    {{ candidato.nombres.0 }}{{ candidato.apellidos.0 }}
+                </div>
+            </div>
+            <div class="col-md-7">
+                <h1 class="mb-2">{{ candidato.nombres }} {{ candidato.apellidos }}</h1>
+                <h5 class="mb-3 opacity-75">{{ candidato.nivel_educacion }}</h5>
+                <div>
+                    <span class="proceso-badge bg-light text-dark">
+                        <i class="bi bi-credit-card"></i> {{ candidato.get_tipo_documento_display }}: {{ candidato.numero_documento }}
+                    </span>
+                    <span class="proceso-badge bg-light text-dark">
+                        <i class="bi bi-telephone"></i> {{ candidato.celular }}
+                    </span>
+                    <span class="proceso-badge bg-light text-dark">
+                        <i class="bi bi-envelope"></i> {{ candidato.email }}
+                    </span>
+                    <span class="proceso-badge bg-light text-dark">
+                        <i class="bi bi-geo-alt"></i> {{ candidato.ciudad }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                {% if candidato.calificacion %}
+                <div class="rating-stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= candidato.calificacion %}
+                        ★
+                        {% else %}
+                        ☆
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <small class="d-block">Calificación General</small>
+                {% else %}
+                <p class="mb-0">Sin calificar</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        
+        <!-- Columna izquierda: Información del candidato -->
+        <div class="col-md-8">
+            
+            <!-- Información Personal -->
+            <div class="info-section">
+                <h5><i class="bi bi-person-fill"></i> Información Personal</h5>
+                
+                <div class="info-row">
+                    <span class="info-label">Nombre Completo:</span>
+                    <span class="info-value">{{ candidato.nombres }} {{ candidato.apellidos }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Tipo de Documento:</span>
+                    <span class="info-value">{{ candidato.get_tipo_documento_display }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Número de Documento:</span>
+                    <span class="info-value">{{ candidato.numero_documento }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">
+                        <a href="mailto:{{ candidato.email }}">{{ candidato.email }}</a>
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Celular:</span>
+                    <span class="info-value">
+                        <a href="tel:{{ candidato.celular }}">{{ candidato.celular }}</a>
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Ciudad:</span>
+                    <span class="info-value">{{ candidato.ciudad }}</span>
+                </div>
+            </div>
+            
+            <!-- Experiencia y Educación -->
+            <div class="info-section">
+                <h5><i class="bi bi-briefcase"></i> Experiencia y Educación</h5>
+                
+                <div class="info-row">
+                    <span class="info-label">Nivel de Educación:</span>
+                    <span class="info-value"><strong>{{ candidato.nivel_educacion }}</strong></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Años de Experiencia:</span>
+                    <span class="info-value"><strong>{{ candidato.años_experiencia }}</strong> año{{ candidato.años_experiencia|pluralize }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Fecha de Registro:</span>
+                    <span class="info-value">{{ candidato.fecha_registro|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+            
+            <!-- Hoja de Vida -->
+            <div class="info-section">
+                <h5><i class="bi bi-file-earmark-pdf"></i> Hoja de Vida</h5>
+                
+                {% if candidato.archivo_hv %}
+                <div class="text-center mb-3">
+                    <a href="{{ candidato.archivo_hv.url }}" target="_blank" class="btn btn-primary btn-lg">
+                        <i class="bi bi-download"></i> Descargar Hoja de Vida
+                    </a>
+                </div>
+                
+                <!-- Visor de PDF (si es PDF) -->
+                {% if candidato.archivo_hv.url|slice:"-4:" == ".pdf" %}
+                <iframe src="{{ candidato.archivo_hv.url }}" class="hv-viewer"></iframe>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    No se ha cargado hoja de vida para este candidato.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Observaciones -->
+            {% if candidato.observaciones %}
+            <div class="info-section">
+                <h5><i class="bi bi-chat-left-text"></i> Observaciones</h5>
+                <p class="mb-0">{{ candidato.observaciones }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Historial de Procesos -->
+            {% if candidato.procesos.all %}
+            <div class="info-section">
+                <h5><i class="bi bi-clock-history"></i> Historial de Procesos</h5>
+                
+                {% for proceso in candidato.procesos.all %}
+                <div class="timeline-item">
+                    <strong>{{ proceso.vacante.titulo }}</strong>
+                    <br>
+                    <span class="badge 
+                        {% if proceso.etapa_actual == 'contratado' %}bg-success
+                        {% elif proceso.etapa_actual == 'rechazado' %}bg-danger
+                        {% elif proceso.etapa_actual == 'oferta' %}bg-info
+                        {% else %}bg-warning text-dark
+                        {% endif %} me-2">
+                        {{ proceso.get_etapa_actual_display }}
+                    </span>
+                    <small class="text-muted">
+                        Aplicó: {{ proceso.fecha_aplicacion|date:"d/m/Y" }}
+                    </small>
+                    
+                    <!-- Calificaciones del proceso -->
+                    <div class="mt-2">
+                        {% if proceso.calificacion_entrevista %}
+                        <div class="small">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <strong>Entrevista:</strong> {{ proceso.calificacion_entrevista }}/5
+                        </div>
+                        {% endif %}
+                        
+                        {% if proceso.calificacion_pruebas %}
+                        <div class="small">
+                            <i class="bi bi-clipboard-check text-success"></i>
+                            <strong>Pruebas:</strong> {{ proceso.calificacion_pruebas }}/5
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Observaciones del proceso -->
+                    {% if proceso.observaciones %}
+                    <div class="mt-2 small text-muted">
+                        <i class="bi bi-chat-dots"></i> {{ proceso.observaciones }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Botón para ver vacante -->
+                    <div class="mt-2">
+                        <a href="{% url 'talento_humano:detalle_vacante' proceso.vacante.pk %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            Ver Vacante
+                        </a>
+                        <a href="{% url 'talento_humano:actualizar_etapa_candidato' proceso.pk %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            Actualizar Etapa
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+        </div>
+        
+        <!-- Columna derecha: Acciones y calificación -->
+        <div class="col-md-4">
+            
+            <div class="action-buttons">
+                
+                <!-- Calificación General -->
+                <div class="info-section text-center">
+                    <h5><i class="bi bi-star"></i> Calificación General</h5>
+                    
+                    {% if candidato.calificacion %}
+                    <div class="score-circle">
+                        <div class="score-number">{{ candidato.calificacion }}</div>
+                        <div class="score-label">de 5</div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        Este candidato aún no ha sido calificado
+                    </div>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#calificarModal">
+                        <i class="bi bi-star-fill"></i> Calificar Candidato
+                    </button>
+                </div>
+                
+                <!-- Acciones Rápidas -->
+                <div class="info-section">
+                    <h5><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="tel:{{ candidato.celular }}" class="btn btn-outline-success">
+                            <i class="bi bi-telephone"></i> Llamar
+                        </a>
+                        
+                        <a href="mailto:{{ candidato.email }}" class="btn btn-outline-primary">
+                            <i class="bi bi-envelope"></i> Enviar Email
+                        </a>
+                        
+                        <a href="https://wa.me/57{{ candidato.celular }}" target="_blank" class="btn btn-outline-success">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        
+                        {% if candidato.archivo_hv %}
+                        <a href="{{ candidato.archivo_hv.url }}" download class="btn btn-outline-secondary">
+                            <i class="bi bi-download"></i> Descargar HV
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Información del Sistema -->
+                <div class="info-section">
+                    <h5><i class="bi bi-info-circle"></i> Información</h5>
+                    
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Registrado:</span>
+                            <strong>{{ candidato.fecha_registro|timesince }} atrás</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Procesos:</span>
+                            <strong>{{ candidato.procesos.count }}</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <span>ID Candidato:</span>
+                            <strong>#{{ candidato.pk }}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navegación -->
+                <div class="info-section">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'talento_humano:lista_candidatos' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Candidatos
+                        </a>
+                        
+                        {% if candidato.procesos.first %}
+                        <a href="{% url 'talento_humano:detalle_vacante' candidato.procesos.first.vacante.pk %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-kanban"></i> Ver en Kanban
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+        
+    </div>
+    
+</div>
+
+<!-- Modal para calificar candidato -->
+<div class="modal fade" id="calificarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-star-fill"></i> Calificar Candidato
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'talento_humano:detalle_candidato' candidato.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h6>{{ candidato.nombres }} {{ candidato.apellidos }}</h6>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Calificación General (1-5)</label>
+                        <select name="calificacion" class="form-select form-select-lg" required>
+                            <option value="">Seleccione...</option>
+                            <option value="1">⭐ 1 - Muy Malo</option>
+                            <option value="2">⭐⭐ 2 - Malo</option>
+                            <option value="3">⭐⭐⭐ 3 - Regular</option>
+                            <option value="4">⭐⭐⭐⭐ 4 - Bueno</option>
+                            <option value="5">⭐⭐⭐⭐⭐ 5 - Excelente</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Observaciones</label>
+                        <textarea name="observaciones" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Comentarios sobre el candidato...">{{ candidato.observaciones }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar Calificación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-seleccionar la calificación actual si existe
+    {% if candidato.calificacion %}
+    document.querySelector('select[name="calificacion"]').value = "{{ candidato.calificacion }}";
+    {% endif %}
+</script>
+{% endblock %}

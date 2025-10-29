@@ -1,22 +1,288 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contratos - Talento Humano{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contrato-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s;
+    }
+    
+    .contrato-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .contrato-card.vencido {
+        border-left-color: #dc3545;
+        background-color: #fff5f5;
+    }
+    
+    .contrato-card.por-vencer {
+        border-left-color: #ffc107;
+        background-color: #fffef5;
+    }
+    
+    .contrato-card.vigente {
+        border-left-color: #28a745;
+    }
+    
+    .alert-stat {
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-stat .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .alert-stat .label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    
+    .badge-dias {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .filter-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+    }
+    
+    .filter-tabs .nav-link.active {
+        color: #007bff;
+        border-bottom-color: #007bff;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2><i class="fas fa-file-contract"></i> Contratos</h2>
-  <a href="{% url 'talento_humano:nuevo_contrato' %}" class="btn btn-primary mb-3">Nuevo Contrato</a>
-  <table class="table table-bordered">
-    <thead><tr><th>Empleado</th><th>Tipo</th><th>Inicio</th><th>Fin</th></tr></thead>
-    <tbody>
-      {% for contrato in contratos %}
-      <tr>
-        <td>{{ contrato.empleado }}</td>
-        <td>{{ contrato.tipo_contrato }}</td>
-        <td>{{ contrato.fecha_inicio }}</td>
-        <td>{{ contrato.fecha_fin }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="4" class="text-center">No hay contratos registrados.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">📄 Contratos Laborales</h1>
+            <p class="text-muted">Gestión y seguimiento de contratos</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'talento_humano:crear_contrato' %}" class="btn btn-primary">
+                <i class="bi bi-file-plus"></i> Nuevo Contrato
+            </a>
+        </div>
+    </div>
+    
+    <!-- Alertas de contratos -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="alert-stat bg-success text-white">
+                <div class="number">{{ contratos_vigentes }}</div>
+                <div class="label">Contratos Vigentes</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert-stat bg-warning text-dark">
+                <div class="number">{{ contratos_por_vencer }}</div>
+                <div class="label">Por Vencer (30 días)</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert-stat bg-danger text-white">
+                <div class="number">{{ contratos_vencidos }}</div>
+                <div class="label">Contratos Vencidos</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros por pestañas -->
+    <ul class="nav filter-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if not request.GET.estado %}active{% endif %}" 
+               href="{% url 'talento_humano:lista_contratos' %}">
+                Todos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'vigente' %}active{% endif %}" 
+               href="?estado=vigente">
+                Vigentes
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'por_vencer' %}active{% endif %}" 
+               href="?estado=por_vencer">
+                Por Vencer
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.GET.estado == 'vencido' %}active{% endif %}" 
+               href="?estado=vencido">
+                Vencidos
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Lista de contratos -->
+    {% if contratos %}
+    <div class="row">
+        {% for contrato in contratos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card contrato-card h-100 
+                {% if contrato.fecha_fin %}
+                    {% if contrato.fecha_fin < today %}vencido
+                    {% elif contrato.dias_para_vencer <= 30 %}por-vencer
+                    {% else %}vigente
+                    {% endif %}
+                {% else %}vigente{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                {{ contrato.get_tipo_display }}
+                            </h5>
+                            <small class="text-muted">No. {{ contrato.numero_contrato }}</small>
+                        </div>
+                        {% if contrato.activo %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <a href="{% url 'talento_humano:detalle_empleado' contrato.empleado.pk %}" 
+                           class="text-decoration-none">
+                            <strong>{{ contrato.empleado.get_nombre_completo }}</strong>
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ contrato.cargo }}</small>
+                    </div>
+                    
+                    <div class="border-top pt-3">
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <i class="bi bi-calendar-check text-muted"></i>
+                                <strong>Inicio:</strong>
+                                <br>{{ contrato.fecha_inicio|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-calendar-x text-muted"></i>
+                                <strong>Fin:</strong>
+                                <br>
+                                {% if contrato.fecha_fin %}
+                                {{ contrato.fecha_fin|date:"d/m/Y" }}
+                                {% else %}
+                                Indefinido
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mt-2">
+                                <i class="bi bi-cash text-muted"></i>
+                                <strong>Salario:</strong> ${{ contrato.salario|floatformat:0 }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if contrato.fecha_fin %}
+                    <div class="border-top pt-3 mt-3">
+                        {% with dias=contrato.dias_para_vencer %}
+                        {% if dias <= 0 %}
+                        <span class="badge bg-danger w-100 badge-dias">
+                            <i class="bi bi-exclamation-triangle"></i> VENCIDO
+                        </span>
+                        {% elif dias <= 30 %}
+                        <span class="badge bg-warning text-dark w-100 badge-dias">
+                            <i class="bi bi-clock"></i> Vence en {{ dias }} día{{ dias|pluralize }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success w-100 badge-dias">
+                            <i class="bi bi-check-circle"></i> {{ dias }} días restantes
+                        </span>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-grid gap-2">
+                            {% if contrato.fecha_fin and contrato.dias_para_vencer <= 60 %}
+                            <a href="{% url 'talento_humano:renovar_contrato' contrato.pk %}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="bi bi-arrow-repeat"></i> Renovar Contrato
+                            </a>
+                            {% endif %}
+                            {% if contrato.archivo %}
+                            <a href="{{ contrato.archivo.url }}" 
+                               target="_blank" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-pdf"></i> Ver Documento
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if contratos.has_other_pages %}
+    <nav aria-label="Paginación de contratos">
+        <ul class="pagination justify-content-center">
+            {% if contratos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ contratos.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    Página {{ contratos.number }} de {{ contratos.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if contratos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ contratos.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ contratos.paginator.num_pages }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <!-- Estado vacío -->
+    <div class="text-center py-5">
+        <i class="bi bi-file-text" style="font-size: 5rem; color: #ccc;"></i>
+        <h4 class="mt-3">No se encontraron contratos</h4>
+        <p class="text-muted">Crea el primer contrato para comenzar</p>
+        <a href="{% url 'talento_humano:crear_contrato' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-file-plus"></i> Crear Primer Contrato
+        </a>
+    </div>
+    {% endif %}
+    
 </div>
 {% endblock %}

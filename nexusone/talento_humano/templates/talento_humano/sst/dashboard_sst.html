@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard SST - Seguridad y Salud en el Trabajo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sst-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #dc3545;
+        height: 100%;
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.danger { border-left-color: #dc3545; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    
+    .stat-card.success .stat-number { color: #28a745; }
+    .stat-card.warning .stat-number { color: #ffc107; }
+    .stat-card.danger .stat-number { color: #dc3545; }
+    .stat-card.info .stat-number { color: #17a2b8; }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.3;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+    
+    .alert-item {
+        background: white;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .alert-item.danger {
+        border-left-color: #dc3545;
+    }
+    
+    .accidente-item {
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #fff5f5;
+        border-radius: 4px;
+    }
+    
+    .riesgo-badge {
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .quick-action {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        cursor: pointer;
+        height: 100%;
+    }
+    
+    .quick-action:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    
+    .quick-action i {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header SST -->
+    <div class="sst-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">🛡️ Seguridad y Salud en el Trabajo (SST)</h1>
+                <p class="mb-0 opacity-75">
+                    Sistema de Gestión de Seguridad y Salud en el Trabajo - Decreto 1072 de 2015
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-light text-dark p-3" style="font-size: 1rem;">
+                    <i class="bi bi-calendar"></i> Año {{ año_actual }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card danger position-relative">
+                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-label">Accidentes de Trabajo</div>
+                <div class="stat-number">{{ total_accidentes }}</div>
+                <small class="text-muted">Este año</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card warning position-relative">
+                <div class="stat-icon"><i class="bi bi-clipboard-pulse"></i></div>
+                <div class="stat-label">Exámenes Vencidos</div>
+                <div class="stat-number">{{ examenes_vencidos }}</div>
+                <small class="text-muted">Requieren actualización</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card danger position-relative">
+                <div class="stat-icon"><i class="bi bi-shield-x"></i></div>
+                <div class="stat-label">Riesgos Alto/Muy Alto</div>
+                <div class="stat-number">{{ riesgos_alto|add:riesgos_muy_alto }}</div>
+                <small class="text-muted">Requieren atención</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card warning position-relative">
+                <div class="stat-icon"><i class="bi bi-box"></i></div>
+                <div class="stat-label">EPP Bajo Stock</div>
+                <div class="stat-number">{{ epp_bajo_stock }}</div>
+                <small class="text-muted">Requieren pedido</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alertas urgentes -->
+    {% if examenes_vencidos > 0 or epp_bajo_stock > 0 or riesgos_muy_alto > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Alertas Urgentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    
+                    {% if examenes_vencidos > 0 %}
+                    <div class="alert-item danger">
+                        <strong>⚠️ Exámenes Médicos Vencidos</strong>
+                        <p class="mb-2">
+                            Hay {{ examenes_vencidos }} empleado{{ examenes_vencidos|pluralize }} con exámenes médicos vencidos.
+                        </p>
+                        <a href="{% url 'talento_humano:lista_examenes_medicos' %}" class="btn btn-sm btn-danger">
+                            Ver Exámenes
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if riesgos_muy_alto > 0 %}
+                    <div class="alert-item danger">
+                        <strong>🔴 Riesgos Muy Altos</strong>
+                        <p class="mb-2">
+                            Se han identificado {{ riesgos_muy_alto }} riesgo{{ riesgos_muy_alto|pluralize }} de nivel muy alto que requieren acción inmediata.
+                        </p>
+                        <a href="{% url 'talento_humano:matriz_riesgos' %}?nivel=muy_alto" class="btn btn-sm btn-danger">
+                            Ver Riesgos
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if epp_bajo_stock > 0 %}
+                    <div class="alert-item">
+                        <strong>📦 EPP con Bajo Stock</strong>
+                        <p class="mb-2">
+                            {{ epp_bajo_stock }} elemento{{ epp_bajo_stock|pluralize }} de protección personal requieren reposición urgente.
+                        </p>
+                        <a href="{% url 'talento_humano:lista_epp' %}" class="btn btn-sm btn-warning">
+                            Ver Inventario EPP
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        
+        <!-- Columna izquierda -->
+        <div class="col-md-8">
+            
+            <!-- Accidentes recientes -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-octagon"></i> Accidentes Recientes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if accidentes_recientes %}
+                    {% for accidente in accidentes_recientes %}
+                    <div class="accidente-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <strong>{{ accidente.empleado.get_nombre_completo }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> {{ accidente.fecha_accidente|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            <span class="riesgo-badge
+                                {% if accidente.severidad == 'leve' %}bg-warning text-dark
+                                {% elif accidente.severidad == 'grave' %}bg-danger text-white
+                                {% else %}bg-dark text-white
+                                {% endif %}">
+                                {{ accidente.get_severidad_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small>
+                                <i class="bi bi-geo-alt"></i> {{ accidente.lugar }}
+                                <br>
+                                <i class="bi bi-bandaid"></i> {{ accidente.parte_cuerpo_afectada }}
+                            </small>
+                        </div>
+                        
+                        {% if accidente.dias_incapacidad > 0 %}
+                        <div class="mt-2">
+                            <span class="badge bg-secondary">
+                                {{ accidente.dias_incapacidad }} día{{ accidente.dias_incapacidad|pluralize }} de incapacidad
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-2">
+                            <a href="{% url 'talento_humano:detalle_accidente' accidente.pk %}" 
+                               class="btn btn-sm btn-outline-danger">
+                                Ver Investigación
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4 text-success">
+                        <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
+                        <p class="mt-2 mb-0">
+                            <strong>¡Excelente!</strong> No hay accidentes registrados recientemente
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- EPP por vencer -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-exclamation"></i> EPP Próximos a Vencer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if epp_por_vencer %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Elemento</th>
+                                    <th>Fecha Entrega</th>
+                                    <th>Vencimiento</th>
+                                    <th>Días Restantes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entrega in epp_por_vencer %}
+                                <tr>
+                                    <td>{{ entrega.empleado.get_nombre_completo }}</td>
+                                    <td>{{ entrega.elemento.nombre }}</td>
+                                    <td>{{ entrega.fecha_entrega|date:"d/m/Y" }}</td>
+                                    <td>{{ entrega.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% with dias=entrega.fecha_vencimiento|timeuntil %}
+                                        <span class="badge bg-warning text-dark">
+                                            {{ dias }}
+                                        </span>
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted mb-0">
+                        No hay EPP próximos a vencer en los próximos 30 días
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Columna derecha: Acciones rápidas -->
+        <div class="col-md-4">
+            
+            <!-- Acciones rápidas -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning"></i> Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'talento_humano:matriz_riesgos' %}" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-table text-danger"></i> Matriz de Riesgos
+                        </a>
+                        <a href="{% url 'talento_humano:crear_accidente' %}" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-circle text-danger"></i> Reportar Accidente
+                        </a>
+                        <a href="{% url 'talento_humano:lista_examenes_medicos' %}" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-clipboard-pulse text-info"></i> Exámenes Médicos
+                        </a>
+                        <a href="{% url 'talento_humano:lista_epp' %}" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-shield text-warning"></i> Gestión de EPP
+                        </a>
+                        <a href="{% url 'talento_humano:lista_entregas_epp' %}" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-seam text-success"></i> Entregas de EPP
+                        </a>
+                        <a href="{% url 'talento_humano:lista_capacitaciones' %}?tipo=seguridad" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-book text-primary"></i> Capacitaciones SST
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Indicadores clave -->
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bi bi-graph-up"></i> Indicadores SST
+                </h6>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Riesgos Muy Alto</small>
+                        <strong class="text-danger">{{ riesgos_muy_alto }}</strong>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Riesgos Alto</small>
+                        <strong class="text-warning">{{ riesgos_alto }}</strong>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: 75%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Accidentes (año)</small>
+                        <strong class="text-danger">{{ total_accidentes }}</strong>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" 
+                             style="width: {% widthratio total_accidentes 10 100 %}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Exámenes al día</small>
+                        <strong class="text-success">
+                            {% widthratio examenes_vencidos total_empleados 100 as porcentaje_vencidos %}
+                            {{ 100|add:porcentaje_vencidos|add:"-100" }}%
+                        </strong>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: {% widthratio examenes_vencidos total_empleados 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock %}
