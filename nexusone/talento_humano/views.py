@@ -656,7 +656,6 @@ def inscribir_capacitacion(request, capacitacion_id, empleado_id):
 def dashboard_sst(request):
     """Dashboard de Seguridad y Salud en el Trabajo"""
     
-    # Estadísticas generales
     total_empleados = Empleado.objects.filter(estado='activo').count()
     
     # Exámenes médicos
@@ -672,10 +671,10 @@ def dashboard_sst(request):
         fecha_accidente__year=date.today().year
     ).count()
     
-    # Riesgos críticos
-    riesgos_criticos = MatrizRiesgo.objects.filter(
-        nivel_riesgo='critico'
-    ).count()
+    # Riesgos
+    riesgos_criticos = MatrizRiesgo.objects.filter(nivel_riesgo='critico').count()
+    riesgos_alto = MatrizRiesgo.objects.filter(nivel_riesgo='alto').count()
+    riesgos_muy_alto = MatrizRiesgo.objects.filter(nivel_riesgo='muy alto').count()
     
     # EPP bajo stock
     epp_bajo_stock = ElementoProteccion.objects.filter(
@@ -683,7 +682,7 @@ def dashboard_sst(request):
         activo=True
     ).count()
     
-    # Próximas entregas de EPP
+    # Próximas entregas
     proximas_entregas = EntregaEPP.objects.filter(
         fecha_entrega__gte=date.today(),
         fecha_entrega__lte=date.today() + timedelta(days=7)
@@ -695,6 +694,8 @@ def dashboard_sst(request):
         'examenes_vencidos': examenes_vencidos,
         'accidentes_año': accidentes_año,
         'riesgos_criticos': riesgos_criticos,
+        'riesgos_alto': riesgos_alto,
+        'riesgos_muy_alto': riesgos_muy_alto,
         'epp_bajo_stock': epp_bajo_stock,
         'proximas_entregas': proximas_entregas,
     }
