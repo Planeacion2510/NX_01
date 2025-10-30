@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from talento_humano.models import EPS, AFP, ARL, CajaCompensacion
+from nexusone.talento_humano.models import EPS, AFP, ARL, CajaCompensacion
 
 class Command(BaseCommand):
     help = "Inicializa las entidades básicas de seguridad social (EPS, AFP, ARL, Caja de Compensación)"
