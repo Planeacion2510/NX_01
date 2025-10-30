@@ -17,6 +17,7 @@ urlpatterns = [
     path('empleados/<int:pk>/', views.EmpleadoDetailView.as_view(), name='detalle_empleado'),
     path('empleados/<int:pk>/editar/', views.EmpleadoUpdateView.as_view(), name='editar_empleado'),
     path('empleados/<int:pk>/inactivar/', views.inactivar_empleado, name='inactivar_empleado'),
+    path('empleados/<int:pk>/eliminar/', views.EmpleadoDeleteView.as_view(), name='eliminar_empleado'),
     
     # ============================================================================
     # CONTRATOS

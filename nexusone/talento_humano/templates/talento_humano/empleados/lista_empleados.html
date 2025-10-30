@@ -147,15 +147,14 @@
                     </td>
                     <td>
                         <div class="text-center">
-                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" class="btn-icon edit" title="Ver Perfil">
+                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn-icon close" title="Editar">
-                                <i class="bi bi-pencil"></i>
+                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil-square"></i>
                             </a>
-                            <a href="{% url 'talento_humano:inactivar_empleado' empleado.id %}" class="btn-icon delete" 
-                               title="Inactivar" onclick="return confirm('¿Desea inactivar a {{ empleado.get_nombre_completo }}?');">
-                                <i class="bi bi-x-circle"></i>
+                            <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
                             </a>
                         </div>
                     </td>
