@@ -1,262 +1,591 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Talento Humano{% endblock %}
-
-{% block extra_css %}
-<style>
-    .stat-card {
-        border-radius: 8px;
-        padding: 20px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border-left: 4px solid #007bff;
-    }
-    
-    .stat-card.warning {
-        border-left-color: #ffc107;
-    }
-    
-    .stat-card.danger {
-        border-left-color: #dc3545;
-    }
-    
-    .stat-card.success {
-        border-left-color: #28a745;
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #333;
-        margin: 10px 0;
-    }
-    
-    .stat-label {
-        color: #666;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .stat-icon {
-        font-size: 3rem;
-        opacity: 0.3;
-        position: absolute;
-        right: 20px;
-        top: 20px;
-    }
-    
-    .alert-box {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 4px;
-    }
-    
-    .list-group-item-action:hover {
-        background-color: #f8f9fa;
-    }
-</style>
-{% endblock %}
+{% block title %}Talento Humano | NexusOne{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h3 mb-2">👥 Talento Humano</h1>
-            <p class="text-muted">Dashboard de gestión de personal</p>
-        </div>
-    </div>
-    
-    <!-- Estadísticas principales -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stat-card success position-relative">
-                <div class="stat-icon">👥</div>
-                <div class="stat-label">Empleados Activos</div>
-                <div class="stat-number">{{ total_empleados }}</div>
-                <small class="text-muted">{{ total_inactivos }} inactivos</small>
-            </div>
-        </div>
+<div class="container mt-5">
+
+    <!-- Título -->
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-user-tie"></i> Módulo de Talento Humano
+    </h2>
+    <p class="text-muted text-center mb-5">Dashboard de gestión de personal</p>
+
+    <!-- Estadísticas principales en tarjetas -->
+    <div class="row g-4 mb-5">
         
-        <div class="col-md-3">
-            <div class="stat-card {% if contratos_por_vencer > 0 %}warning{% endif %} position-relative">
-                <div class="stat-icon">📄</div>
-                <div class="stat-label">Contratos por Vencer</div>
-                <div class="stat-number">{{ contratos_por_vencer }}</div>
-                <small class="text-muted">Próximos 30 días</small>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="stat-card position-relative">
-                <div class="stat-icon">📢</div>
-                <div class="stat-label">Vacantes Abiertas</div>
-                <div class="stat-number">{{ vacantes_abiertas }}</div>
-                <small class="text-muted">Procesos activos</small>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="stat-card position-relative">
-                <div class="stat-icon">🎓</div>
-                <div class="stat-label">Capacitaciones</div>
-                <div class="stat-number">{{ capacitaciones_proximas }}</div>
-                <small class="text-muted">Próximo mes</small>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Alertas y accesos rápidos -->
-    <div class="row">
-        <!-- Columna izquierda: Alertas -->
-        <div class="col-md-8">
-            
-            <!-- Alertas SST -->
-            {% if examenes_pendientes > 0 or contratos_por_vencer > 0 %}
-            <div class="card mb-4">
-                <div class="card-header bg-warning text-white">
-                    <h5 class="mb-0">⚠️ Alertas Importantes</h5>
+        <!-- Empleados Activos -->
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card stat-success">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
                 </div>
-                <div class="card-body">
-                    
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_empleados }}</div>
+                    <div class="stat-label">Empleados Activos</div>
+                    <div class="stat-subtitle">{{ total_inactivos }} inactivos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contratos por Vencer -->
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card {% if contratos_por_vencer > 0 %}stat-warning{% else %}stat-info{% endif %}">
+                <div class="stat-icon">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ contratos_por_vencer }}</div>
+                    <div class="stat-label">Contratos por Vencer</div>
+                    <div class="stat-subtitle">Próximos 30 días</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vacantes Abiertas -->
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ vacantes_abiertas }}</div>
+                    <div class="stat-label">Vacantes Abiertas</div>
+                    <div class="stat-subtitle">Procesos activos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacitaciones -->
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card stat-info">
+                <div class="stat-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ capacitaciones_proximas }}</div>
+                    <div class="stat-label">Capacitaciones</div>
+                    <div class="stat-subtitle">Próximo mes</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Alertas importantes (si existen) -->
+    {% if examenes_pendientes > 0 or contratos_por_vencer > 0 %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="alert-panel">
+                <div class="alert-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h5>Alertas Importantes</h5>
+                </div>
+                <div class="alert-content">
                     {% if contratos_por_vencer > 0 %}
-                    <div class="alert-box mb-3">
-                        <strong>⏰ Contratos por vencer:</strong> 
-                        Hay {{ contratos_por_vencer }} contrato(s) que vencen en los próximos 30 días.
+                    <div class="alert-item">
+                        <i class="fas fa-clock text-warning"></i>
+                        <span><strong>{{ contratos_por_vencer }}</strong> contrato(s) vencen en los próximos 30 días</span>
                         <a href="{% url 'talento_humano:lista_contratos' %}?estado=por_vencer" class="alert-link">Ver contratos</a>
                     </div>
                     {% endif %}
                     
                     {% if examenes_pendientes > 0 %}
-                    <div class="alert-box">
-                        <strong>🏥 Exámenes médicos vencidos:</strong> 
-                        {{ examenes_pendientes }} empleado(s) tienen exámenes médicos vencidos.
+                    <div class="alert-item">
+                        <i class="fas fa-stethoscope text-danger"></i>
+                        <span><strong>{{ examenes_pendientes }}</strong> empleado(s) con exámenes médicos vencidos</span>
                         <a href="{% url 'talento_humano:lista_examenes_medicos' %}" class="alert-link">Ver exámenes</a>
                     </div>
                     {% endif %}
-                    
                 </div>
             </div>
-            {% endif %}
-            
-            <!-- Empleados nuevos -->
-            {% if empleados_nuevos %}
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">🆕 Empleados Nuevos (Últimos 30 días)</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for empleado in empleados_nuevos %}
-                        <a href="{% url 'talento_humano:detalle_empleado' empleado.pk %}" 
-                           class="list-group-item list-group-item-action">
-                            <div class="d-flex align-items-center">
-                                {% if empleado.foto %}
-                                <img src="{{ empleado.foto.url }}" 
-                                     alt="{{ empleado.get_nombre_completo }}" 
-                                     class="rounded-circle me-3" 
-                                     style="width: 40px; height: 40px; object-fit: cover;">
-                                {% else %}
-                                <div class="rounded-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center" 
-                                     style="width: 40px; height: 40px;">
-                                    {{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}
-                                </div>
-                                {% endif %}
-                                <div class="flex-grow-1">
-                                    <strong>{{ empleado.get_nombre_completo }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ empleado.cargo }} - {{ empleado.area }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted">{{ empleado.fecha_ingreso|date:"d/m/Y" }}</small>
-                                </div>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-        </div>
-        
-        <!-- Columna derecha: Accesos rápidos y cumpleaños -->
-        <div class="col-md-4">
-            
-            <!-- Accesos rápidos -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">🚀 Accesos Rápidos</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        <a href="{% url 'talento_humano:crear_empleado' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-person-plus-fill me-2"></i> Nuevo Empleado
-                        </a>
-                        <a href="{% url 'talento_humano:lista_empleados' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-people-fill me-2"></i> Ver Empleados
-                        </a>
-                        <a href="{% url 'talento_humano:lista_contratos' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-file-text-fill me-2"></i> Contratos
-                        </a>
-                        <a href="{% url 'talento_humano:generar_certificacion' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-file-earmark-pdf-fill me-2"></i> Generar Certificación
-                        </a>
-                        <a href="{% url 'talento_humano:lista_vacantes' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-megaphone-fill me-2"></i> Vacantes
-                        </a>
-                        <a href="{% url 'talento_humano:lista_capacitaciones' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-book-fill me-2"></i> Capacitaciones
-                        </a>
-                        <a href="{% url 'talento_humano:dashboard_sst' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-shield-fill-check me-2"></i> SST
-                        </a>
-                        <a href="{% url 'talento_humano:lista_permisos' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-calendar-check-fill me-2"></i> Permisos
-                        </a>
-                        <a href="{% url 'talento_humano:lista_vacaciones' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-umbrella-fill me-2"></i> Vacaciones
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cumpleaños del mes -->
-            {% if cumpleañeros %}
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">🎂 Cumpleaños del Mes</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for empleado in cumpleañeros %}
-                        <div class="list-group-item">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1">
-                                    <strong>{{ empleado.get_nombre_completo }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ empleado.cargo }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-info">
-                                        {{ empleado.fecha_nacimiento|date:"d/m" }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
         </div>
     </div>
-    
+    {% endif %}
+
+    <!-- Título de Secciones -->
+    <h4 class="section-subtitle text-center mb-4">
+        <i class="fas fa-th-large"></i> Gestión de Personal
+    </h4>
+
+    <!-- Tarjetas de acciones principales -->
+    <div class="row g-4 justify-content-center mb-5">
+
+        <!-- 1. Administración de Personal -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-success text-white">
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Empleados</h5>
+                    <p class="text-muted small">Gestión completa de empleados y contratos.</p>
+                    <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-module mt-auto">
+                        Ver empleados
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Selección y Talento -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-primary text-white">
+                    <i class="fas fa-user-check fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Selección</h5>
+                    <p class="text-muted small">Vacantes, candidatos y procesos de selección.</p>
+                    <a href="{% url 'talento_humano:lista_vacantes' %}" class="btn-module mt-auto">
+                        Ver vacantes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Capacitación -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-info text-white">
+                    <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Capacitaciones</h5>
+                    <p class="text-muted small">Programas de formación y desarrollo.</p>
+                    <a href="{% url 'talento_humano:lista_capacitaciones' %}" class="btn-module mt-auto">
+                        Ver capacitaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. SST -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-warning text-white">
+                    <i class="fas fa-hard-hat fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">SST</h5>
+                    <p class="text-muted small">Seguridad y salud en el trabajo.</p>
+                    <a href="{% url 'talento_humano:dashboard_sst' %}" class="btn-module mt-auto">
+                        Ir a SST
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Gestión Laboral -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-danger text-white">
+                    <i class="fas fa-calendar-alt fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Permisos y Vacaciones</h5>
+                    <p class="text-muted small">Gestión de ausencias y permisos.</p>
+                    <a href="{% url 'talento_humano:lista_permisos' %}" class="btn-module mt-auto">
+                        Ver permisos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Evaluaciones -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-secondary text-white">
+                    <i class="fas fa-star fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Evaluaciones</h5>
+                    <p class="text-muted small">Evaluación de desempeño del personal.</p>
+                    <a href="{% url 'talento_humano:lista_evaluaciones' %}" class="btn-module mt-auto">
+                        Ver evaluaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Contratos -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-dark text-white">
+                    <i class="fas fa-file-signature fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Contratos</h5>
+                    <p class="text-muted small">Gestión y renovación de contratos.</p>
+                    <a href="{% url 'talento_humano:lista_contratos' %}" class="btn-module mt-auto">
+                        Ver contratos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Bienestar -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-module shadow-sm text-center">
+                <div class="card-icon bg-success text-white">
+                    <i class="fas fa-smile fa-2x"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Bienestar</h5>
+                    <p class="text-muted small">Actividades y clima organizacional.</p>
+                    <a href="{% url 'talento_humano:lista_actividades_bienestar' %}" class="btn-module mt-auto">
+                        Ver actividades
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Empleados Nuevos y Cumpleaños (si existen) -->
+    <div class="row g-4">
+        
+        <!-- Empleados Nuevos -->
+        {% if empleados_nuevos %}
+        <div class="col-md-6">
+            <div class="info-panel">
+                <div class="info-header">
+                    <i class="fas fa-user-plus"></i>
+                    <h5>Empleados Nuevos</h5>
+                    <span class="badge bg-primary">Últimos 30 días</span>
+                </div>
+                <div class="info-content">
+                    {% for empleado in empleados_nuevos %}
+                    <div class="info-item">
+                        <div class="employee-avatar">
+                            {% if empleado.foto %}
+                            <img src="{{ empleado.foto.url }}" alt="{{ empleado.get_nombre_completo }}">
+                            {% else %}
+                            <div class="avatar-initials">
+                                {{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="employee-info">
+                            <strong>{{ empleado.get_nombre_completo }}</strong>
+                            <small class="text-muted">{{ empleado.cargo }} - {{ empleado.area }}</small>
+                        </div>
+                        <div class="employee-date">
+                            <small class="text-muted">{{ empleado.fecha_ingreso|date:"d/m/Y" }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Cumpleaños del Mes -->
+        {% if cumpleañeros %}
+        <div class="col-md-6">
+            <div class="info-panel">
+                <div class="info-header">
+                    <i class="fas fa-birthday-cake"></i>
+                    <h5>Cumpleaños del Mes</h5>
+                    <span class="badge bg-info">{{ cumpleañeros|length }}</span>
+                </div>
+                <div class="info-content">
+                    {% for empleado in cumpleañeros %}
+                    <div class="info-item">
+                        <div class="employee-avatar">
+                            <div class="avatar-initials bg-info">
+                                {{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}
+                            </div>
+                        </div>
+                        <div class="employee-info">
+                            <strong>{{ empleado.get_nombre_completo }}</strong>
+                            <small class="text-muted">{{ empleado.cargo }}</small>
+                        </div>
+                        <div class="employee-date">
+                            <span class="badge bg-info">{{ empleado.fecha_nacimiento|date:"d/m" }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
 </div>
+
+<!-- Estilos -->
+<style>
+    /* Tarjetas de estadísticas */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .stat-success { border-color: #28a745; }
+    .stat-warning { border-color: #ffc107; }
+    .stat-danger { border-color: #dc3545; }
+    .stat-info { border-color: #17a2b8; }
+    .stat-primary { border-color: #007bff; }
+
+    .stat-icon {
+        font-size: 3rem;
+        opacity: 0.2;
+        min-width: 80px;
+        text-align: center;
+    }
+
+    .stat-success .stat-icon { color: #28a745; opacity: 0.3; }
+    .stat-warning .stat-icon { color: #ffc107; opacity: 0.3; }
+    .stat-info .stat-icon { color: #17a2b8; opacity: 0.3; }
+    .stat-primary .stat-icon { color: #007bff; opacity: 0.3; }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        color: #666;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-subtitle {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 3px;
+    }
+
+    /* Tarjetas de módulos */
+    .card-module {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        border: none;
+        background: white;
+    }
+
+    .card-module:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .card-icon {
+        padding: 25px;
+        font-size: 32px;
+    }
+
+    .card-body {
+        padding: 20px;
+        flex-grow: 1;
+    }
+
+    .card-title {
+        font-weight: 600;
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #1f2937;
+    }
+
+    .btn-module {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .btn-module:hover {
+        background: linear-gradient(135deg, #0056b3, #003d82);
+        transform: scale(1.05);
+        color: white;
+    }
+
+    /* Panel de alertas */
+    .alert-panel {
+        background: #fff3cd;
+        border-radius: 12px;
+        overflow: hidden;
+        border-left: 4px solid #ffc107;
+    }
+
+    .alert-header {
+        background: #ffc107;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-header h5 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .alert-content {
+        padding: 20px;
+    }
+
+    .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .alert-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .alert-item i {
+        font-size: 1.5rem;
+    }
+
+    .alert-item span {
+        flex: 1;
+    }
+
+    .alert-link {
+        color: #007bff;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .alert-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Paneles de información */
+    .info-panel {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .info-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-header h5 {
+        margin: 0;
+        flex: 1;
+        font-size: 1.1rem;
+    }
+
+    .info-content {
+        padding: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .employee-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .employee-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-initials {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .avatar-initials.bg-info {
+        background: #17a2b8;
+    }
+
+    .employee-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .employee-info strong {
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .employee-info small {
+        font-size: 0.85rem;
+    }
+
+    .employee-date {
+        text-align: right;
+    }
+
+    /* Subtítulos de sección */
+    .section-subtitle {
+        color: #495057;
+        font-weight: 600;
+        margin-top: 2rem;
+    }
+
+    .section-subtitle i {
+        color: #007bff;
+    }
+</style>
 {% endblock %}
