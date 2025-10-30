@@ -148,6 +148,10 @@ class EmpleadoListView(LoginRequiredMixin, ListView):
         
         return context
 
+class EmpleadoDeleteView(DeleteView):
+    model = Empleado
+    success_url = reverse_lazy('nombre_de_tu_url_lista')  # ajusta según tu configuración
+    template_name = 'talento_humano/empleado_confirm_delete.html'
 
 class EmpleadoDetailView(LoginRequiredMixin, DetailView):
     """Detalle completo de empleado"""
