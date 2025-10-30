@@ -27,10 +27,9 @@
     <form method="post" enctype="multipart/form-data" id="empleadoForm">
         {% csrf_token %}
 
-        {% if form.errors %}
+        {% if form.non_field_errors %}
         <div class="alert alert-danger mb-4">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>Revisa los campos con errores:</strong> {{ form.errors }}
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ form.non_field_errors }}
         </div>
         {% endif %}
 
@@ -45,8 +44,93 @@
         </ul>
 
         <div class="tab-content bg-white p-4 rounded shadow-sm">
-            <!-- ... tus tabs tal cual ... -->
-            <!-- (no te los repito para no hacer demasiado largo el bloque) -->
+
+            <!-- TAB PERSONAL -->
+            <div class="tab-pane fade show active" id="personal">
+                <h5 class="mb-3"><i class="bi bi-person-fill"></i> Información Personal</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form.tipo_documento.label_tag }}{{ form.tipo_documento }}</div>
+                    <div class="col-md-4">{{ form.numero_documento.label_tag }}{{ form.numero_documento }}</div>
+                    <div class="col-md-4">{{ form.lugar_expedicion.label_tag }}{{ form.lugar_expedicion }}</div>
+                    <div class="col-md-3">{{ form.primer_nombre.label_tag }}{{ form.primer_nombre }}</div>
+                    <div class="col-md-3">{{ form.segundo_nombre.label_tag }}{{ form.segundo_nombre }}</div>
+                    <div class="col-md-3">{{ form.primer_apellido.label_tag }}{{ form.primer_apellido }}</div>
+                    <div class="col-md-3">{{ form.segundo_apellido.label_tag }}{{ form.segundo_apellido }}</div>
+                    <div class="col-md-4">{{ form.fecha_nacimiento.label_tag }}{{ form.fecha_nacimiento }}</div>
+                    <div class="col-md-4">{{ form.genero.label_tag }}{{ form.genero }}</div>
+                    <div class="col-md-4">{{ form.estado_civil.label_tag }}{{ form.estado_civil }}</div>
+                    <div class="col-12">
+                        <label class="form-label"><i class="bi bi-camera"></i> Fotografía</label>
+                        <div class="photo-upload-area" onclick="document.getElementById('id_foto').click()">
+                            {% if object and object.foto %}
+                                <img src="{{ object.foto.url }}" class="photo-preview" id="photoPreview" alt="Foto actual">
+                            {% else %}
+                                <div class="text-muted py-3"><i class="bi bi-cloud-upload"></i> Click para seleccionar</div>
+                            {% endif %}
+                        </div>
+                        {{ form.foto }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTACTO -->
+            <div class="tab-pane fade" id="contacto">
+                <h5 class="mb-3"><i class="bi bi-telephone-fill"></i> Información de Contacto</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">{{ form.celular.label_tag }}{{ form.celular }}</div>
+                    <div class="col-md-3">{{ form.telefono_fijo.label_tag }}{{ form.telefono_fijo }}</div>
+                    <div class="col-md-3">{{ form.email_personal.label_tag }}{{ form.email_personal }}</div>
+                    <div class="col-md-3">{{ form.email_corporativo.label_tag }}{{ form.email_corporativo }}</div>
+                    <div class="col-md-6">{{ form.direccion.label_tag }}{{ form.direccion }}</div>
+                    <div class="col-md-3">{{ form.ciudad.label_tag }}{{ form.ciudad }}</div>
+                    <div class="col-md-3">{{ form.barrio.label_tag }}{{ form.barrio }}</div>
+                </div>
+            </div>
+
+            <!-- TAB LABORAL -->
+            <div class="tab-pane fade" id="laboral">
+                <h5 class="mb-3"><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">{{ form.fecha_ingreso.label_tag }}{{ form.fecha_ingreso }}</div>
+                    <div class="col-md-3">{{ form.cargo.label_tag }}{{ form.cargo }}</div>
+                    <div class="col-md-3">{{ form.area.label_tag }}{{ form.area }}</div>
+                    <div class="col-md-3">{{ form.sede.label_tag }}{{ form.sede }}</div>
+                    <div class="col-md-6">{{ form.jefe_inmediato.label_tag }}{{ form.jefe_inmediato }}</div>
+                    <div class="col-md-6">{{ form.estado.label_tag }}{{ form.estado }}</div>
+                </div>
+            </div>
+
+            <!-- TAB SALARIO -->
+            <div class="tab-pane fade" id="salario">
+                <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Información Salarial</h5>
+                <div class="row g-3">
+                    <div class="col-md-12">{{ form.salario_basico.label_tag }}{{ form.salario_basico }}</div>
+                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.aplica_auxilio_transporte }}<label>{{ form.aplica_auxilio_transporte.label }}</label></div>
+                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.salario_integral }}<label>{{ form.salario_integral.label }}</label></div>
+                </div>
+            </div>
+
+            <!-- TAB SEGURIDAD -->
+            <div class="tab-pane fade" id="seguridad">
+                <h5 class="mb-3"><i class="bi bi-shield-check"></i> Seguridad Social</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.eps.label_tag }}{{ form.eps }}</div>
+                    <div class="col-md-6">{{ form.afp.label_tag }}{{ form.afp }}</div>
+                    <div class="col-md-6">{{ form.arl.label_tag }}{{ form.arl }}</div>
+                    <div class="col-md-6">{{ form.caja_compensacion.label_tag }}{{ form.caja_compensacion }}</div>
+                </div>
+            </div>
+
+            <!-- TAB BANCARIA -->
+            <div class="tab-pane fade" id="bancaria">
+                <h5 class="mb-3"><i class="bi bi-bank"></i> Información Bancaria</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form.banco.label_tag }}{{ form.banco }}</div>
+                    <div class="col-md-4">{{ form.tipo_cuenta.label_tag }}{{ form.tipo_cuenta }}</div>
+                    <div class="col-md-4">{{ form.numero_cuenta.label_tag }}{{ form.numero_cuenta }}</div>
+                    <div class="col-12">{{ form.observaciones.label_tag }}{{ form.observaciones }}</div>
+                </div>
+            </div>
         </div>
 
         <!-- BOTONES -->
