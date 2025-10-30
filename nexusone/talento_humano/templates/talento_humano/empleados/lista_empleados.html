@@ -1,300 +1,105 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Empleados - Talento Humano{% endblock %}
-
-{% block extra_css %}
-<style>
-    .empleado-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-    }
-    
-    .empleado-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .empleado-avatar {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-    }
-    
-    .empleado-avatar-placeholder {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-    
-    .badge-estado {
-        padding: 5px 12px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    
-    .filter-card {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-mini {
-        text-align: center;
-        padding: 15px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .stat-mini .number {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #007bff;
-    }
-    
-    .stat-mini .label {
-        font-size: 0.85rem;
-        color: #666;
-    }
-</style>
-{% endblock %}
+{% block title %}Empleados | NexusOne{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 mb-2">👥 Empleados</h1>
-            <p class="text-muted">Gestión y administración de personal</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="{% url 'talento_humano:crear_empleado' %}" class="btn btn-primary">
-                <i class="bi bi-person-plus-fill"></i> Nuevo Empleado
-            </a>
-            <a href="{% url 'talento_humano:exportar_empleados_excel' %}" class="btn btn-success">
-                <i class="bi bi-file-excel-fill"></i> Exportar
-            </a>
-        </div>
-    </div>
-    
-    <!-- Mini estadísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stat-mini">
-                <div class="number">{{ total_empleados }}</div>
-                <div class="label">Total Empleados</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-mini">
-                <div class="number text-success">{{ total_activos }}</div>
-                <div class="label">Activos</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-mini">
-                <div class="number text-warning">{{ empleados.paginator.count|default:0 }}</div>
-                <div class="label">En Búsqueda</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-mini">
-                <div class="number text-info">{{ areas|length }}</div>
-                <div class="label">Áreas</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Filtros de búsqueda -->
-    <div class="filter-card">
-        <form method="get" id="filterForm">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">🔍 Búsqueda</label>
-                    <input type="text" 
-                           name="busqueda" 
-                           class="form-control" 
-                           placeholder="Nombre, documento, cargo..."
-                           value="{{ request.GET.busqueda }}">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">📊 Área</label>
-                    <select name="area" class="form-select">
-                        <option value="">Todas</option>
-                        {% for area in areas %}
-                        <option value="{{ area }}" {% if request.GET.area == area %}selected{% endif %}>
-                            {{ area }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">📌 Estado</label>
-                    <select name="estado" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="activo" {% if request.GET.estado == 'activo' %}selected{% endif %}>Activo</option>
-                        <option value="inactivo" {% if request.GET.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
-                        <option value="vacaciones" {% if request.GET.estado == 'vacaciones' %}selected{% endif %}>Vacaciones</option>
-                        <option value="incapacidad" {% if request.GET.estado == 'incapacidad' %}selected{% endif %}>Incapacidad</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">💼 Cargo</label>
-                    <input type="text" 
-                           name="cargo" 
-                           class="form-control" 
-                           placeholder="Cargo..."
-                           value="{{ request.GET.cargo }}">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search"></i> Buscar
-                        </button>
-                        <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-outline-secondary btn-sm">
-                            Limpiar
-                        </a>
-                    </div>
-                </div>
-            </div>
+<div class="container mt-5">
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-users"></i> Lista de Empleados
+    </h2>
+    <p class="text-muted text-center mb-5">Gestione, edite o consulte los empleados registrados</p>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'talento_humano:crear_empleado' %}" class="btn-modern">
+            <i class="fas fa-user-plus"></i> Nuevo Empleado
+        </a>
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Buscar empleado..." value="{{ request.GET.q }}">
+            <button class="btn-modern-outline" type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
-    
-    <!-- Lista de empleados -->
-    {% if empleados %}
-    <div class="row">
-        {% for empleado in empleados %}
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card empleado-card h-100" onclick="window.location='{% url 'talento_humano:detalle_empleado' empleado.pk %}'">
-                <div class="card-body">
-                    <div class="d-flex align-items-start mb-3">
-                        <div class="me-3">
-                            {% if empleado.foto %}
-                            <img src="{{ empleado.foto.url }}" 
-                                 alt="{{ empleado.get_nombre_completo }}" 
-                                 class="rounded-circle empleado-avatar">
-                            {% else %}
-                            <div class="rounded-circle empleado-avatar-placeholder bg-primary text-white">
-                                {{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="card-title mb-1">{{ empleado.get_nombre_completo }}</h5>
-                            <p class="text-muted mb-2 small">
-                                <i class="bi bi-briefcase-fill"></i> {{ empleado.cargo }}
-                            </p>
-                            <span class="badge-estado
-                                {% if empleado.estado == 'activo' %}bg-success
-                                {% elif empleado.estado == 'inactivo' %}bg-danger
-                                {% elif empleado.estado == 'vacaciones' %}bg-info
-                                {% elif empleado.estado == 'incapacidad' %}bg-warning text-dark
-                                {% else %}bg-secondary
-                                {% endif %}">
-                                {{ empleado.get_estado_display }}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="border-top pt-3">
-                        <div class="row g-2 small">
-                            <div class="col-6">
-                                <i class="bi bi-credit-card text-muted"></i>
-                                <strong>{{ empleado.numero_documento }}</strong>
-                            </div>
-                            <div class="col-6">
-                                <i class="bi bi-diagram-3 text-muted"></i>
-                                {{ empleado.area }}
-                            </div>
-                            <div class="col-6">
-                                <i class="bi bi-telephone-fill text-muted"></i>
-                                {{ empleado.celular }}
-                            </div>
-                            <div class="col-6">
-                                <i class="bi bi-calendar-check text-muted"></i>
-                                {{ empleado.fecha_ingreso|date:"d/m/Y" }}
-                            </div>
-                            <div class="col-12">
-                                <i class="bi bi-envelope-fill text-muted"></i>
-                                <small>{{ empleado.email_corporativo|default:"Sin email" }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="border-top pt-3 mt-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="bi bi-clock-history"></i>
-                                Antigüedad: {{ empleado.get_antiguedad.años }} año(s)
-                            </small>
-                            <a href="{% url 'talento_humano:detalle_empleado' empleado.pk %}" 
-                               class="btn btn-sm btn-outline-primary"
-                               onclick="event.stopPropagation();">
-                                Ver Perfil <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+
+    <div class="card-modern">
+        <div class="card-body-modern">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Cargo</th>
+                            <th>Área</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empleado in empleados %}
+                        <tr>
+                            <td>
+                                {% if empleado.foto %}
+                                <img src="{{ empleado.foto.url }}" class="rounded-circle" width="45" height="45">
+                                {% else %}
+                                <div class="avatar-initials bg-primary text-white">{{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ empleado.get_nombre_completo }}</td>
+                            <td>{{ empleado.cargo }}</td>
+                            <td>{{ empleado.area }}</td>
+                            <td>
+                                <span class="badge {% if empleado.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ empleado.estado|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'talento_humano:perfil_empleado' empleado.id %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">No hay empleados registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        {% endfor %}
     </div>
-    
-    <!-- Paginación -->
-    {% if empleados.has_other_pages %}
-    <nav aria-label="Paginación de empleados">
-        <ul class="pagination justify-content-center">
-            {% if empleados.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}">Primera</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ empleados.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}">Anterior</a>
-            </li>
-            {% endif %}
-            
-            <li class="page-item active">
-                <span class="page-link">
-                    Página {{ empleados.number }} de {{ empleados.paginator.num_pages }}
-                </span>
-            </li>
-            
-            {% if empleados.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ empleados.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}">Siguiente</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ empleados.paginator.num_pages }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}">Última</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-    
-    {% else %}
-    <!-- Estado vacío -->
-    <div class="text-center py-5">
-        <i class="bi bi-people" style="font-size: 5rem; color: #ccc;"></i>
-        <h4 class="mt-3">No se encontraron empleados</h4>
-        <p class="text-muted">Intenta ajustar los filtros de búsqueda o agrega un nuevo empleado</p>
-        <a href="{% url 'talento_humano:crear_empleado' %}" class="btn btn-primary mt-3">
-            <i class="bi bi-person-plus-fill"></i> Agregar Primer Empleado
-        </a>
-    </div>
-    {% endif %}
-    
 </div>
+
+<style>
+.card-modern {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.card-body-modern { padding: 25px; }
+.btn-modern, .btn-modern-outline {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 8px 16px;
+}
+.btn-modern {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+}
+.btn-modern-outline {
+    background: white;
+    color: #007bff;
+    border: 2px solid #007bff;
+}
+.btn-modern-outline:hover {
+    background: #007bff;
+    color: white;
+}
+.avatar-initials {
+    width: 45px; height: 45px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+}
+</style>
 {% endblock %}

@@ -1,618 +1,84 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} Empleado{% endblock %}
-
-{% block extra_css %}
-<style>
-    .form-section {
-        background: white;
-        border-radius: 8px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .form-section h5 {
-        color: #667eea;
-        border-bottom: 2px solid #667eea;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .form-section .section-icon {
-        font-size: 1.3rem;
-        margin-right: 8px;
-    }
-    
-    .required-field::after {
-        content: " *";
-        color: red;
-    }
-    
-    .preview-foto {
-        max-width: 200px;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        padding: 5px;
-    }
-    
-    .step-wizard {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 30px;
-        position: relative;
-    }
-    
-    .step-wizard::before {
-        content: '';
-        position: absolute;
-        top: 20px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: #ddd;
-        z-index: -1;
-    }
-    
-    .step {
-        text-align: center;
-        flex: 1;
-        position: relative;
-        background: white;
-    }
-    
-    .step-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #ddd;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        font-weight: bold;
-    }
-    
-    .step.active .step-circle {
-        background: #667eea;
-    }
-    
-    .step.completed .step-circle {
-        background: #28a745;
-    }
-    
-    .help-text {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-top: 5px;
-    }
-</style>
-{% endblock %}
+{% block title %}Registrar / Editar Empleado | NexusOne{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'talento_humano:dashboard' %}">Talento Humano</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'talento_humano:lista_empleados' %}">Empleados</a></li>
-                    <li class="breadcrumb-item active">{% if object %}Editar{% else %}Nuevo{% endif %}</li>
-                </ol>
-            </nav>
-            <h1 class="h3">
-                <i class="bi bi-person-fill"></i> 
-                {% if object %}Editar Empleado: {{ object.get_nombre_completo }}{% else %}Nuevo Empleado{% endif %}
-            </h1>
+<div class="container mt-5">
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-user-plus"></i> {{ titulo }}
+    </h2>
+    <p class="text-muted text-center mb-5">Complete la información del empleado</p>
+
+    <div class="card-modern mb-5">
+        <div class="card-body-modern">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <div class="row g-4">
+                    {% for field in form %}
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ field }}
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-5">
+                    <button type="submit" class="btn-modern me-2">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                    <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-modern-outline">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <form method="post" enctype="multipart/form-data" id="empleadoForm">
-        {% csrf_token %}
-        
-        <!-- Mensajes de error generales -->
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            {{ form.non_field_errors }}
-        </div>
-        {% endif %}
-        
-        <!-- Sección 1: Información Personal -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">👤</span>
-                Información Personal
-            </h5>
-            
-            <div class="row g-3">
-                <!-- Tipo y número de documento -->
-                <div class="col-md-3">
-                    <label class="form-label required-field">Tipo de Documento</label>
-                    {{ form.tipo_documento }}
-                    {% if form.tipo_documento.errors %}
-                    <div class="text-danger small">{{ form.tipo_documento.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label required-field">Número de Documento</label>
-                    {{ form.numero_documento }}
-                    {% if form.numero_documento.errors %}
-                    <div class="text-danger small">{{ form.numero_documento.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Lugar de Expedición</label>
-                    {{ form.lugar_expedicion }}
-                    {% if form.lugar_expedicion.errors %}
-                    <div class="text-danger small">{{ form.lugar_expedicion.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Fecha de Nacimiento</label>
-                    {{ form.fecha_nacimiento }}
-                    {% if form.fecha_nacimiento.errors %}
-                    <div class="text-danger small">{{ form.fecha_nacimiento.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- Nombres -->
-                <div class="col-md-3">
-                    <label class="form-label required-field">Primer Nombre</label>
-                    {{ form.primer_nombre }}
-                    {% if form.primer_nombre.errors %}
-                    <div class="text-danger small">{{ form.primer_nombre.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Segundo Nombre</label>
-                    {{ form.segundo_nombre }}
-                    {% if form.segundo_nombre.errors %}
-                    <div class="text-danger small">{{ form.segundo_nombre.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label required-field">Primer Apellido</label>
-                    {{ form.primer_apellido }}
-                    {% if form.primer_apellido.errors %}
-                    <div class="text-danger small">{{ form.primer_apellido.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Segundo Apellido</label>
-                    {{ form.segundo_apellido }}
-                    {% if form.segundo_apellido.errors %}
-                    <div class="text-danger small">{{ form.segundo_apellido.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- Género y estado civil -->
-                <div class="col-md-6">
-                    <label class="form-label">Género</label>
-                    {{ form.genero }}
-                    {% if form.genero.errors %}
-                    <div class="text-danger small">{{ form.genero.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-6">
-                    <label class="form-label">Estado Civil</label>
-                    {{ form.estado_civil }}
-                    {% if form.estado_civil.errors %}
-                    <div class="text-danger small">{{ form.estado_civil.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- Foto -->
-                <div class="col-md-12">
-                    <label class="form-label">Foto</label>
-                    {{ form.foto }}
-                    {% if form.foto.errors %}
-                    <div class="text-danger small">{{ form.foto.errors }}</div>
-                    {% endif %}
-                    {% if object and object.foto %}
-                    <div class="mt-2">
-                        <img src="{{ object.foto.url }}" class="preview-foto" alt="Foto actual">
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 2: Información de Contacto -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">📞</span>
-                Información de Contacto
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label required-field">Celular</label>
-                    {{ form.celular }}
-                    {% if form.celular.errors %}
-                    <div class="text-danger small">{{ form.celular.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Teléfono Fijo</label>
-                    {{ form.telefono_fijo }}
-                    {% if form.telefono_fijo.errors %}
-                    <div class="text-danger small">{{ form.telefono_fijo.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Email Personal</label>
-                    {{ form.email_personal }}
-                    {% if form.email_personal.errors %}
-                    <div class="text-danger small">{{ form.email_personal.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Email Corporativo</label>
-                    {{ form.email_corporativo }}
-                    {% if form.email_corporativo.errors %}
-                    <div class="text-danger small">{{ form.email_corporativo.errors }}</div>
-                    {% endif %}
-                    <div class="help-text">Se generará automáticamente si se deja vacío</div>
-                </div>
-                
-                <div class="col-md-6">
-                    <label class="form-label required-field">Dirección</label>
-                    {{ form.direccion }}
-                    {% if form.direccion.errors %}
-                    <div class="text-danger small">{{ form.direccion.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label required-field">Ciudad</label>
-                    {{ form.ciudad }}
-                    {% if form.ciudad.errors %}
-                    <div class="text-danger small">{{ form.ciudad.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Barrio</label>
-                    {{ form.barrio }}
-                    {% if form.barrio.errors %}
-                    <div class="text-danger small">{{ form.barrio.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 3: Contacto de Emergencia -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">🚨</span>
-                Contacto de Emergencia
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Nombre Completo</label>
-                    {{ form.contacto_emergencia_nombre }}
-                    {% if form.contacto_emergencia_nombre.errors %}
-                    <div class="text-danger small">{{ form.contacto_emergencia_nombre.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">Parentesco</label>
-                    {{ form.contacto_emergencia_parentesco }}
-                    {% if form.contacto_emergencia_parentesco.errors %}
-                    <div class="text-danger small">{{ form.contacto_emergencia_parentesco.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">Teléfono</label>
-                    {{ form.contacto_emergencia_telefono }}
-                    {% if form.contacto_emergencia_telefono.errors %}
-                    <div class="text-danger small">{{ form.contacto_emergencia_telefono.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 4: Información Laboral -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">💼</span>
-                Información Laboral
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label required-field">Fecha de Ingreso</label>
-                    {{ form.fecha_ingreso }}
-                    {% if form.fecha_ingreso.errors %}
-                    <div class="text-danger small">{{ form.fecha_ingreso.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label required-field">Cargo</label>
-                    {{ form.cargo }}
-                    {% if form.cargo.errors %}
-                    <div class="text-danger small">{{ form.cargo.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label required-field">Área</label>
-                    {{ form.area }}
-                    {% if form.area.errors %}
-                    <div class="text-danger small">{{ form.area.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Sede</label>
-                    {{ form.sede }}
-                    {% if form.sede.errors %}
-                    <div class="text-danger small">{{ form.sede.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">Jefe Inmediato</label>
-                    {{ form.jefe_inmediato }}
-                    {% if form.jefe_inmediato.errors %}
-                    <div class="text-danger small">{{ form.jefe_inmediato.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label required-field">Estado</label>
-                    {{ form.estado }}
-                    {% if form.estado.errors %}
-                    <div class="text-danger small">{{ form.estado.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 5: Salario -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">💰</span>
-                Información Salarial
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label required-field">Salario Básico</label>
-                    {{ form.salario_basico }}
-                    {% if form.salario_basico.errors %}
-                    <div class="text-danger small">{{ form.salario_basico.errors }}</div>
-                    {% endif %}
-                    <div class="help-text">Mínimo: $1,423,500 (SMLV 2025)</div>
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label d-block">Auxilio de Transporte</label>
-                    <div class="form-check form-switch">
-                        {{ form.aplica_auxilio_transporte }}
-                        <label class="form-check-label" for="{{ form.aplica_auxilio_transporte.id_for_label }}">
-                            Aplica (si salario ≤ 2 SMLV)
-                        </label>
-                    </div>
-                    {% if form.aplica_auxilio_transporte.errors %}
-                    <div class="text-danger small">{{ form.aplica_auxilio_transporte.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label d-block">Salario Integral</label>
-                    <div class="form-check form-switch">
-                        {{ form.salario_integral }}
-                        <label class="form-check-label" for="{{ form.salario_integral.id_for_label }}">
-                            Es salario integral
-                        </label>
-                    </div>
-                    {% if form.salario_integral.errors %}
-                    <div class="text-danger small">{{ form.salario_integral.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 6: Seguridad Social -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">🏥</span>
-                Seguridad Social
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">EPS</label>
-                    {{ form.eps }}
-                    {% if form.eps.errors %}
-                    <div class="text-danger small">{{ form.eps.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">AFP (Pensión)</label>
-                    {{ form.afp }}
-                    {% if form.afp.errors %}
-                    <div class="text-danger small">{{ form.afp.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">ARL</label>
-                    {{ form.arl }}
-                    {% if form.arl.errors %}
-                    <div class="text-danger small">{{ form.arl.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Caja de Compensación</label>
-                    {{ form.caja_compensacion }}
-                    {% if form.caja_compensacion.errors %}
-                    <div class="text-danger small">{{ form.caja_compensacion.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 7: Información Bancaria -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">🏦</span>
-                Información Bancaria
-            </h5>
-            
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Banco</label>
-                    {{ form.banco }}
-                    {% if form.banco.errors %}
-                    <div class="text-danger small">{{ form.banco.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">Tipo de Cuenta</label>
-                    {{ form.tipo_cuenta }}
-                    {% if form.tipo_cuenta.errors %}
-                    <div class="text-danger small">{{ form.tipo_cuenta.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="col-md-4">
-                    <label class="form-label">Número de Cuenta</label>
-                    {{ form.numero_cuenta }}
-                    {% if form.numero_cuenta.errors %}
-                    <div class="text-danger small">{{ form.numero_cuenta.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sección 8: Observaciones -->
-        <div class="form-section">
-            <h5>
-                <span class="section-icon">📝</span>
-                Observaciones
-            </h5>
-            
-            <div class="row">
-                <div class="col-12">
-                    <label class="form-label">Observaciones Adicionales</label>
-                    {{ form.observaciones }}
-                    {% if form.observaciones.errors %}
-                    <div class="text-danger small">{{ form.observaciones.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Botones de acción -->
-        <div class="form-section">
-            <div class="row">
-                <div class="col-12 text-end">
-                    <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-secondary me-2">
-                        <i class="bi bi-x-circle"></i> Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> 
-                        {% if object %}Actualizar{% else %}Guardar{% endif %} Empleado
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-    </form>
-    
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-    // Validación del formulario
-    document.getElementById('empleadoForm').addEventListener('submit', function(e) {
-        let valid = true;
-        
-        // Validar campos requeridos
-        const requiredFields = this.querySelectorAll('[required]');
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                valid = false;
-                field.classList.add('is-invalid');
-            } else {
-                field.classList.remove('is-invalid');
-            }
-        });
-        
-        if (!valid) {
-            e.preventDefault();
-            alert('Por favor complete todos los campos requeridos marcados con *');
-            window.scrollTo(0, 0);
-        }
-    });
-    
-    // Previsualización de foto
-    const fotoInput = document.querySelector('input[type="file"][name="foto"]');
-    if (fotoInput) {
-        fotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    let preview = document.querySelector('.preview-foto');
-                    if (!preview) {
-                        preview = document.createElement('img');
-                        preview.className = 'preview-foto mt-2';
-                        fotoInput.parentElement.appendChild(preview);
-                    }
-                    preview.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-    
-    // Auto-completar email corporativo
-    const primerNombreInput = document.querySelector('input[name="primer_nombre"]');
-    const primerApellidoInput = document.querySelector('input[name="primer_apellido"]');
-    const emailCorporativoInput = document.querySelector('input[name="email_corporativo"]');
-    
-    function generarEmailCorporativo() {
-        if (primerNombreInput && primerApellidoInput && emailCorporativoInput) {
-            const nombre = primerNombreInput.value.trim().toLowerCase();
-            const apellido = primerApellidoInput.value.trim().toLowerCase();
-            
-            if (nombre && apellido && !emailCorporativoInput.value) {
-                emailCorporativoInput.value = `${nombre}.${apellido}@dinnova.com.co`;
-            }
-        }
-    }
-    
-    if (primerNombreInput) {
-        primerNombreInput.addEventListener('blur', generarEmailCorporativo);
-    }
-    
-    if (primerApellidoInput) {
-        primerApellidoInput.addEventListener('blur', generarEmailCorporativo);
-    }
-</script>
+<style>
+.card-modern {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.card-body-modern { padding: 35px; }
+.btn-modern {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: all 0.3s ease;
+}
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.btn-modern-outline {
+    background: white;
+    color: #007bff;
+    border: 2px solid #007bff;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: all 0.3s ease;
+}
+.btn-modern-outline:hover {
+    background: #007bff;
+    color: white;
+}
+.form-floating > label {
+    color: #6c757d;
+}
+</style>
 {% endblock %}
