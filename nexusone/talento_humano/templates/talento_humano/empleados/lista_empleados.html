@@ -1,105 +1,144 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Empleados | NexusOne{% endblock %}
+{% block title %}Empleados - Talento Humano{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+    .table th {
+        background: #f9fafb;
+        font-weight: 600;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    .filter-bar {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="section-title text-center mb-4">
-        <i class="fas fa-users"></i> Lista de Empleados
-    </h2>
-    <p class="text-muted text-center mb-5">Gestione, edite o consulte los empleados registrados</p>
+<div class="container-fluid py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="{% url 'talento_humano:crear_empleado' %}" class="btn-modern">
-            <i class="fas fa-user-plus"></i> Nuevo Empleado
-        </a>
-        <form method="get" class="d-flex">
-            <input type="text" name="q" class="form-control me-2" placeholder="Buscar empleado..." value="{{ request.GET.q }}">
-            <button class="btn-modern-outline" type="submit"><i class="fas fa-search"></i></button>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-people-fill"></i> Empleados</h2>
+            <p class="text-muted mb-0">Gestione la información del personal de su organización.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'talento_humano:exportar_empleados_excel' %}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Exportar
+            </a>
+            <a href="{% url 'talento_humano:crear_empleado' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus-fill"></i> Nuevo
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtro -->
+    <div class="filter-bar mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Búsqueda</label>
+                <input type="text" name="busqueda" class="form-control" placeholder="Nombre, documento o cargo"
+                    value="{{ request.GET.busqueda }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Área</label>
+                <select name="area" class="form-select">
+                    <option value="">Todas</option>
+                    {% for area in areas %}
+                        <option value="{{ area }}" {% if request.GET.area == area %}selected{% endif %}>{{ area }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="activo" {% if request.GET.estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if request.GET.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Cargo</label>
+                <input type="text" name="cargo" class="form-control" placeholder="Cargo..."
+                    value="{{ request.GET.cargo }}">
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
         </form>
     </div>
 
-    <div class="card-modern">
-        <div class="card-body-modern">
+    <!-- Tabla -->
+    <div class="card">
+        <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table align-middle table-hover mb-0">
+                    <thead>
                         <tr>
-                            <th>Foto</th>
-                            <th>Nombre</th>
+                            <th>#</th>
+                            <th>Empleado</th>
                             <th>Cargo</th>
                             <th>Área</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for empleado in empleados %}
                         <tr>
-                            <td>
-                                {% if empleado.foto %}
-                                <img src="{{ empleado.foto.url }}" class="rounded-circle" width="45" height="45">
-                                {% else %}
-                                <div class="avatar-initials bg-primary text-white">{{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}</div>
-                                {% endif %}
-                            </td>
+                            <td>{{ forloop.counter }}</td>
                             <td>{{ empleado.get_nombre_completo }}</td>
                             <td>{{ empleado.cargo }}</td>
                             <td>{{ empleado.area }}</td>
                             <td>
                                 <span class="badge {% if empleado.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {{ empleado.estado|title }}
+                                    {{ empleado.get_estado_display }}
                                 </span>
                             </td>
-                            <td>
-                                <a href="{% url 'talento_humano:perfil_empleado' empleado.id %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
-                                <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></a>
-                                <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            <td class="text-end">
+                                <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'talento_humano:inactivar_empleado' empleado.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center text-muted">No hay empleados registrados.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">No hay empleados registrados.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-.card-modern {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-.card-body-modern { padding: 25px; }
-.btn-modern, .btn-modern-outline {
-    border-radius: 10px;
-    font-weight: 600;
-    padding: 8px 16px;
-}
-.btn-modern {
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
-    border: none;
-}
-.btn-modern-outline {
-    background: white;
-    color: #007bff;
-    border: 2px solid #007bff;
-}
-.btn-modern-outline:hover {
-    background: #007bff;
-    color: white;
-}
-.avatar-initials {
-    width: 45px; height: 45px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold;
-}
-</style>
+</div>
 {% endblock %}
