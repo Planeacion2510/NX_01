@@ -60,6 +60,7 @@ urlpatterns = [
     # ============================================================================
     path('capacitaciones/', views.CapacitacionListView.as_view(), name='lista_capacitaciones'),
     path('capacitaciones/nueva/', views.CapacitacionCreateView.as_view(), name='crear_capacitacion'),
+    path('capacitaciones/calendario/', views.calendario_capacitaciones, name='calendario_capacitaciones'),
     path('capacitaciones/<int:pk>/', views.CapacitacionDetailView.as_view(), name='detalle_capacitacion'),
     path('capacitaciones/<int:pk>/editar/', views.CapacitacionUpdateView.as_view(), name='editar_capacitacion'),
     path('capacitaciones/<int:capacitacion_id>/inscribir/<int:empleado_id>/', views.inscribir_capacitacion, name='inscribir_capacitacion'),

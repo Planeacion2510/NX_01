@@ -674,8 +674,7 @@ def dashboard_sst(request):
     
     # Riesgos críticos
     riesgos_criticos = MatrizRiesgo.objects.filter(
-        nivel_riesgo='critico',
-        activo=True
+        nivel_riesgo='critico'
     ).count()
     
     # EPP bajo stock
@@ -714,7 +713,7 @@ class MatrizRiesgoListView(LoginRequiredMixin, ListView):
     context_object_name = 'riesgos'
     
     def get_queryset(self):
-        queryset = MatrizRiesgo.objects.filter(activo=True)
+        queryset = MatrizRiesgo.objects.all()
         
         # Filtrar por nivel de riesgo
         nivel = self.request.GET.get('nivel')
@@ -1420,7 +1419,7 @@ def reporte_sst(request):
     examenes_año = ExamenMedico.objects.filter(fecha__year=año_actual)
     
     # Riesgos
-    riesgos_activos = MatrizRiesgo.objects.filter(activo=True)
+    riesgos_activos = MatrizRiesgo.objects.all()
     riesgos_criticos = riesgos_activos.filter(nivel_riesgo='critico').count()
     riesgos_altos = riesgos_activos.filter(nivel_riesgo='alto').count()
     
@@ -1514,3 +1513,75 @@ def calcular_liquidacion_ajax(request):
         return JsonResponse(data)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# Add this to your views.py file (nexusone/talento_humano/views.py)
+
+@login_required
+def calendario_capacitaciones(request):
+    """Vista de calendario de capacitaciones"""
+    from datetime import datetime, timedelta
+    
+    # Obtener mes y año de los parámetros GET, o usar el actual
+    año = int(request.GET.get('año', datetime.now().year))
+    mes = int(request.GET.get('mes', datetime.now().month))
+    
+    # Crear fecha para el primer día del mes
+    primer_dia = datetime(año, mes, 1).date()
+    
+    # Calcular el último día del mes
+    if mes == 12:
+        ultimo_dia = datetime(año + 1, 1, 1).date() - timedelta(days=1)
+    else:
+        ultimo_dia = datetime(año, mes + 1, 1).date() - timedelta(days=1)
+    
+    # Obtener capacitaciones del mes
+    capacitaciones = Capacitacion.objects.filter(
+        fecha_programada__gte=primer_dia,
+        fecha_programada__lte=ultimo_dia
+    ).order_by('fecha_programada')
+    
+    # Crear estructura de calendario
+    # Agregar días vacíos al inicio (días de la semana anterior)
+    inicio_semana = primer_dia.weekday()  # 0 = Lunes, 6 = Domingo
+    
+    # Crear lista de días del mes con sus capacitaciones
+    dias_calendario = []
+    for dia_num in range(1, ultimo_dia.day + 1):
+        fecha_dia = datetime(año, mes, dia_num).date()
+        caps_dia = capacitaciones.filter(fecha_programada=fecha_dia)
+        dias_calendario.append({
+            'fecha': fecha_dia,
+            'dia': dia_num,
+            'capacitaciones': caps_dia
+        })
+    
+    # Calcular mes anterior y siguiente
+    if mes == 1:
+        mes_anterior = {'mes': 12, 'año': año - 1}
+    else:
+        mes_anterior = {'mes': mes - 1, 'año': año}
+    
+    if mes == 12:
+        mes_siguiente = {'mes': 1, 'año': año + 1}
+    else:
+        mes_siguiente = {'mes': mes + 1, 'año': año}
+    
+    # Nombres de meses en español
+    meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ]
+    
+    context = {
+        'año': año,
+        'mes': mes,
+        'mes_nombre': meses[mes - 1],
+        'dias_calendario': dias_calendario,
+        'inicio_semana': inicio_semana,
+        'mes_anterior': mes_anterior,
+        'mes_siguiente': mes_siguiente,
+        'capacitaciones_mes': capacitaciones,
+        'hoy': datetime.now().date(),
+    }
+    
+    return render(request, 'talento_humano/capacitacion/calendario_capacitaciones.html', context)
