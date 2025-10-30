@@ -3,965 +3,164 @@
 
 {% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} Empleado - Talento Humano{% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Variables de colores */
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    }
-
-    /* Header del formulario */
-    .form-header {
-        background: var(--primary-gradient);
-        border-radius: 16px;
-        padding: 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        color: white;
-    }
-
-    .form-header h2 {
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .form-header p {
-        opacity: 0.9;
-        margin-bottom: 0;
-    }
-
-    /* Navegación por tabs moderna */
-    .nav-tabs-modern {
-        border: none;
-        background: white;
-        border-radius: 12px;
-        padding: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .nav-tabs-modern .nav-link {
-        border: none;
-        border-radius: 8px;
-        padding: 12px 20px;
-        font-weight: 600;
-        color: #6c757d;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: transparent;
-    }
-
-    .nav-tabs-modern .nav-link:hover {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-    }
-
-    .nav-tabs-modern .nav-link.active {
-        background: var(--primary-gradient);
-        color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .nav-tabs-modern .nav-link i {
-        font-size: 1.2rem;
-    }
-
-    /* Contenedor de tabs */
-    .tab-content {
-        background: white;
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 25px;
-    }
-
-    /* Secciones del formulario */
-    .form-section-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #f1f3f5;
-    }
-
-    .form-section-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 12px;
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
-
-    .form-section-title h5 {
-        margin: 0;
-        font-weight: 700;
-        color: #2b2f3a;
-    }
-
-    /* Campos del formulario mejorados */
-    .form-label {
-        font-weight: 600;
-        color: #2b2f3a;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .form-label.required-field::after {
-        content: '*';
-        color: #ff6a00;
-        margin-left: 4px;
-        font-weight: 700;
-    }
-
-    .form-control,
-    .form-select {
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        padding: 12px 15px;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-    }
-
-    .form-control.is-invalid {
-        border-color: #ff6a00;
-    }
-
-    textarea.form-control {
-        min-height: 100px;
-        resize: vertical;
-    }
-
-    /* Switches modernos */
-    .form-check-input {
-        width: 50px;
-        height: 26px;
-        border-radius: 26px;
-        cursor: pointer;
-        border: 2px solid #e9ecef;
-    }
-
-    .form-check-input:checked {
-        background-color: #667eea;
-        border-color: #667eea;
-        background-image: none;
-    }
-
-    .form-check-input:focus {
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        border-color: #667eea;
-    }
-
-    .form-check-label {
-        font-weight: 500;
-        color: #6c757d;
-        margin-left: 10px;
-    }
-
-    /* Preview de foto */
-    .photo-upload-area {
-        border: 2px dashed #e9ecef;
-        border-radius: 12px;
-        padding: 30px;
-        text-align: center;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .photo-upload-area:hover {
-        border-color: #667eea;
-        background: rgba(102, 126, 234, 0.05);
-    }
-
-    .photo-preview {
-        max-width: 200px;
-        border-radius: 12px;
-        border: 3px solid #667eea;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        margin: 20px auto;
-        display: block;
-    }
-
-    .photo-upload-icon {
-        font-size: 3rem;
-        color: #667eea;
-        margin-bottom: 10px;
-    }
-
-    /* Texto de ayuda */
-    .help-text {
-        color: #6c757d;
-        font-size: 0.875rem;
-        margin-top: 5px;
-        display: block;
-    }
-
-    /* Mensajes de error */
-    .text-danger {
-        color: #ff6a00 !important;
-        font-size: 0.875rem;
-        margin-top: 5px;
-        display: block;
-    }
-
-    .alert {
-        border-radius: 12px;
-        border: none;
-        padding: 15px 20px;
-    }
-
-    /* Botones modernos */
-    .btn-modern {
-        border-radius: 10px;
-        padding: 12px 28px;
-        font-weight: 600;
-        border: none;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-modern-primary {
-        background: var(--primary-gradient);
-        color: white;
-    }
-
-    .btn-modern-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-        color: white;
-    }
-
-    .btn-modern-success {
-        background: var(--success-gradient);
-        color: white;
-    }
-
-    .btn-modern-success:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(17, 153, 142, 0.4);
-        color: white;
-    }
-
-    .btn-modern-outline {
-        background: white;
-        color: #6c757d;
-        border: 2px solid #e9ecef;
-    }
-
-    .btn-modern-outline:hover {
-        background: #f8f9fa;
-        border-color: #667eea;
-        color: #667eea;
-    }
-
-    /* Barra de progreso de llenado */
-    .progress-bar-container {
-        background: white;
-        border-radius: 12px;
-        padding: 15px 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 25px;
-    }
-
-    .progress-bar-custom {
-        height: 8px;
-        border-radius: 10px;
-        background: #e9ecef;
-        overflow: hidden;
-    }
-
-    .progress-bar-fill {
-        height: 100%;
-        background: var(--success-gradient);
-        border-radius: 10px;
-        transition: width 0.3s ease;
-    }
-
-    .progress-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 10px;
-        font-size: 0.875rem;
-        color: #6c757d;
-        font-weight: 600;
-    }
-
-    /* Animaciones */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .tab-pane {
-        animation: fadeIn 0.5s ease;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .form-header {
-            padding: 20px;
-        }
-
-        .nav-tabs-modern .nav-link {
-            font-size: 0.875rem;
-            padding: 10px 15px;
-        }
-
-        .tab-content {
-            padding: 20px;
-        }
-
-        .btn-modern {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-
-    /* Indicador de campo requerido */
-    .required-indicator {
-        background: rgba(255, 106, 0, 0.1);
-        color: #ff6a00;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 20px;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid py-4">
-    
-    <!-- Header -->
-    <div class="form-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-                <h2>
-                    <i class="bi bi-person-fill-add"></i> 
-                    {% if object %}Editar Empleado{% else %}Nuevo Empleado{% endif %}
-                </h2>
-                <p>Complete la información del empleado en cada sección</p>
-            </div>
-            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-modern btn-modern-outline">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-        </div>
+<div class="container mb-5">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="section-title">
+            <i class="bi bi-person-fill-add"></i>
+            {% if object %}Editar Empleado{% else %}Nuevo Empleado{% endif %}
+        </h1>
+        <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-volver">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
     </div>
 
-    <!-- Indicador de campos requeridos -->
-    <div class="required-indicator">
-        <i class="bi bi-info-circle-fill"></i>
-        Los campos marcados con <span style="color: #ff6a00;">*</span> son obligatorios
+    <!-- INDICADOR -->
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-4" style="background:#e0f2fe;border:none;">
+        <i class="bi bi-info-circle-fill text-primary"></i>
+        Los campos marcados con <span class="fw-bold text-danger">*</span> son obligatorios.
     </div>
 
+    <!-- FORMULARIO -->
     <form method="post" enctype="multipart/form-data" id="empleadoForm">
         {% csrf_token %}
-        
+
         {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            {{ form.non_field_errors }}
+        <div class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ form.non_field_errors }}
         </div>
         {% endif %}
 
-        <!-- Navegación por Tabs -->
-        <ul class="nav nav-tabs-modern" id="empleadoTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
-                    <i class="bi bi-person-fill"></i>
-                    <span class="d-none d-md-inline">Personal</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button">
-                    <i class="bi bi-telephone-fill"></i>
-                    <span class="d-none d-md-inline">Contacto</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="laboral-tab" data-bs-toggle="tab" data-bs-target="#laboral" type="button">
-                    <i class="bi bi-briefcase-fill"></i>
-                    <span class="d-none d-md-inline">Laboral</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#salario" type="button">
-                    <i class="bi bi-cash-stack"></i>
-                    <span class="d-none d-md-inline">Salario</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="seguridad-tab" data-bs-toggle="tab" data-bs-target="#seguridad" type="button">
-                    <i class="bi bi-shield-fill-check"></i>
-                    <span class="d-none d-md-inline">Seg. Social</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="bancaria-tab" data-bs-toggle="tab" data-bs-target="#bancaria" type="button">
-                    <i class="bi bi-bank"></i>
-                    <span class="d-none d-md-inline">Bancaria</span>
-                </button>
-            </li>
+        <!-- TABS -->
+        <ul class="nav nav-tabs mb-4 border-0">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#personal" type="button"><i class="bi bi-person"></i> Personal</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#contacto" type="button"><i class="bi bi-telephone"></i> Contacto</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#laboral" type="button"><i class="bi bi-briefcase"></i> Laboral</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#salario" type="button"><i class="bi bi-cash-stack"></i> Salario</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#seguridad" type="button"><i class="bi bi-shield-check"></i> Seg. Social</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bancaria" type="button"><i class="bi bi-bank"></i> Bancaria</button></li>
         </ul>
 
-        <!-- Contenido de Tabs -->
-        <div class="tab-content" id="empleadoTabsContent">
-            
-            <!-- Tab 1: Información Personal -->
-            <div class="tab-pane fade show active" id="personal" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <h5>Información Personal</h5>
-                </div>
+        <div class="tab-content bg-white p-4 rounded shadow-sm">
 
-                <div class="row g-4">
-                    <!-- Documento -->
-                    <div class="col-md-4">
-                        <label class="form-label required-field">
-                            <i class="bi bi-card-text"></i> Tipo de Documento
-                        </label>
-                        {{ form.tipo_documento }}
-                        {% if form.tipo_documento.errors %}<span class="text-danger">{{ form.tipo_documento.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label required-field">
-                            <i class="bi bi-hash"></i> Número de Documento
-                        </label>
-                        {{ form.numero_documento }}
-                        {% if form.numero_documento.errors %}<span class="text-danger">{{ form.numero_documento.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-geo-alt-fill"></i> Lugar de Expedición
-                        </label>
-                        {{ form.lugar_expedicion }}
-                        {% if form.lugar_expedicion.errors %}<span class="text-danger">{{ form.lugar_expedicion.errors }}</span>{% endif %}
-                    </div>
-
-                    <!-- Nombres -->
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-person"></i> Primer Nombre
-                        </label>
-                        {{ form.primer_nombre }}
-                        {% if form.primer_nombre.errors %}<span class="text-danger">{{ form.primer_nombre.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-person"></i> Segundo Nombre
-                        </label>
-                        {{ form.segundo_nombre }}
-                        {% if form.segundo_nombre.errors %}<span class="text-danger">{{ form.segundo_nombre.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-person-fill"></i> Primer Apellido
-                        </label>
-                        {{ form.primer_apellido }}
-                        {% if form.primer_apellido.errors %}<span class="text-danger">{{ form.primer_apellido.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-person-fill"></i> Segundo Apellido
-                        </label>
-                        {{ form.segundo_apellido }}
-                        {% if form.segundo_apellido.errors %}<span class="text-danger">{{ form.segundo_apellido.errors }}</span>{% endif %}
-                    </div>
-
-                    <!-- Datos adicionales -->
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-calendar3"></i> Fecha de Nacimiento
-                        </label>
-                        {{ form.fecha_nacimiento }}
-                        {% if form.fecha_nacimiento.errors %}<span class="text-danger">{{ form.fecha_nacimiento.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-gender-ambiguous"></i> Género
-                        </label>
-                        {{ form.genero }}
-                        {% if form.genero.errors %}<span class="text-danger">{{ form.genero.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-heart-fill"></i> Estado Civil
-                        </label>
-                        {{ form.estado_civil }}
-                        {% if form.estado_civil.errors %}<span class="text-danger">{{ form.estado_civil.errors }}</span>{% endif %}
-                    </div>
-
-                    <!-- Foto -->
+            <!-- TAB PERSONAL -->
+            <div class="tab-pane fade show active" id="personal">
+                <h5 class="mb-3"><i class="bi bi-person-fill"></i> Información Personal</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form.tipo_documento.label_tag }}{{ form.tipo_documento }}</div>
+                    <div class="col-md-4">{{ form.numero_documento.label_tag }}{{ form.numero_documento }}</div>
+                    <div class="col-md-4">{{ form.lugar_expedicion.label_tag }}{{ form.lugar_expedicion }}</div>
+                    <div class="col-md-3">{{ form.primer_nombre.label_tag }}{{ form.primer_nombre }}</div>
+                    <div class="col-md-3">{{ form.segundo_nombre.label_tag }}{{ form.segundo_nombre }}</div>
+                    <div class="col-md-3">{{ form.primer_apellido.label_tag }}{{ form.primer_apellido }}</div>
+                    <div class="col-md-3">{{ form.segundo_apellido.label_tag }}{{ form.segundo_apellido }}</div>
+                    <div class="col-md-4">{{ form.fecha_nacimiento.label_tag }}{{ form.fecha_nacimiento }}</div>
+                    <div class="col-md-4">{{ form.genero.label_tag }}{{ form.genero }}</div>
+                    <div class="col-md-4">{{ form.estado_civil.label_tag }}{{ form.estado_civil }}</div>
                     <div class="col-12">
-                        <label class="form-label">
-                            <i class="bi bi-camera-fill"></i> Fotografía
-                        </label>
+                        <label class="form-label"><i class="bi bi-camera"></i> Fotografía</label>
                         <div class="photo-upload-area" onclick="document.getElementById('id_foto').click()">
                             {% if object and object.foto %}
                                 <img src="{{ object.foto.url }}" class="photo-preview" id="photoPreview" alt="Foto actual">
                             {% else %}
-                                <div class="photo-upload-icon" id="uploadIcon">
-                                    <i class="bi bi-cloud-upload-fill"></i>
-                                </div>
-                                <div id="uploadText">
-                                    <strong>Click para seleccionar una foto</strong>
-                                    <p class="help-text mb-0">Formatos: JPG, PNG (máx. 2MB)</p>
-                                </div>
-                                <img src="#" class="photo-preview d-none" id="photoPreview" alt="Vista previa">
+                                <div class="text-muted py-3"><i class="bi bi-cloud-upload"></i> Click para seleccionar</div>
                             {% endif %}
                         </div>
                         {{ form.foto }}
-                        {% if form.foto.errors %}<span class="text-danger">{{ form.foto.errors }}</span>{% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 2: Contacto -->
-            <div class="tab-pane fade" id="contacto" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-telephone-fill"></i>
-                    </div>
-                    <h5>Información de Contacto</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-phone-fill"></i> Celular
-                        </label>
-                        {{ form.celular }}
-                        {% if form.celular.errors %}<span class="text-danger">{{ form.celular.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-telephone-fill"></i> Teléfono Fijo
-                        </label>
-                        {{ form.telefono_fijo }}
-                        {% if form.telefono_fijo.errors %}<span class="text-danger">{{ form.telefono_fijo.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-envelope-fill"></i> Email Personal
-                        </label>
-                        {{ form.email_personal }}
-                        {% if form.email_personal.errors %}<span class="text-danger">{{ form.email_personal.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-envelope-at-fill"></i> Email Corporativo
-                        </label>
-                        {{ form.email_corporativo }}
-                        {% if form.email_corporativo.errors %}<span class="text-danger">{{ form.email_corporativo.errors }}</span>{% endif %}
-                        <span class="help-text">Se generará automáticamente si se deja vacío</span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label required-field">
-                            <i class="bi bi-house-fill"></i> Dirección
-                        </label>
-                        {{ form.direccion }}
-                        {% if form.direccion.errors %}<span class="text-danger">{{ form.direccion.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-pin-map-fill"></i> Ciudad
-                        </label>
-                        {{ form.ciudad }}
-                        {% if form.ciudad.errors %}<span class="text-danger">{{ form.ciudad.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-signpost-fill"></i> Barrio
-                        </label>
-                        {{ form.barrio }}
-                        {% if form.barrio.errors %}<span class="text-danger">{{ form.barrio.errors }}</span>{% endif %}
-                    </div>
-                </div>
-
-                <div class="form-section-title mt-5">
-                    <div class="form-section-icon" style="background: rgba(255, 106, 0, 0.1); color: #ff6a00;">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                    </div>
-                    <h5>Contacto de Emergencia</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-person-fill"></i> Nombre Completo
-                        </label>
-                        {{ form.contacto_emergencia_nombre }}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-people-fill"></i> Parentesco
-                        </label>
-                        {{ form.contacto_emergencia_parentesco }}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-telephone-fill"></i> Teléfono
-                        </label>
-                        {{ form.contacto_emergencia_telefono }}
-                    </div>
+            <!-- TAB CONTACTO -->
+            <div class="tab-pane fade" id="contacto">
+                <h5 class="mb-3"><i class="bi bi-telephone-fill"></i> Información de Contacto</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">{{ form.celular.label_tag }}{{ form.celular }}</div>
+                    <div class="col-md-3">{{ form.telefono_fijo.label_tag }}{{ form.telefono_fijo }}</div>
+                    <div class="col-md-3">{{ form.email_personal.label_tag }}{{ form.email_personal }}</div>
+                    <div class="col-md-3">{{ form.email_corporativo.label_tag }}{{ form.email_corporativo }}</div>
+                    <div class="col-md-6">{{ form.direccion.label_tag }}{{ form.direccion }}</div>
+                    <div class="col-md-3">{{ form.ciudad.label_tag }}{{ form.ciudad }}</div>
+                    <div class="col-md-3">{{ form.barrio.label_tag }}{{ form.barrio }}</div>
                 </div>
             </div>
 
-            <!-- Tab 3: Información Laboral -->
-            <div class="tab-pane fade" id="laboral" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-briefcase-fill"></i>
-                    </div>
-                    <h5>Información Laboral</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-calendar-check-fill"></i> Fecha de Ingreso
-                        </label>
-                        {{ form.fecha_ingreso }}
-                        {% if form.fecha_ingreso.errors %}<span class="text-danger">{{ form.fecha_ingreso.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-award-fill"></i> Cargo
-                        </label>
-                        {{ form.cargo }}
-                        {% if form.cargo.errors %}<span class="text-danger">{{ form.cargo.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label required-field">
-                            <i class="bi bi-diagram-3-fill"></i> Área
-                        </label>
-                        {{ form.area }}
-                        {% if form.area.errors %}<span class="text-danger">{{ form.area.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            <i class="bi bi-building"></i> Sede
-                        </label>
-                        {{ form.sede }}
-                        {% if form.sede.errors %}<span class="text-danger">{{ form.sede.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="bi bi-person-badge-fill"></i> Jefe Inmediato
-                        </label>
-                        {{ form.jefe_inmediato }}
-                        {% if form.jefe_inmediato.errors %}<span class="text-danger">{{ form.jefe_inmediato.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label required-field">
-                            <i class="bi bi-toggle-on"></i> Estado
-                        </label>
-                        {{ form.estado }}
-                        {% if form.estado.errors %}<span class="text-danger">{{ form.estado.errors }}</span>{% endif %}
-                    </div>
+            <!-- TAB LABORAL -->
+            <div class="tab-pane fade" id="laboral">
+                <h5 class="mb-3"><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">{{ form.fecha_ingreso.label_tag }}{{ form.fecha_ingreso }}</div>
+                    <div class="col-md-3">{{ form.cargo.label_tag }}{{ form.cargo }}</div>
+                    <div class="col-md-3">{{ form.area.label_tag }}{{ form.area }}</div>
+                    <div class="col-md-3">{{ form.sede.label_tag }}{{ form.sede }}</div>
+                    <div class="col-md-6">{{ form.jefe_inmediato.label_tag }}{{ form.jefe_inmediato }}</div>
+                    <div class="col-md-6">{{ form.estado.label_tag }}{{ form.estado }}</div>
                 </div>
             </div>
 
-            <!-- Tab 4: Información Salarial -->
-            <div class="tab-pane fade" id="salario" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <h5>Información Salarial</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-12">
-                        <label class="form-label required-field">
-                            <i class="bi bi-currency-dollar"></i> Salario Básico
-                        </label>
-                        {{ form.salario_basico }}
-                        {% if form.salario_basico.errors %}<span class="text-danger">{{ form.salario_basico.errors }}</span>{% endif %}
-                        <span class="help-text">Ingrese el salario mensual básico</span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            {{ form.aplica_auxilio_transporte }}
-                            <label class="form-check-label" for="{{ form.aplica_auxilio_transporte.id_for_label }}">
-                                <i class="bi bi-bus-front-fill"></i> Aplica Auxilio de Transporte
-                            </label>
-                        </div>
-                        <span class="help-text">Solo si el salario es ≤ 2 SMLV</span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            {{ form.salario_integral }}
-                            <label class="form-check-label" for="{{ form.salario_integral.id_for_label }}">
-                                <i class="bi bi-star-fill"></i> Salario Integral
-                            </label>
-                        </div>
-                        <span class="help-text">Para salarios ≥ 10 SMLV</span>
-                    </div>
+            <!-- TAB SALARIO -->
+            <div class="tab-pane fade" id="salario">
+                <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Información Salarial</h5>
+                <div class="row g-3">
+                    <div class="col-md-12">{{ form.salario_basico.label_tag }}{{ form.salario_basico }}</div>
+                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.aplica_auxilio_transporte }}<label>{{ form.aplica_auxilio_transporte.label }}</label></div>
+                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.salario_integral }}<label>{{ form.salario_integral.label }}</label></div>
                 </div>
             </div>
 
-            <!-- Tab 5: Seguridad Social -->
-            <div class="tab-pane fade" id="seguridad" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-shield-fill-check"></i>
-                    </div>
-                    <h5>Seguridad Social</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="bi bi-hospital-fill"></i> EPS
-                        </label>
-                        {{ form.eps }}
-                        {% if form.eps.errors %}<span class="text-danger">{{ form.eps.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="bi bi-piggy-bank-fill"></i> Fondo de Pensiones (AFP)
-                        </label>
-                        {{ form.afp }}
-                        {% if form.afp.errors %}<span class="text-danger">{{ form.afp.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="bi bi-shield-fill-plus"></i> ARL
-                        </label>
-                        {{ form.arl }}
-                        {% if form.arl.errors %}<span class="text-danger">{{ form.arl.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="bi bi-gift-fill"></i> Caja de Compensación
-                        </label>
-                        {{ form.caja_compensacion }}
-                        {% if form.caja_compensacion.errors %}<span class="text-danger">{{ form.caja_compensacion.errors }}</span>{% endif %}
-                    </div>
+            <!-- TAB SEGURIDAD -->
+            <div class="tab-pane fade" id="seguridad">
+                <h5 class="mb-3"><i class="bi bi-shield-check"></i> Seguridad Social</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.eps.label_tag }}{{ form.eps }}</div>
+                    <div class="col-md-6">{{ form.afp.label_tag }}{{ form.afp }}</div>
+                    <div class="col-md-6">{{ form.arl.label_tag }}{{ form.arl }}</div>
+                    <div class="col-md-6">{{ form.caja_compensacion.label_tag }}{{ form.caja_compensacion }}</div>
                 </div>
             </div>
 
-            <!-- Tab 6: Información Bancaria -->
-            <div class="tab-pane fade" id="bancaria" role="tabpanel">
-                <div class="form-section-title">
-                    <div class="form-section-icon">
-                        <i class="bi bi-bank"></i>
-                    </div>
-                    <h5>Información Bancaria</h5>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-bank2"></i> Banco
-                        </label>
-                        {{ form.banco }}
-                        {% if form.banco.errors %}<span class="text-danger">{{ form.banco.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-credit-card-fill"></i> Tipo de Cuenta
-                        </label>
-                        {{ form.tipo_cuenta }}
-                        {% if form.tipo_cuenta.errors %}<span class="text-danger">{{ form.tipo_cuenta.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="bi bi-hash"></i> Número de Cuenta
-                        </label>
-                        {{ form.numero_cuenta }}
-                        {% if form.numero_cuenta.errors %}<span class="text-danger">{{ form.numero_cuenta.errors }}</span>{% endif %}
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">
-                            <i class="bi bi-chat-left-text-fill"></i> Observaciones
-                        </label>
-                        {{ form.observaciones }}
-                        {% if form.observaciones.errors %}<span class="text-danger">{{ form.observaciones.errors }}</span>{% endif %}
-                        <span class="help-text">Información adicional o notas sobre el empleado</span>
-                    </div>
+            <!-- TAB BANCARIA -->
+            <div class="tab-pane fade" id="bancaria">
+                <h5 class="mb-3"><i class="bi bi-bank"></i> Información Bancaria</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form.banco.label_tag }}{{ form.banco }}</div>
+                    <div class="col-md-4">{{ form.tipo_cuenta.label_tag }}{{ form.tipo_cuenta }}</div>
+                    <div class="col-md-4">{{ form.numero_cuenta.label_tag }}{{ form.numero_cuenta }}</div>
+                    <div class="col-12">{{ form.observaciones.label_tag }}{{ form.observaciones }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Botones de acción -->
+        <!-- BOTONES -->
         <div class="d-flex justify-content-end gap-3 mt-4">
-            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-modern btn-modern-outline">
+            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-outline">
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
-            <button type="submit" class="btn-modern btn-modern-success">
-                <i class="bi bi-check-circle-fill"></i> 
-                {% if object %}Actualizar Empleado{% else %}Guardar Empleado{% endif %}
+            <button type="submit" class="btn-verde">
+                <i class="bi bi-check2-circle"></i>
+                {% if object %}Actualizar{% else %}Guardar{% endif %} Empleado
             </button>
         </div>
     </form>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Ocultar el input de archivo
 document.getElementById('id_foto').style.display = 'none';
-
-// Preview de foto
 const fotoInput = document.getElementById('id_foto');
-fotoInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('photoPreview');
-            const uploadIcon = document.getElementById('uploadIcon');
-            const uploadText = document.getElementById('uploadText');
-            
-            preview.src = e.target.result;
-            preview.classList.remove('d-none');
-            if (uploadIcon) uploadIcon.style.display = 'none';
-            if (uploadText) uploadText.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Auto-generar email corporativo
-const primerNombre = document.querySelector('input[name="primer_nombre"]');
-const primerApellido = document.querySelector('input[name="primer_apellido"]');
-const emailCorporativo = document.querySelector('input[name="email_corporativo"]');
-
-function generarEmail() {
-    if (primerNombre && primerApellido && emailCorporativo) {
-        const nombre = primerNombre.value.trim().toLowerCase();
-        const apellido = primerApellido.value.trim().toLowerCase();
-        if (nombre && apellido && !emailCorporativo.value) {
-            emailCorporativo.value = `${nombre}.${apellido}@dinnova.com.co`;
-        }
-    }
-}
-
-if (primerNombre) primerNombre.addEventListener('blur', generarEmail);
-if (primerApellido) primerApellido.addEventListener('blur', generarEmail);
-
-// Validación del formulario
-document.getElementById('empleadoForm').addEventListener('submit', function(e) {
-    let valid = true;
-    const requiredFields = this.querySelectorAll('[required]');
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            valid = false;
-            field.classList.add('is-invalid');
-        } else {
-            field.classList.remove('is-invalid');
-        }
-    });
-    
-    if (!valid) {
-        e.preventDefault();
-        alert('Por favor complete todos los campos requeridos marcados con *');
-        
-        // Ir al primer tab con errores
-        const firstInvalidField = this.querySelector('.is-invalid');
-        if (firstInvalidField) {
-            const tabPane = firstInvalidField.closest('.tab-pane');
-            if (tabPane) {
-                const tabId = tabPane.id;
-                const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
-                if (tabButton) {
-                    tabButton.click();
-                }
-            }
-        }
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-});
-
-// Animación de entrada para tabs
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function() {
-        const targetPane = document.querySelector(this.getAttribute('data-bs-target'));
-        if (targetPane) {
-            targetPane.style.animation = 'none';
-            setTimeout(() => {
-                targetPane.style.animation = 'fadeIn 0.5s ease';
-            }, 10);
-        }
-    });
-});
-
-// Validar campos al salir de ellos
-document.querySelectorAll('.form-control, .form-select').forEach(field => {
-    field.addEventListener('blur', function() {
-        if (this.hasAttribute('required') && !this.value.trim()) {
-            this.classList.add('is-invalid');
-        } else {
-            this.classList.remove('is-invalid');
-        }
-    });
+fotoInput?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const preview = document.getElementById('photoPreview');
+    preview.src = ev.target.result;
+    preview.classList.remove('d-none');
+  };
+  reader.readAsDataURL(file);
 });
 </script>
 {% endblock %}

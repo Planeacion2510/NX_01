@@ -3,516 +3,193 @@
 
 {% block title %}Empleados - Talento Humano{% endblock %}
 
-{% block extra_css %}
-<style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    .page-wrapper { padding: 20px; background: #f5f5f5; min-height: 100vh; }
-    
-    /* Header compacto */
-    .header-section {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .header-section h1 {
-        font-size: 1.5rem;
-        color: #333;
-        margin: 0;
-    }
-    
-    .header-actions { display: flex; gap: 10px; }
-    
-    /* Botones sólidos */
-    .btn-solid {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 14px;
-    }
-    
-    .btn-primary {
-        background: #007bff;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background: #0056b3;
-        color: white;
-    }
-    
-    .btn-success {
-        background: #28a745;
-        color: white;
-    }
-    
-    .btn-success:hover {
-        background: #218838;
-        color: white;
-    }
-    
-    .btn-warning {
-        background: #ffc107;
-        color: #000;
-    }
-    
-    .btn-warning:hover {
-        background: #e0a800;
-    }
-    
-    .btn-danger {
-        background: #dc3545;
-        color: white;
-    }
-    
-    .btn-danger:hover {
-        background: #c82333;
-        color: white;
-    }
-    
-    .btn-info {
-        background: #17a2b8;
-        color: white;
-    }
-    
-    .btn-info:hover {
-        background: #138496;
-        color: white;
-    }
-    
-    /* Stats cards compactas */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-card {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border-left: 4px solid #007bff;
-    }
-    
-    .stat-card.success { border-left-color: #28a745; }
-    .stat-card.warning { border-left-color: #ffc107; }
-    .stat-card.info { border-left-color: #17a2b8; }
-    
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 5px;
-    }
-    
-    .stat-label {
-        color: #666;
-        font-size: 0.875rem;
-    }
-    
-    /* Filtros compactos */
-    .filters-section {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .filters-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
-        gap: 10px;
-        align-items: end;
-    }
-    
-    .form-group { margin: 0; }
-    
-    .form-label {
-        font-size: 0.875rem;
-        color: #666;
-        margin-bottom: 5px;
-        display: block;
-        font-weight: 600;
-    }
-    
-    .form-control, .form-select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        outline: none;
-        border-color: #007bff;
-    }
-    
-    /* Tabla compacta */
-    .table-section {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-    
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 0;
-    }
-    
-    .table thead {
-        background: #f8f9fa;
-    }
-    
-    .table th {
-        padding: 12px;
-        text-align: left;
-        font-weight: 600;
-        color: #333;
-        font-size: 0.875rem;
-        border-bottom: 2px solid #dee2e6;
-    }
-    
-    .table td {
-        padding: 12px;
-        border-bottom: 1px solid #f0f0f0;
-        vertical-align: middle;
-    }
-    
-    .table tbody tr:hover {
-        background: #f8f9fa;
-    }
-    
-    /* Avatar */
-    .employee-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        object-fit: cover;
-    }
-    
-    .avatar-initials {
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        background: #007bff;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-    }
-    
-    .employee-info { flex: 1; }
-    
-    .employee-name {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 2px;
-    }
-    
-    .employee-email {
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    /* Badge */
-    .badge {
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    
-    .badge-success { background: #d4edda; color: #155724; }
-    .badge-danger { background: #f8d7da; color: #721c24; }
-    .badge-warning { background: #fff3cd; color: #856404; }
-    .badge-secondary { background: #e2e3e5; color: #383d41; }
-    
-    /* Botones de acción en tabla */
-    .action-buttons {
-        display: flex;
-        gap: 5px;
-    }
-    
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 0.75rem;
-        border-radius: 4px;
-    }
-    
-    .btn-icon {
-        padding: 6px 10px;
-    }
-    
-    /* Paginación */
-    .pagination-wrapper {
-        padding: 15px;
-        display: flex;
-        justify-content: center;
-    }
-    
-    .pagination {
-        display: flex;
-        gap: 5px;
-        list-style: none;
-    }
-    
-    .page-item .page-link {
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        color: #007bff;
-        text-decoration: none;
-    }
-    
-    .page-item.active .page-link {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-    
-    .page-item .page-link:hover {
-        background: #f8f9fa;
-    }
-    
-    /* Empty state */
-    .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: #666;
-    }
-    
-    /* Responsive */
-    @media (max-width: 1200px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    
-    @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: 1fr; }
-        .filters-grid { grid-template-columns: 1fr; }
-        .header-section { flex-direction: column; gap: 15px; }
-        .header-actions { width: 100%; flex-direction: column; }
-        .btn-solid { width: 100%; text-align: center; }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="page-wrapper">
-    
-    <!-- Header -->
-    <div class="header-section">
-        <div>
-            <h1><i class="bi bi-people-fill"></i> Gestión de Empleados</h1>
-        </div>
-        <div class="header-actions">
-            <a href="{% url 'talento_humano:exportar_empleados_excel' %}" class="btn-solid btn-success">
-                <i class="bi bi-file-excel"></i> Exportar Excel
+<div class="container mt-4 mb-5">
+
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="section-title">
+            <i class="bi bi-people-fill"></i> Gestión de Empleados
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'talento_humano:exportar_empleados_excel' %}" class="btn-verde">
+                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
             </a>
-            <a href="{% url 'talento_humano:crear_empleado' %}" class="btn-solid btn-primary">
-                <i class="bi bi-plus-lg"></i> Nuevo Empleado
+            <a href="{% url 'talento_humano:crear_empleado' %}" class="btn-amarillo">
+                <i class="bi bi-person-plus"></i> Nuevo Empleado
             </a>
         </div>
     </div>
-    
-    <!-- Stats -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">{{ total_empleados|default:0 }}</div>
-            <div class="stat-label">Total Empleados</div>
-        </div>
-        <div class="stat-card success">
-            <div class="stat-number">{{ total_activos|default:0 }}</div>
-            <div class="stat-label">Activos</div>
-        </div>
-        <div class="stat-card warning">
-            <div class="stat-number">{{ empleados.paginator.num_pages|default:1 }}</div>
-            <div class="stat-label">Páginas</div>
-        </div>
-        <div class="stat-card info">
-            <div class="stat-number">{{ areas.count|default:0 }}</div>
-            <div class="stat-label">Áreas</div>
-        </div>
-    </div>
-    
-    <!-- Filtros -->
-    <div class="filters-section">
-        <form method="get">
-            <div class="filters-grid">
-                <div class="form-group">
-                    <label class="form-label">Búsqueda</label>
-                    <input type="text" name="busqueda" class="form-control" 
-                           placeholder="Nombre, documento o cargo..." 
-                           value="{{ request.GET.busqueda }}">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Área</label>
-                    <select name="area" class="form-select">
-                        <option value="">Todas</option>
-                        {% for area in areas %}
-                        <option value="{{ area }}" {% if request.GET.area == area %}selected{% endif %}>
-                            {{ area }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Estado</label>
-                    <select name="estado" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="activo" {% if request.GET.estado == 'activo' %}selected{% endif %}>Activo</option>
-                        <option value="inactivo" {% if request.GET.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
-                        <option value="vacaciones" {% if request.GET.estado == 'vacaciones' %}selected{% endif %}>Vacaciones</option>
-                        <option value="incapacidad" {% if request.GET.estado == 'incapacidad' %}selected{% endif %}>Incapacidad</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Cargo</label>
-                    <input type="text" name="cargo" class="form-control" 
-                           placeholder="Cargo..." 
-                           value="{{ request.GET.cargo }}">
-                </div>
-                
-                <div class="form-group" style="display: flex; gap: 5px;">
-                    <button type="submit" class="btn-solid btn-primary">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                    <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-solid btn-warning">
-                        <i class="bi bi-x"></i>
-                    </a>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="row mb-4 text-center">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-header-bar" style="background-color: var(--primary);"></div>
+                <div class="card-body">
+                    <h5>Total Empleados</h5>
+                    <h2>{{ total_empleados|default:0 }}</h2>
                 </div>
             </div>
-        </form>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-header-bar" style="background-color: var(--success);"></div>
+                <div class="card-body">
+                    <h5>Activos</h5>
+                    <h2>{{ total_activos|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-header-bar" style="background-color: var(--warning);"></div>
+                <div class="card-body">
+                    <h5>Áreas</h5>
+                    <h2>{{ areas.count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-header-bar" style="background-color: var(--danger);"></div>
+                <div class="card-body">
+                    <h5>Páginas</h5>
+                    <h2>{{ empleados.paginator.num_pages|default:1 }}</h2>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <!-- Tabla -->
-    <div class="table-section">
-        <table class="table">
+
+    <!-- FILTROS -->
+    <form method="get" class="card p-3 mb-4 shadow-sm">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">🔍 Búsqueda</label>
+                <input type="text" name="busqueda" class="form-control" placeholder="Nombre, documento o cargo..."
+                       value="{{ request.GET.busqueda }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Área</label>
+                <select name="area" class="form-select">
+                    <option value="">Todas</option>
+                    {% for area in areas %}
+                        <option value="{{ area }}" {% if request.GET.area == area %}selected{% endif %}>{{ area }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="activo" {% if request.GET.estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if request.GET.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                    <option value="vacaciones" {% if request.GET.estado == 'vacaciones' %}selected{% endif %}>Vacaciones</option>
+                    <option value="incapacidad" {% if request.GET.estado == 'incapacidad' %}selected{% endif %}>Incapacidad</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Cargo</label>
+                <input type="text" name="cargo" class="form-control" placeholder="Cargo..."
+                       value="{{ request.GET.cargo }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn-primary-custom w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-outline w-100">
+                    <i class="bi bi-arrow-repeat"></i> Limpiar
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- TABLA -->
+    <div class="table-container">
+        <table class="table-modern">
             <thead>
                 <tr>
-                    <th style="width: 50px;">#</th>
-                    <th style="width: 40%;">Empleado</th>
+                    <th>#</th>
+                    <th>Empleado</th>
                     <th>Cargo</th>
                     <th>Área</th>
-                    <th style="width: 120px;">Estado</th>
-                    <th style="width: 200px; text-align: right;">Acciones</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for empleado in empleados %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>
-                        <div class="employee-cell">
+                    <td class="text-start">
+                        <div style="display:flex;align-items:center;gap:10px;">
                             {% if empleado.foto %}
-                            <img src="{{ empleado.foto.url }}" class="avatar" alt="{{ empleado.get_nombre_completo }}">
+                                <img src="{{ empleado.foto.url }}" alt="{{ empleado.get_nombre_completo }}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">
                             {% else %}
-                            <div class="avatar-initials">{{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}</div>
+                                <div class="avatar-initials">{{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}</div>
                             {% endif %}
-                            <div class="employee-info">
-                                <div class="employee-name">{{ empleado.get_nombre_completo }}</div>
-                                <div class="employee-email">{{ empleado.email_corporativo|default:"Sin email" }}</div>
+                            <div>
+                                <strong>{{ empleado.get_nombre_completo }}</strong><br>
+                                <small class="text-muted">{{ empleado.email_corporativo|default:"Sin email" }}</small>
                             </div>
                         </div>
                     </td>
                     <td>{{ empleado.cargo }}</td>
                     <td>{{ empleado.area }}</td>
                     <td>
-                        <span class="badge {% if empleado.estado == 'activo' %}badge-success{% elif empleado.estado == 'inactivo' %}badge-danger{% elif empleado.estado == 'vacaciones' %}badge-warning{% else %}badge-secondary{% endif %}">
+                        <span class="badge 
+                            {% if empleado.estado == 'activo' %}badge-success
+                            {% elif empleado.estado == 'inactivo' %}badge-danger
+                            {% elif empleado.estado == 'vacaciones' %}badge-warning
+                            {% else %}badge-secondary{% endif %}">
                             {{ empleado.get_estado_display }}
                         </span>
                     </td>
                     <td>
-                        <div class="action-buttons" style="justify-content: flex-end;">
-                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" 
-                               class="btn-solid btn-info btn-sm btn-icon" 
-                               title="Ver perfil">
+                        <div class="text-center">
+                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" class="btn-icon edit" title="Ver Perfil">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" 
-                               class="btn-solid btn-warning btn-sm btn-icon" 
-                               title="Editar">
+                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn-icon close" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'talento_humano:inactivar_empleado' empleado.id %}" 
-                               class="btn-solid btn-danger btn-sm btn-icon" 
-                               title="Inactivar"
-                               onclick="return confirm('¿Está seguro de inactivar a {{ empleado.get_nombre_completo }}?');">
-                                <i class="bi bi-trash"></i>
+                            <a href="{% url 'talento_humano:inactivar_empleado' empleado.id %}" class="btn-icon delete" 
+                               title="Inactivar" onclick="return confirm('¿Desea inactivar a {{ empleado.get_nombre_completo }}?');">
+                                <i class="bi bi-x-circle"></i>
                             </a>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                            <p>No se encontraron empleados</p>
-                        </div>
+                    <td colspan="6" class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size:2rem;color:#ccc;"></i><br>
+                        <small>No hay empleados registrados</small>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        
-        <!-- Paginación -->
-        {% if empleados.has_other_pages %}
-        <div class="pagination-wrapper">
-            <ul class="pagination">
-                {% if empleados.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1">Primera</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ empleados.previous_page_number }}">Anterior</a>
-                </li>
-                {% endif %}
-                
-                <li class="page-item active">
-                    <span class="page-link">{{ empleados.number }} / {{ empleados.paginator.num_pages }}</span>
-                </li>
-                
-                {% if empleados.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ empleados.next_page_number }}">Siguiente</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ empleados.paginator.num_pages }}">Última</a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-        {% endif %}
     </div>
-    
+
+    <!-- PAGINACIÓN -->
+    {% if empleados.has_other_pages %}
+    <div class="mt-3 text-center">
+        <ul class="pagination justify-content-center">
+            {% if empleados.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1">Primera</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ empleados.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">{{ empleados.number }} / {{ empleados.paginator.num_pages }}</span>
+            </li>
+            {% if empleados.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ empleados.next_page_number }}">Siguiente</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ empleados.paginator.num_pages }}">Última</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
