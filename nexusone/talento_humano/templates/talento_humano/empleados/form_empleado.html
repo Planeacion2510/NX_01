@@ -5,90 +5,284 @@
 
 {% block extra_css %}
 <style>
-    .form-section {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        padding: 25px;
-        margin-bottom: 25px;
-    }
-    .form-section h5 {
-        color: #3b82f6;
-        border-bottom: 2px solid #3b82f6;
-        padding-bottom: 8px;
-        margin-bottom: 16px;
-    }
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-    }
+.form-section {
+    background:#fff; border-radius:12px; padding:22px; margin-bottom:22px; box-shadow:0 6px 18px rgba(13,38,59,0.04);
+}
+.form-section h5 { color:#3b82f6; border-bottom:2px solid #e6f0ff; padding-bottom:8px; margin-bottom:14px; }
+.preview-foto { max-width:200px; border-radius:8px; border:2px solid #f1f3f5; display:block; }
+.step-wizard { display:flex; gap:12px; margin-bottom:18px; }
+.step { flex:1; text-align:center; background:#fff; padding:8px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.03); }
+.btn { border-radius:8px; }
+.help-text { color:#6c757d; font-size:0.9rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">
-            {% if object %}<i class="bi bi-pencil"></i> Editar Empleado{% else %}<i class="bi bi-person-plus"></i> Nuevo Empleado{% endif %}
-        </h2>
-        <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">{% if object %}Editar Empleado{% else %}Nuevo Empleado{% endif %}</h2>
+        <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 
-    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <form method="post" enctype="multipart/form-data" id="empleadoForm">
         {% csrf_token %}
-        
-        <!-- Datos personales -->
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <!-- Sección 1: Información Personal -->
         <div class="form-section">
-            <h5><i class="bi bi-person-circle"></i> Información Personal</h5>
+            <h5><i class="bi bi-person-fill"></i> Información Personal</h5>
             <div class="row g-3">
-                <div class="col-md-4">{{ form.tipo_documento.label_tag }} {{ form.tipo_documento }}</div>
-                <div class="col-md-4">{{ form.numero_documento.label_tag }} {{ form.numero_documento }}</div>
-                <div class="col-md-4">{{ form.primer_nombre.label_tag }} {{ form.primer_nombre }}</div>
-                <div class="col-md-4">{{ form.primer_apellido.label_tag }} {{ form.primer_apellido }}</div>
-                <div class="col-md-4">{{ form.fecha_nacimiento.label_tag }} {{ form.fecha_nacimiento }}</div>
+                <div class="col-md-3">
+                    <label class="form-label required-field">Tipo de Documento</label>
+                    {{ form.tipo_documento }}
+                    {% if form.tipo_documento.errors %}<div class="text-danger small">{{ form.tipo_documento.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label required-field">Número de Documento</label>
+                    {{ form.numero_documento }}
+                    {% if form.numero_documento.errors %}<div class="text-danger small">{{ form.numero_documento.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Lugar de Expedición</label>
+                    {{ form.lugar_expedicion }}
+                    {% if form.lugar_expedicion.errors %}<div class="text-danger small">{{ form.lugar_expedicion.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de Nacimiento</label>
+                    {{ form.fecha_nacimiento }}
+                    {% if form.fecha_nacimiento.errors %}<div class="text-danger small">{{ form.fecha_nacimiento.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label required-field">Primer Nombre</label>
+                    {{ form.primer_nombre }}
+                    {% if form.primer_nombre.errors %}<div class="text-danger small">{{ form.primer_nombre.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Segundo Nombre</label>
+                    {{ form.segundo_nombre }}
+                    {% if form.segundo_nombre.errors %}<div class="text-danger small">{{ form.segundo_nombre.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label required-field">Primer Apellido</label>
+                    {{ form.primer_apellido }}
+                    {% if form.primer_apellido.errors %}<div class="text-danger small">{{ form.primer_apellido.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Segundo Apellido</label>
+                    {{ form.segundo_apellido }}
+                    {% if form.segundo_apellido.errors %}<div class="text-danger small">{{ form.segundo_apellido.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Género</label>
+                    {{ form.genero }}
+                    {% if form.genero.errors %}<div class="text-danger small">{{ form.genero.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Estado Civil</label>
+                    {{ form.estado_civil }}
+                    {% if form.estado_civil.errors %}<div class="text-danger small">{{ form.estado_civil.errors }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Foto</label>
+                    {{ form.foto }}
+                    {% if form.foto.errors %}<div class="text-danger small">{{ form.foto.errors }}</div>{% endif %}
+                    {% if object and object.foto %}<div class="mt-2"><img src="{{ object.foto.url }}" class="preview-foto" alt="Foto actual"></div>{% endif %}
+                </div>
             </div>
         </div>
 
-        <!-- Contacto -->
+        <!-- Sección 2: Contacto -->
         <div class="form-section">
-            <h5><i class="bi bi-telephone"></i> Contacto</h5>
+            <h5><i class="bi bi-telephone-fill"></i> Información de Contacto</h5>
             <div class="row g-3">
-                <div class="col-md-4">{{ form.celular.label_tag }} {{ form.celular }}</div>
-                <div class="col-md-4">{{ form.email_corporativo.label_tag }} {{ form.email_corporativo }}</div>
-                <div class="col-md-4">{{ form.direccion.label_tag }} {{ form.direccion }}</div>
+                <div class="col-md-3">
+                    <label class="form-label required-field">Celular</label>
+                    {{ form.celular }}
+                    {% if form.celular.errors %}<div class="text-danger small">{{ form.celular.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Teléfono Fijo</label>
+                    {{ form.telefono_fijo }}
+                    {% if form.telefono_fijo.errors %}<div class="text-danger small">{{ form.telefono_fijo.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Email Personal</label>
+                    {{ form.email_personal }}
+                    {% if form.email_personal.errors %}<div class="text-danger small">{{ form.email_personal.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Email Corporativo</label>
+                    {{ form.email_corporativo }}
+                    {% if form.email_corporativo.errors %}<div class="text-danger small">{{ form.email_corporativo.errors }}</div>{% endif %}
+                    <div class="help-text">Se generará automáticamente si se deja vacío</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label required-field">Dirección</label>
+                    {{ form.direccion }}
+                    {% if form.direccion.errors %}<div class="text-danger small">{{ form.direccion.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label required-field">Ciudad</label>
+                    {{ form.ciudad }}
+                    {% if form.ciudad.errors %}<div class="text-danger small">{{ form.ciudad.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Barrio</label>
+                    {{ form.barrio }}
+                    {% if form.barrio.errors %}<div class="text-danger small">{{ form.barrio.errors }}</div>{% endif %}
+                </div>
             </div>
         </div>
 
-        <!-- Laboral -->
+        <!-- Sección 3: Contacto de Emergencia -->
         <div class="form-section">
-            <h5><i class="bi bi-briefcase"></i> Información Laboral</h5>
+            <h5><i class="bi bi-exclamation-triangle-fill"></i> Contacto de Emergencia</h5>
+            <div class="row g-3">
+                <div class="col-md-4">{{ form.contacto_emergencia_nombre.label_tag }} {{ form.contacto_emergencia_nombre }}</div>
+                <div class="col-md-4">{{ form.contacto_emergencia_parentesco.label_tag }} {{ form.contacto_emergencia_parentesco }}</div>
+                <div class="col-md-4">{{ form.contacto_emergencia_telefono.label_tag }} {{ form.contacto_emergencia_telefono }}</div>
+            </div>
+        </div>
+
+        <!-- Sección 4: Información Laboral -->
+        <div class="form-section">
+            <h5><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
             <div class="row g-3">
                 <div class="col-md-3">{{ form.fecha_ingreso.label_tag }} {{ form.fecha_ingreso }}</div>
                 <div class="col-md-3">{{ form.cargo.label_tag }} {{ form.cargo }}</div>
                 <div class="col-md-3">{{ form.area.label_tag }} {{ form.area }}</div>
-                <div class="col-md-3">{{ form.estado.label_tag }} {{ form.estado }}</div>
+                <div class="col-md-3">{{ form.sede.label_tag }} {{ form.sede }}</div>
+                <div class="col-md-4">{{ form.jefe_inmediato.label_tag }} {{ form.jefe_inmediato }}</div>
+                <div class="col-md-4">{{ form.estado.label_tag }} {{ form.estado }}</div>
             </div>
         </div>
 
-        <!-- Salario -->
+        <!-- Sección 5: Salario -->
         <div class="form-section">
-            <h5><i class="bi bi-cash-stack"></i> Salario</h5>
+            <h5><i class="bi bi-cash-stack"></i> Información Salarial</h5>
             <div class="row g-3">
                 <div class="col-md-4">{{ form.salario_basico.label_tag }} {{ form.salario_basico }}</div>
-                <div class="col-md-4">{{ form.aplica_auxilio_transporte.label_tag }} {{ form.aplica_auxilio_transporte }}</div>
-                <div class="col-md-4">{{ form.salario_integral.label_tag }} {{ form.salario_integral }}</div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">Auxilio de Transporte</label>
+                    <div class="form-check form-switch">
+                        {{ form.aplica_auxilio_transporte }}
+                        <label class="form-check-label" for="{{ form.aplica_auxilio_transporte.id_for_label }}">Aplica (si salario ≤ 2 SMLV)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">Salario Integral</label>
+                    <div class="form-check form-switch">
+                        {{ form.salario_integral }}
+                        <label class="form-check-label" for="{{ form.salario_integral.id_for_label }}">Es salario integral</label>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check-circle"></i> Guardar
-            </button>
+        <!-- Sección 6: Seguridad Social -->
+        <div class="form-section">
+            <h5><i class="bi bi-shield-fill-check"></i> Seguridad Social</h5>
+            <div class="row g-3">
+                <div class="col-md-3">{{ form.eps.label_tag }} {{ form.eps }}</div>
+                <div class="col-md-3">{{ form.afp.label_tag }} {{ form.afp }}</div>
+                <div class="col-md-3">{{ form.arl.label_tag }} {{ form.arl }}</div>
+                <div class="col-md-3">{{ form.caja_compensacion.label_tag }} {{ form.caja_compensacion }}</div>
+            </div>
+        </div>
+
+        <!-- Sección 7: Información Bancaria -->
+        <div class="form-section">
+            <h5><i class="bi bi-bank"></i> Información Bancaria</h5>
+            <div class="row g-3">
+                <div class="col-md-4">{{ form.banco.label_tag }} {{ form.banco }}</div>
+                <div class="col-md-4">{{ form.tipo_cuenta.label_tag }} {{ form.tipo_cuenta }}</div>
+                <div class="col-md-4">{{ form.numero_cuenta.label_tag }} {{ form.numero_cuenta }}</div>
+            </div>
+        </div>
+
+        <!-- Sección 8: Observaciones -->
+        <div class="form-section">
+            <h5><i class="bi bi-chat-left-text-fill"></i> Observaciones</h5>
+            <div class="row">
+                <div class="col-12">{{ form.observaciones.label_tag }} {{ form.observaciones }}</div>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-section text-end">
+            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> {% if object %}Actualizar{% else %}Guardar{% endif %}</button>
         </div>
     </form>
-
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Mantengo tu JS de validación, preview y auto-email (sin cambiar lógica)
+document.getElementById('empleadoForm').addEventListener('submit', function(e) {
+    let valid = true;
+    const requiredFields = this.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            valid = false;
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    if (!valid) {
+        e.preventDefault();
+        alert('Por favor complete todos los campos requeridos marcados con *');
+        window.scrollTo(0,0);
+    }
+});
+
+const fotoInput = document.querySelector('input[type="file"][name="foto"]');
+if (fotoInput) {
+    fotoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let preview = document.querySelector('.preview-foto');
+                if (!preview) {
+                    preview = document.createElement('img');
+                    preview.className = 'preview-foto mt-2';
+                    fotoInput.parentElement.appendChild(preview);
+                }
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+const primerNombreInput = document.querySelector('input[name="primer_nombre"]');
+const primerApellidoInput = document.querySelector('input[name="primer_apellido"]');
+const emailCorporativoInput = document.querySelector('input[name="email_corporativo"]');
+function generarEmailCorporativo() {
+    if (primerNombreInput && primerApellidoInput && emailCorporativoInput) {
+        const nombre = primerNombreInput.value.trim().toLowerCase();
+        const apellido = primerApellidoInput.value.trim().toLowerCase();
+        if (nombre && apellido && !emailCorporativoInput.value) {
+            emailCorporativoInput.value = `${nombre}.${apellido}@dinnova.com.co`;
+        }
+    }
+}
+if (primerNombreInput) primerNombreInput.addEventListener('blur', generarEmailCorporativo);
+if (primerApellidoInput) primerApellidoInput.addEventListener('blur', generarEmailCorporativo);
+</script>
 {% endblock %}

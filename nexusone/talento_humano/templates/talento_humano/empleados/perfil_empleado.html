@@ -5,109 +5,218 @@
 
 {% block extra_css %}
 <style>
-    .profile-header {
-        background: linear-gradient(135deg, #4f46e5, #3b82f6);
-        color: white;
-        border-radius: 12px;
-        padding: 40px;
-        margin-bottom: 25px;
-    }
-    .profile-avatar {
-        width: 110px;
-        height: 110px;
-        border-radius: 50%;
-        border: 4px solid #fff;
-        object-fit: cover;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .info-section {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    .info-section h5 {
-        border-bottom: 2px solid #3b82f6;
-        padding-bottom: 8px;
-        margin-bottom: 16px;
-        color: #3b82f6;
-    }
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 0;
-        border-bottom: 1px solid #f1f1f1;
-        font-size: 0.95rem;
-    }
-    .info-label { color: #555; font-weight: 600; }
+.profile-header {
+    background: linear-gradient(135deg,#4f46e5,#3b82f6);
+    color:#fff; border-radius:12px; padding:30px; margin-bottom:20px;
+}
+.profile-avatar { width:120px; height:120px; object-fit:cover; border-radius:50%; border:4px solid rgba(255,255,255,0.2); box-shadow:0 6px 16px rgba(11,22,65,0.12); }
+.info-section { background:#fff; border-radius:12px; box-shadow:0 6px 18px rgba(13,38,59,0.04); padding:18px; margin-bottom:18px; }
+.info-section h5 { color:#3b82f6; border-bottom:2px solid #e6f0ff; padding-bottom:8px; margin-bottom:14px; }
+.info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f1f1; }
+.info-row:last-child { border-bottom: none; }
+.badge-custom { padding:6px 12px; border-radius:12px; font-weight:600; }
+.timeline-item { border-left:3px solid #3b82f6; padding-left:14px; margin-bottom:12px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-
-    <!-- Header -->
-    <div class="profile-header d-flex align-items-center justify-content-between flex-wrap">
-        <div class="d-flex align-items-center gap-4">
+<div class="container-fluid py-4">
+    <div class="profile-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
             {% if empleado.foto %}
-                <img src="{{ empleado.foto.url }}" class="profile-avatar" alt="{{ empleado.get_nombre_completo }}">
+                <img src="{{ empleado.foto.url }}" alt="{{ empleado.get_nombre_completo }}" class="profile-avatar">
             {% else %}
-                <div class="profile-avatar d-flex align-items-center justify-content-center bg-white text-primary fw-bold">
+                <div class="profile-avatar d-flex align-items-center justify-content-center bg-white text-primary fw-bold" style="font-size:28px;">
                     {{ empleado.primer_nombre.0 }}{{ empleado.primer_apellido.0 }}
                 </div>
             {% endif %}
             <div>
                 <h2 class="mb-1">{{ empleado.get_nombre_completo }}</h2>
-                <p class="mb-1 opacity-75">{{ empleado.cargo }}</p>
-                <div class="d-flex gap-2 flex-wrap">
-                    <span class="badge bg-light text-dark">{{ empleado.area }}</span>
-                    <span class="badge {% if empleado.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %}">
+                <p class="mb-1 opacity-75">{{ empleado.cargo }} - {{ empleado.area }}</p>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark">{{ empleado.sede|default:"Sede" }}</span>
+                    <span class="badge {% if empleado.estado == 'activo' %}bg-success{% else %}bg-secondary{% endif %} badge-custom">
                         {{ empleado.get_estado_display }}
                     </span>
                 </div>
             </div>
         </div>
-        <div class="d-flex gap-2 mt-3 mt-md-0">
+
+        <div class="d-flex gap-2">
             <a href="{% url 'talento_humano:editar_empleado' empleado.pk %}" class="btn btn-light">
                 <i class="bi bi-pencil"></i> Editar
             </a>
             <a href="{% url 'talento_humano:generar_certificacion_empleado' empleado.pk %}" class="btn btn-outline-light">
                 <i class="bi bi-file-earmark-pdf"></i> Certificación
             </a>
+            <a href="{% url 'talento_humano:inactivar_empleado' empleado.pk %}" class="btn btn-outline-light text-danger">
+                <i class="bi bi-person-x"></i> Inactivar
+            </a>
         </div>
     </div>
 
     <div class="row">
-        <!-- Columna izquierda -->
+        <!-- Izquierda -->
         <div class="col-md-4">
             <div class="info-section">
-                <h5><i class="bi bi-person"></i> Datos personales</h5>
-                <div class="info-row"><span class="info-label">Documento:</span> <span>{{ empleado.numero_documento }}</span></div>
-                <div class="info-row"><span class="info-label">Nacimiento:</span> <span>{{ empleado.fecha_nacimiento|date:"d/m/Y" }}</span></div>
-                <div class="info-row"><span class="info-label">Género:</span> <span>{{ empleado.get_genero_display }}</span></div>
+                <h5><i class="bi bi-person-fill"></i> Información Personal</h5>
+                <div class="info-row"><span class="text-muted">Fecha de Nacimiento</span><span>{{ empleado.fecha_nacimiento|date:"d/m/Y"|default:"N/A" }}</span></div>
+                <div class="info-row"><span class="text-muted">Edad</span>
+                    <span>{% if empleado.fecha_nacimiento %}{{ empleado.fecha_nacimiento|timesince }}{% else %}N/A{% endif %}</span>
+                </div>
+                <div class="info-row"><span class="text-muted">Género</span><span>{{ empleado.get_genero_display|default:"N/A" }}</span></div>
+                <div class="info-row"><span class="text-muted">Estado Civil</span><span>{{ empleado.get_estado_civil_display|default:"N/A" }}</span></div>
+                <div class="info-row"><span class="text-muted">Lugar de Expedición</span><span>{{ empleado.lugar_expedicion|default:"N/A" }}</span></div>
+            </div>
+
+            <div class="info-section">
+                <h5><i class="bi bi-telephone-fill"></i> Contacto</h5>
+                <div class="info-row"><span class="text-muted">Celular</span><span><a href="tel:{{ empleado.celular }}">{{ empleado.celular|default:"N/A" }}</a></span></div>
+                {% if empleado.telefono_fijo %}
+                <div class="info-row"><span class="text-muted">Teléfono Fijo</span><span>{{ empleado.telefono_fijo }}</span></div>
+                {% endif %}
+                <div class="info-row"><span class="text-muted">Email Personal</span><span><a href="mailto:{{ empleado.email_personal }}">{{ empleado.email_personal|default:"N/A" }}</a></span></div>
+                <div class="info-row"><span class="text-muted">Email Corporativo</span><span><a href="mailto:{{ empleado.email_corporativo }}">{{ empleado.email_corporativo|default:"N/A" }}</a></span></div>
+                <div class="info-row"><span class="text-muted">Dirección</span><span>{{ empleado.direccion|default:"N/A" }}</span></div>
+                <div class="info-row"><span class="text-muted">Ciudad</span><span>{{ empleado.ciudad|default:"N/A" }}</span></div>
+                {% if empleado.barrio %}<div class="info-row"><span class="text-muted">Barrio</span><span>{{ empleado.barrio }}</span></div>{% endif %}
+            </div>
+
+            {% if empleado.contacto_emergencia_nombre %}
+            <div class="info-section">
+                <h5><i class="bi bi-exclamation-triangle-fill"></i> Contacto de Emergencia</h5>
+                <div class="info-row"><span class="text-muted">Nombre</span><span>{{ empleado.contacto_emergencia_nombre }}</span></div>
+                <div class="info-row"><span class="text-muted">Parentesco</span><span>{{ empleado.contacto_emergencia_parentesco }}</span></div>
+                <div class="info-row"><span class="text-muted">Teléfono</span><span><a href="tel:{{ empleado.contacto_emergencia_telefono }}">{{ empleado.contacto_emergencia_telefono }}</a></span></div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Centro -->
+        <div class="col-md-4">
+            <div class="info-section">
+                <h5><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
+                <div class="info-row"><span class="text-muted">Fecha de Ingreso</span><span>{{ empleado.fecha_ingreso|date:"d/m/Y" }}</span></div>
+                <div class="info-row"><span class="text-muted">Antigüedad</span><span><strong>{{ antiguedad.texto }}</strong></span></div>
+                <div class="info-row"><span class="text-muted">Cargo</span><span>{{ empleado.cargo }}</span></div>
+                <div class="info-row"><span class="text-muted">Área</span><span>{{ empleado.area }}</span></div>
+                {% if empleado.jefe_inmediato %}
+                <div class="info-row"><span class="text-muted">Jefe Inmediato</span>
+                    <span><a href="{% url 'talento_humano:detalle_empleado' empleado.jefe_inmediato.pk %}">{{ empleado.jefe_inmediato.get_nombre_completo }}</a></span>
+                </div>
+                {% endif %}
+                {% if empleado.sede %}<div class="info-row"><span class="text-muted">Sede</span><span>{{ empleado.sede }}</span></div>{% endif %}
+            </div>
+
+            <div class="info-section">
+                <h5><i class="bi bi-cash-stack"></i> Salario</h5>
+                <div class="info-row"><span class="text-muted">Salario Básico</span><span><strong>${{ empleado.salario_basico|floatformat:0 }}</strong></span></div>
+                <div class="info-row"><span class="text-muted">Auxilio Transporte</span><span>{% if empleado.aplica_auxilio_transporte %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</span></div>
+                <div class="info-row"><span class="text-muted">Salario Integral</span><span>{% if empleado.salario_integral %}<span class="badge bg-primary">Sí</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</span></div>
+            </div>
+
+            <div class="info-section">
+                <h5><i class="bi bi-shield-fill-check"></i> Seguridad Social</h5>
+                <div class="info-row"><span class="text-muted">EPS</span><span>{{ empleado.eps.nombre|default:"No asignada" }}</span></div>
+                <div class="info-row"><span class="text-muted">AFP</span><span>{{ empleado.afp.nombre|default:"No asignada" }}</span></div>
+                <div class="info-row"><span class="text-muted">ARL</span><span>{{ empleado.arl.nombre|default:"No asignada" }}</span></div>
+                <div class="info-row"><span class="text-muted">Caja Compensación</span><span>{{ empleado.caja_compensacion.nombre|default:"No asignada" }}</span></div>
             </div>
         </div>
 
-        <!-- Columna central -->
+        <!-- Derecha -->
         <div class="col-md-4">
+            {% if contrato_actual %}
             <div class="info-section">
-                <h5><i class="bi bi-briefcase"></i> Información Laboral</h5>
-                <div class="info-row"><span class="info-label">Ingreso:</span> <span>{{ empleado.fecha_ingreso|date:"d/m/Y" }}</span></div>
-                <div class="info-row"><span class="info-label">Área:</span> <span>{{ empleado.area }}</span></div>
-                <div class="info-row"><span class="info-label">Salario:</span> <span>${{ empleado.salario_basico|floatformat:0 }}</span></div>
+                <h5><i class="bi bi-file-text-fill"></i> Contrato Actual</h5>
+                <div class="alert alert-info mb-3">
+                    <strong>{{ contrato_actual.get_tipo_display }}</strong><br><small>No. {{ contrato_actual.numero_contrato }}</small>
+                </div>
+                <div class="info-row"><span class="text-muted">Fecha Inicio</span><span>{{ contrato_actual.fecha_inicio|date:"d/m/Y" }}</span></div>
+                {% if contrato_actual.fecha_fin %}
+                <div class="info-row"><span class="text-muted">Fecha Fin</span><span>{{ contrato_actual.fecha_fin|date:"d/m/Y" }}</span></div>
+                <div class="info-row"><span class="text-muted">Días Restantes</span>
+                    <span>{% if contrato_actual.dias_para_vencer <= 30 %}<span class="badge bg-warning text-dark">{{ contrato_actual.dias_para_vencer }} días</span>{% else %}{{ contrato_actual.dias_para_vencer }} días{% endif %}</span>
+                </div>
+                {% endif %}
+                <a href="{% url 'talento_humano:lista_contratos' %}?empleado={{ empleado.pk }}" class="btn btn-outline-primary w-100 mt-3">Ver Historial de Contratos</a>
             </div>
-        </div>
+            {% endif %}
 
-        <!-- Columna derecha -->
-        <div class="col-md-4">
             <div class="info-section">
-                <h5><i class="bi bi-shield-check"></i> Seguridad Social</h5>
-                <div class="info-row"><span class="info-label">EPS:</span> <span>{{ empleado.eps.nombre|default:"N/A" }}</span></div>
-                <div class="info-row"><span class="info-label">AFP:</span> <span>{{ empleado.afp.nombre|default:"N/A" }}</span></div>
-                <div class="info-row"><span class="info-label">ARL:</span> <span>{{ empleado.arl.nombre|default:"N/A" }}</span></div>
+                <h5><i class="bi bi-umbrella-fill"></i> Vacaciones</h5>
+                <div class="text-center mb-3">
+                    <div class="display-5 text-primary">{{ dias_vacaciones_disponibles }}</div>
+                    <small class="text-muted">días disponibles</small>
+                </div>
+                {% if vacaciones_recientes %}
+                <h6 class="mb-2">Últimas solicitudes</h6>
+                {% for vacacion in vacaciones_recientes %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ vacacion.fecha_inicio|date:"d/m/Y" }} - {{ vacacion.fecha_fin|date:"d/m/Y" }}</span>
+                            <span class="badge {% if vacacion.aprobada %}bg-success{% else %}bg-warning text-dark{% endif %}">{% if vacacion.aprobada %}Aprobada{% else %}Pendiente{% endif %}</span>
+                        </div>
+                        <small class="text-muted">{{ vacacion.dias_habiles }} días hábiles</small>
+                    </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            {% if capacitaciones %}
+            <div class="info-section">
+                <h5><i class="bi bi-book"></i> Capacitaciones</h5>
+                {% for inscripcion in capacitaciones %}
+                    <div class="timeline-item">
+                        <strong>{{ inscripcion.capacitacion.nombre }}</strong><br>
+                        <small class="text-muted">{{ inscripcion.capacitacion.fecha_programada|date:"d/m/Y" }}
+                            {% if inscripcion.asistio %}<span class="badge bg-success ms-2">Asistió</span>{% endif %}
+                            {% if inscripcion.calificacion %}<span class="badge bg-info ms-1">{{ inscripcion.calificacion }}/5</span>{% endif %}
+                        </small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if permisos_recientes %}
+            <div class="info-section">
+                <h5><i class="bi bi-calendar-check-fill"></i> Permisos Recientes</h5>
+                {% for permiso in permisos_recientes %}
+                    <div class="timeline-item">
+                        <strong>{{ permiso.get_tipo_display }}</strong><br>
+                        <small class="text-muted">{{ permiso.fecha_inicio|date:"d/m/Y" }} - {{ permiso.fecha_fin|date:"d/m/Y" }}
+                            <span class="badge {% if permiso.aprobado %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">
+                                {% if permiso.aprobado %}Aprobado{% else %}Pendiente{% endif %}
+                            </span>
+                        </small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if evaluaciones %}
+            <div class="info-section">
+                <h5><i class="bi bi-star-fill"></i> Evaluaciones</h5>
+                {% for evaluacion in evaluaciones %}
+                    <div class="timeline-item">
+                        <strong>Evaluación {{ evaluacion.periodo }}</strong>
+                        <br><small class="text-muted">{{ evaluacion.fecha_evaluacion|date:"d/m/Y" }} <span class="badge bg-primary ms-2">{{ evaluacion.calificacion_promedio }}/5</span></small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if empleado.observaciones %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="info-section">
+                <h5><i class="bi bi-chat-left-text-fill"></i> Observaciones</h5>
+                <p class="mb-0">{{ empleado.observaciones }}</p>
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
