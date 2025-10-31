@@ -167,7 +167,7 @@
                             {% endif %}
                         </div>
                         {{ form.foto }}
-                        {% if form.foto.errors %}<div class="text-danger small">{{ form.foto.errors }}</div>{% endif %}
+                        {% if form.foto.errors %}<div class="text-danger small mt-2">{{ form.foto.errors }}</div>{% endif %}
                     </div>
                 </div>
             </div>
@@ -356,7 +356,7 @@
             <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-outline">
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
-            <button type="submit" class="btn-verde">
+            <button type="submit" class="btn-verde" id="btnGuardar">
                 <i class="bi bi-check2-circle"></i>
                 {% if object %}Actualizar{% else %}Guardar{% endif %} Empleado
             </button>
@@ -373,24 +373,29 @@ const fotoInput = document.getElementById('id_foto');
 const photoPreview = document.getElementById('photoPreview');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
-photoUploadBox.addEventListener('click', () => {
-    fotoInput.click();
-});
+if (photoUploadBox && fotoInput) {
+    photoUploadBox.addEventListener('click', function(e) {
+        e.preventDefault();
+        fotoInput.click();
+    });
 
-fotoInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            photoPreview.src = e.target.result;
-            photoPreview.classList.remove('d-none');
-            if (uploadPlaceholder) {
-                uploadPlaceholder.style.display = 'none';
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-});
+    fotoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (photoPreview) {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.remove('d-none');
+                }
+                if (uploadPlaceholder) {
+                    uploadPlaceholder.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
 // Auto-generar email corporativo
 const primerNombre = document.querySelector('input[name="primer_nombre"]');
@@ -410,24 +415,15 @@ function generarEmail() {
 if (primerNombre) primerNombre.addEventListener('blur', generarEmail);
 if (primerApellido) primerApellido.addEventListener('blur', generarEmail);
 
-// Validación del formulario
-document.getElementById('empleadoForm').addEventListener('submit', function(e) {
-    const requiredFields = this.querySelectorAll('[required]');
-    let valid = true;
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            valid = false;
-            field.classList.add('is-invalid');
-        } else {
-            field.classList.remove('is-invalid');
-        }
+// Asegurar que el formulario se envíe
+const form = document.getElementById('empleadoForm');
+const btnGuardar = document.getElementById('btnGuardar');
+
+if (form && btnGuardar) {
+    btnGuardar.addEventListener('click', function(e) {
+        // Solo mostrar indicador de que se está procesando
+        console.log('Enviando formulario...');
     });
-    
-    if (!valid) {
-        e.preventDefault();
-        alert('Por favor complete todos los campos obligatorios marcados con *');
-    }
-});
+}
 </script>
 {% endblock %}
