@@ -25,9 +25,6 @@
     margin: 10px auto;
     display: block;
 }
-#id_foto {
-    display: none;
-}
 </style>
 {% endblock %}
 
@@ -52,7 +49,7 @@
     </div>
 
     <!-- FORMULARIO -->
-    <form method="post" enctype="multipart/form-data" id="empleadoForm">
+    <form method="post" enctype="multipart/form-data" action="">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -64,32 +61,32 @@
         <!-- TABS -->
         <ul class="nav nav-tabs mb-4 border-0" id="empleadoTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">
                     <i class="bi bi-person"></i> Personal
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">
+                <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab" aria-controls="contacto" aria-selected="false">
                     <i class="bi bi-telephone"></i> Contacto
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="laboral-tab" data-bs-toggle="tab" data-bs-target="#laboral" type="button" role="tab">
+                <button class="nav-link" id="laboral-tab" data-bs-toggle="tab" data-bs-target="#laboral" type="button" role="tab" aria-controls="laboral" aria-selected="false">
                     <i class="bi bi-briefcase"></i> Laboral
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#salario" type="button" role="tab">
+                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#salario" type="button" role="tab" aria-controls="salario" aria-selected="false">
                     <i class="bi bi-cash-stack"></i> Salario
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="seguridad-tab" data-bs-toggle="tab" data-bs-target="#seguridad" type="button" role="tab">
+                <button class="nav-link" id="seguridad-tab" data-bs-toggle="tab" data-bs-target="#seguridad" type="button" role="tab" aria-controls="seguridad" aria-selected="false">
                     <i class="bi bi-shield-check"></i> Seg. Social
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="bancaria-tab" data-bs-toggle="tab" data-bs-target="#bancaria" type="button" role="tab">
+                <button class="nav-link" id="bancaria-tab" data-bs-toggle="tab" data-bs-target="#bancaria" type="button" role="tab" aria-controls="bancaria" aria-selected="false">
                     <i class="bi bi-bank"></i> Bancaria
                 </button>
             </li>
@@ -98,7 +95,7 @@
         <div class="tab-content bg-white p-4 rounded shadow-sm">
 
             <!-- TAB PERSONAL -->
-            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+            <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
                 <h5 class="mb-3"><i class="bi bi-person-fill"></i> Información Personal</h5>
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -153,7 +150,7 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label"><i class="bi bi-camera"></i> Fotografía</label>
-                        <div class="photo-upload-box" id="photoUploadBox">
+                        <div class="photo-upload-box" onclick="document.getElementById('{{ form.foto.id_for_label }}').click()">
                             {% if object and object.foto %}
                                 <img src="{{ object.foto.url }}" class="photo-preview-img" id="photoPreview" alt="Foto actual">
                                 <p class="mb-0 mt-2"><small class="text-muted">Click para cambiar la foto</small></p>
@@ -166,14 +163,14 @@
                                 <img src="#" class="photo-preview-img d-none" id="photoPreview" alt="Vista previa">
                             {% endif %}
                         </div>
-                        {{ form.foto }}
+                        <div style="display:none;">{{ form.foto }}</div>
                         {% if form.foto.errors %}<div class="text-danger small mt-2">{{ form.foto.errors }}</div>{% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- TAB CONTACTO -->
-            <div class="tab-pane fade" id="contacto" role="tabpanel">
+            <div class="tab-pane fade" id="contacto" role="tabpanel" aria-labelledby="contacto-tab">
                 <h5 class="mb-3"><i class="bi bi-telephone-fill"></i> Información de Contacto</h5>
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -232,7 +229,7 @@
             </div>
 
             <!-- TAB LABORAL -->
-            <div class="tab-pane fade" id="laboral" role="tabpanel">
+            <div class="tab-pane fade" id="laboral" role="tabpanel" aria-labelledby="laboral-tab">
                 <h5 class="mb-3"><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -269,7 +266,7 @@
             </div>
 
             <!-- TAB SALARIO -->
-            <div class="tab-pane fade" id="salario" role="tabpanel">
+            <div class="tab-pane fade" id="salario" role="tabpanel" aria-labelledby="salario-tab">
                 <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Información Salarial</h5>
                 <div class="row g-3">
                     <div class="col-md-12">
@@ -297,7 +294,7 @@
             </div>
 
             <!-- TAB SEGURIDAD -->
-            <div class="tab-pane fade" id="seguridad" role="tabpanel">
+            <div class="tab-pane fade" id="seguridad" role="tabpanel" aria-labelledby="seguridad-tab">
                 <h5 class="mb-3"><i class="bi bi-shield-check"></i> Seguridad Social</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -324,7 +321,7 @@
             </div>
 
             <!-- TAB BANCARIA -->
-            <div class="tab-pane fade" id="bancaria" role="tabpanel">
+            <div class="tab-pane fade" id="bancaria" role="tabpanel" aria-labelledby="bancaria-tab">
                 <h5 class="mb-3"><i class="bi bi-bank"></i> Información Bancaria</h5>
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -353,10 +350,10 @@
 
         <!-- BOTONES -->
         <div class="d-flex justify-content-end gap-3 mt-4">
-            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-outline">
+            <a href="{% url 'talento_humano:lista_empleados' %}" class="btn-outline" type="button">
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
-            <button type="submit" class="btn-verde" id="btnGuardar">
+            <button type="submit" class="btn-verde">
                 <i class="bi bi-check2-circle"></i>
                 {% if object %}Actualizar{% else %}Guardar{% endif %} Empleado
             </button>
@@ -368,17 +365,11 @@
 {% block extra_js %}
 <script>
 // Manejo de foto
-const photoUploadBox = document.getElementById('photoUploadBox');
-const fotoInput = document.getElementById('id_foto');
+const fotoInput = document.getElementById('{{ form.foto.id_for_label }}');
 const photoPreview = document.getElementById('photoPreview');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
-if (photoUploadBox && fotoInput) {
-    photoUploadBox.addEventListener('click', function(e) {
-        e.preventDefault();
-        fotoInput.click();
-    });
-
+if (fotoInput) {
     fotoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -414,16 +405,5 @@ function generarEmail() {
 
 if (primerNombre) primerNombre.addEventListener('blur', generarEmail);
 if (primerApellido) primerApellido.addEventListener('blur', generarEmail);
-
-// Asegurar que el formulario se envíe
-const form = document.getElementById('empleadoForm');
-const btnGuardar = document.getElementById('btnGuardar');
-
-if (form && btnGuardar) {
-    btnGuardar.addEventListener('click', function(e) {
-        // Solo mostrar indicador de que se está procesando
-        console.log('Enviando formulario...');
-    });
-}
 </script>
 {% endblock %}
