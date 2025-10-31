@@ -114,7 +114,7 @@
                     <th>Cargo</th>
                     <th>Área</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th style="text-align: center;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -146,15 +146,25 @@
                         </span>
                     </td>
                     <td>
-                        <div class="text-center">
-                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i>
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{% url 'talento_humano:detalle_empleado' empleado.id %}" 
+                               class="btn btn-sm" 
+                               style="background:#17a2b8;color:white;border-radius:4px;padding:5px 10px;"
+                               title="Ver perfil">
+                                <i class="bi bi-eye-fill"></i>
                             </a>
-                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil-square"></i>
+                            <a href="{% url 'talento_humano:editar_empleado' empleado.id %}" 
+                               class="btn btn-sm" 
+                               style="background:#ffc107;color:#000;border-radius:4px;padding:5px 10px;"
+                               title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
                             </a>
-                            <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i>
+                            <a href="{% url 'talento_humano:eliminar_empleado' empleado.id %}" 
+                               class="btn btn-sm" 
+                               style="background:#dc3545;color:white;border-radius:4px;padding:5px 10px;"
+                               title="Eliminar"
+                               onclick="return confirm('¿Está seguro de eliminar a {{ empleado.get_nombre_completo }}?');">
+                                <i class="bi bi-trash-fill"></i>
                             </a>
                         </div>
                     </td>

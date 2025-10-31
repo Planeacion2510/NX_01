@@ -3,6 +3,34 @@
 
 {% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} Empleado - Talento Humano{% endblock %}
 
+{% block extra_css %}
+<style>
+.photo-upload-box {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f9f9f9;
+}
+.photo-upload-box:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+.photo-preview-img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin: 10px auto;
+    display: block;
+}
+#id_foto {
+    display: none;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mb-5">
 
@@ -34,101 +62,291 @@
         {% endif %}
 
         <!-- TABS -->
-        <ul class="nav nav-tabs mb-4 border-0">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#personal" type="button"><i class="bi bi-person"></i> Personal</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#contacto" type="button"><i class="bi bi-telephone"></i> Contacto</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#laboral" type="button"><i class="bi bi-briefcase"></i> Laboral</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#salario" type="button"><i class="bi bi-cash-stack"></i> Salario</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#seguridad" type="button"><i class="bi bi-shield-check"></i> Seg. Social</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bancaria" type="button"><i class="bi bi-bank"></i> Bancaria</button></li>
+        <ul class="nav nav-tabs mb-4 border-0" id="empleadoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                    <i class="bi bi-person"></i> Personal
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">
+                    <i class="bi bi-telephone"></i> Contacto
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="laboral-tab" data-bs-toggle="tab" data-bs-target="#laboral" type="button" role="tab">
+                    <i class="bi bi-briefcase"></i> Laboral
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#salario" type="button" role="tab">
+                    <i class="bi bi-cash-stack"></i> Salario
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="seguridad-tab" data-bs-toggle="tab" data-bs-target="#seguridad" type="button" role="tab">
+                    <i class="bi bi-shield-check"></i> Seg. Social
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bancaria-tab" data-bs-toggle="tab" data-bs-target="#bancaria" type="button" role="tab">
+                    <i class="bi bi-bank"></i> Bancaria
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content bg-white p-4 rounded shadow-sm">
 
             <!-- TAB PERSONAL -->
-            <div class="tab-pane fade show active" id="personal">
+            <div class="tab-pane fade show active" id="personal" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-person-fill"></i> Información Personal</h5>
                 <div class="row g-3">
-                    <div class="col-md-4">{{ form.tipo_documento.label_tag }}{{ form.tipo_documento }}</div>
-                    <div class="col-md-4">{{ form.numero_documento.label_tag }}{{ form.numero_documento }}</div>
-                    <div class="col-md-4">{{ form.lugar_expedicion.label_tag }}{{ form.lugar_expedicion }}</div>
-                    <div class="col-md-3">{{ form.primer_nombre.label_tag }}{{ form.primer_nombre }}</div>
-                    <div class="col-md-3">{{ form.segundo_nombre.label_tag }}{{ form.segundo_nombre }}</div>
-                    <div class="col-md-3">{{ form.primer_apellido.label_tag }}{{ form.primer_apellido }}</div>
-                    <div class="col-md-3">{{ form.segundo_apellido.label_tag }}{{ form.segundo_apellido }}</div>
-                    <div class="col-md-4">{{ form.fecha_nacimiento.label_tag }}{{ form.fecha_nacimiento }}</div>
-                    <div class="col-md-4">{{ form.genero.label_tag }}{{ form.genero }}</div>
-                    <div class="col-md-4">{{ form.estado_civil.label_tag }}{{ form.estado_civil }}</div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo de Documento *</label>
+                        {{ form.tipo_documento }}
+                        {% if form.tipo_documento.errors %}<div class="text-danger small">{{ form.tipo_documento.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Número de Documento *</label>
+                        {{ form.numero_documento }}
+                        {% if form.numero_documento.errors %}<div class="text-danger small">{{ form.numero_documento.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Lugar de Expedición</label>
+                        {{ form.lugar_expedicion }}
+                        {% if form.lugar_expedicion.errors %}<div class="text-danger small">{{ form.lugar_expedicion.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Primer Nombre *</label>
+                        {{ form.primer_nombre }}
+                        {% if form.primer_nombre.errors %}<div class="text-danger small">{{ form.primer_nombre.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Segundo Nombre</label>
+                        {{ form.segundo_nombre }}
+                        {% if form.segundo_nombre.errors %}<div class="text-danger small">{{ form.segundo_nombre.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Primer Apellido *</label>
+                        {{ form.primer_apellido }}
+                        {% if form.primer_apellido.errors %}<div class="text-danger small">{{ form.primer_apellido.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Segundo Apellido</label>
+                        {{ form.segundo_apellido }}
+                        {% if form.segundo_apellido.errors %}<div class="text-danger small">{{ form.segundo_apellido.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Nacimiento</label>
+                        {{ form.fecha_nacimiento }}
+                        {% if form.fecha_nacimiento.errors %}<div class="text-danger small">{{ form.fecha_nacimiento.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Género</label>
+                        {{ form.genero }}
+                        {% if form.genero.errors %}<div class="text-danger small">{{ form.genero.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Estado Civil</label>
+                        {{ form.estado_civil }}
+                        {% if form.estado_civil.errors %}<div class="text-danger small">{{ form.estado_civil.errors }}</div>{% endif %}
+                    </div>
                     <div class="col-12">
                         <label class="form-label"><i class="bi bi-camera"></i> Fotografía</label>
-                        <div class="photo-upload-area" onclick="document.getElementById('id_foto').click()">
+                        <div class="photo-upload-box" id="photoUploadBox">
                             {% if object and object.foto %}
-                                <img src="{{ object.foto.url }}" class="photo-preview" id="photoPreview" alt="Foto actual">
+                                <img src="{{ object.foto.url }}" class="photo-preview-img" id="photoPreview" alt="Foto actual">
+                                <p class="mb-0 mt-2"><small class="text-muted">Click para cambiar la foto</small></p>
                             {% else %}
-                                <div class="text-muted py-3"><i class="bi bi-cloud-upload"></i> Click para seleccionar</div>
+                                <div id="uploadPlaceholder">
+                                    <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #007bff;"></i>
+                                    <p class="mb-0 mt-2"><strong>Click para seleccionar una foto</strong></p>
+                                    <small class="text-muted">JPG, PNG (máx. 2MB)</small>
+                                </div>
+                                <img src="#" class="photo-preview-img d-none" id="photoPreview" alt="Vista previa">
                             {% endif %}
                         </div>
                         {{ form.foto }}
+                        {% if form.foto.errors %}<div class="text-danger small">{{ form.foto.errors }}</div>{% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- TAB CONTACTO -->
-            <div class="tab-pane fade" id="contacto">
+            <div class="tab-pane fade" id="contacto" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-telephone-fill"></i> Información de Contacto</h5>
                 <div class="row g-3">
-                    <div class="col-md-3">{{ form.celular.label_tag }}{{ form.celular }}</div>
-                    <div class="col-md-3">{{ form.telefono_fijo.label_tag }}{{ form.telefono_fijo }}</div>
-                    <div class="col-md-3">{{ form.email_personal.label_tag }}{{ form.email_personal }}</div>
-                    <div class="col-md-3">{{ form.email_corporativo.label_tag }}{{ form.email_corporativo }}</div>
-                    <div class="col-md-6">{{ form.direccion.label_tag }}{{ form.direccion }}</div>
-                    <div class="col-md-3">{{ form.ciudad.label_tag }}{{ form.ciudad }}</div>
-                    <div class="col-md-3">{{ form.barrio.label_tag }}{{ form.barrio }}</div>
+                    <div class="col-md-3">
+                        <label class="form-label">Celular *</label>
+                        {{ form.celular }}
+                        {% if form.celular.errors %}<div class="text-danger small">{{ form.celular.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Teléfono Fijo</label>
+                        {{ form.telefono_fijo }}
+                        {% if form.telefono_fijo.errors %}<div class="text-danger small">{{ form.telefono_fijo.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Email Personal</label>
+                        {{ form.email_personal }}
+                        {% if form.email_personal.errors %}<div class="text-danger small">{{ form.email_personal.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Email Corporativo</label>
+                        {{ form.email_corporativo }}
+                        {% if form.email_corporativo.errors %}<div class="text-danger small">{{ form.email_corporativo.errors }}</div>{% endif %}
+                        <small class="text-muted">Se generará automáticamente</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Dirección *</label>
+                        {{ form.direccion }}
+                        {% if form.direccion.errors %}<div class="text-danger small">{{ form.direccion.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ciudad *</label>
+                        {{ form.ciudad }}
+                        {% if form.ciudad.errors %}<div class="text-danger small">{{ form.ciudad.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Barrio</label>
+                        {{ form.barrio }}
+                        {% if form.barrio.errors %}<div class="text-danger small">{{ form.barrio.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                <hr class="my-4">
+                <h6 class="mb-3"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Contacto de Emergencia</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        {{ form.contacto_emergencia_nombre }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Parentesco</label>
+                        {{ form.contacto_emergencia_parentesco }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        {{ form.contacto_emergencia_telefono }}
+                    </div>
                 </div>
             </div>
 
             <!-- TAB LABORAL -->
-            <div class="tab-pane fade" id="laboral">
+            <div class="tab-pane fade" id="laboral" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-briefcase-fill"></i> Información Laboral</h5>
                 <div class="row g-3">
-                    <div class="col-md-3">{{ form.fecha_ingreso.label_tag }}{{ form.fecha_ingreso }}</div>
-                    <div class="col-md-3">{{ form.cargo.label_tag }}{{ form.cargo }}</div>
-                    <div class="col-md-3">{{ form.area.label_tag }}{{ form.area }}</div>
-                    <div class="col-md-3">{{ form.sede.label_tag }}{{ form.sede }}</div>
-                    <div class="col-md-6">{{ form.jefe_inmediato.label_tag }}{{ form.jefe_inmediato }}</div>
-                    <div class="col-md-6">{{ form.estado.label_tag }}{{ form.estado }}</div>
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha de Ingreso *</label>
+                        {{ form.fecha_ingreso }}
+                        {% if form.fecha_ingreso.errors %}<div class="text-danger small">{{ form.fecha_ingreso.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Cargo *</label>
+                        {{ form.cargo }}
+                        {% if form.cargo.errors %}<div class="text-danger small">{{ form.cargo.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Área *</label>
+                        {{ form.area }}
+                        {% if form.area.errors %}<div class="text-danger small">{{ form.area.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sede</label>
+                        {{ form.sede }}
+                        {% if form.sede.errors %}<div class="text-danger small">{{ form.sede.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Jefe Inmediato</label>
+                        {{ form.jefe_inmediato }}
+                        {% if form.jefe_inmediato.errors %}<div class="text-danger small">{{ form.jefe_inmediato.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Estado *</label>
+                        {{ form.estado }}
+                        {% if form.estado.errors %}<div class="text-danger small">{{ form.estado.errors }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 
             <!-- TAB SALARIO -->
-            <div class="tab-pane fade" id="salario">
+            <div class="tab-pane fade" id="salario" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Información Salarial</h5>
                 <div class="row g-3">
-                    <div class="col-md-12">{{ form.salario_basico.label_tag }}{{ form.salario_basico }}</div>
-                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.aplica_auxilio_transporte }}<label>{{ form.aplica_auxilio_transporte.label }}</label></div>
-                    <div class="col-md-6 d-flex align-items-center gap-2">{{ form.salario_integral }}<label>{{ form.salario_integral.label }}</label></div>
+                    <div class="col-md-12">
+                        <label class="form-label">Salario Básico *</label>
+                        {{ form.salario_basico }}
+                        {% if form.salario_basico.errors %}<div class="text-danger small">{{ form.salario_basico.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {{ form.aplica_auxilio_transporte }}
+                            <label class="form-check-label" for="{{ form.aplica_auxilio_transporte.id_for_label }}">
+                                Aplica Auxilio de Transporte (≤ 2 SMLV)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {{ form.salario_integral }}
+                            <label class="form-check-label" for="{{ form.salario_integral.id_for_label }}">
+                                Salario Integral (≥ 10 SMLV)
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- TAB SEGURIDAD -->
-            <div class="tab-pane fade" id="seguridad">
+            <div class="tab-pane fade" id="seguridad" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-shield-check"></i> Seguridad Social</h5>
                 <div class="row g-3">
-                    <div class="col-md-6">{{ form.eps.label_tag }}{{ form.eps }}</div>
-                    <div class="col-md-6">{{ form.afp.label_tag }}{{ form.afp }}</div>
-                    <div class="col-md-6">{{ form.arl.label_tag }}{{ form.arl }}</div>
-                    <div class="col-md-6">{{ form.caja_compensacion.label_tag }}{{ form.caja_compensacion }}</div>
+                    <div class="col-md-6">
+                        <label class="form-label">EPS</label>
+                        {{ form.eps }}
+                        {% if form.eps.errors %}<div class="text-danger small">{{ form.eps.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">AFP</label>
+                        {{ form.afp }}
+                        {% if form.afp.errors %}<div class="text-danger small">{{ form.afp.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">ARL</label>
+                        {{ form.arl }}
+                        {% if form.arl.errors %}<div class="text-danger small">{{ form.arl.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Caja de Compensación</label>
+                        {{ form.caja_compensacion }}
+                        {% if form.caja_compensacion.errors %}<div class="text-danger small">{{ form.caja_compensacion.errors }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 
             <!-- TAB BANCARIA -->
-            <div class="tab-pane fade" id="bancaria">
+            <div class="tab-pane fade" id="bancaria" role="tabpanel">
                 <h5 class="mb-3"><i class="bi bi-bank"></i> Información Bancaria</h5>
                 <div class="row g-3">
-                    <div class="col-md-4">{{ form.banco.label_tag }}{{ form.banco }}</div>
-                    <div class="col-md-4">{{ form.tipo_cuenta.label_tag }}{{ form.tipo_cuenta }}</div>
-                    <div class="col-md-4">{{ form.numero_cuenta.label_tag }}{{ form.numero_cuenta }}</div>
-                    <div class="col-12">{{ form.observaciones.label_tag }}{{ form.observaciones }}</div>
+                    <div class="col-md-4">
+                        <label class="form-label">Banco</label>
+                        {{ form.banco }}
+                        {% if form.banco.errors %}<div class="text-danger small">{{ form.banco.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo de Cuenta</label>
+                        {{ form.tipo_cuenta }}
+                        {% if form.tipo_cuenta.errors %}<div class="text-danger small">{{ form.tipo_cuenta.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Número de Cuenta</label>
+                        {{ form.numero_cuenta }}
+                        {% if form.numero_cuenta.errors %}<div class="text-danger small">{{ form.numero_cuenta.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Observaciones</label>
+                        {{ form.observaciones }}
+                        {% if form.observaciones.errors %}<div class="text-danger small">{{ form.observaciones.errors }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -149,18 +367,67 @@
 
 {% block extra_js %}
 <script>
-document.getElementById('id_foto').style.display = 'none';
+// Manejo de foto
+const photoUploadBox = document.getElementById('photoUploadBox');
 const fotoInput = document.getElementById('id_foto');
-fotoInput?.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const preview = document.getElementById('photoPreview');
-    preview.src = ev.target.result;
-    preview.classList.remove('d-none');
-  };
-  reader.readAsDataURL(file);
+const photoPreview = document.getElementById('photoPreview');
+const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+photoUploadBox.addEventListener('click', () => {
+    fotoInput.click();
+});
+
+fotoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            photoPreview.src = e.target.result;
+            photoPreview.classList.remove('d-none');
+            if (uploadPlaceholder) {
+                uploadPlaceholder.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Auto-generar email corporativo
+const primerNombre = document.querySelector('input[name="primer_nombre"]');
+const primerApellido = document.querySelector('input[name="primer_apellido"]');
+const emailCorporativo = document.querySelector('input[name="email_corporativo"]');
+
+function generarEmail() {
+    if (primerNombre && primerApellido && emailCorporativo) {
+        const nombre = primerNombre.value.trim().toLowerCase();
+        const apellido = primerApellido.value.trim().toLowerCase();
+        if (nombre && apellido && !emailCorporativo.value) {
+            emailCorporativo.value = `${nombre}.${apellido}@dinnova.com.co`;
+        }
+    }
+}
+
+if (primerNombre) primerNombre.addEventListener('blur', generarEmail);
+if (primerApellido) primerApellido.addEventListener('blur', generarEmail);
+
+// Validación del formulario
+document.getElementById('empleadoForm').addEventListener('submit', function(e) {
+    const requiredFields = this.querySelectorAll('[required]');
+    let valid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            valid = false;
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!valid) {
+        e.preventDefault();
+        alert('Por favor complete todos los campos obligatorios marcados con *');
+    }
 });
 </script>
 {% endblock %}
